@@ -1,5 +1,14 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
+
+#define MAX_LINE_SIZE 4096
+
+struct node {
+	char line[MAX_LINE_SIZE];
+	struct node * next;
+	struct node * prev;
+};
 
 int main(int argc, char * argv[]){
         /*
@@ -41,7 +50,40 @@ int main(int argc, char * argv[]){
 		        exit(1);
 	}
 
+	char buf[MAX_LINE_SIZE];
+
+	struct node *list = NULL; //the linked list that contains lines read from input file; 
+	struct node *prev = NULL, *p = NULL, *current = NULL;
+
+	//read the input file by line, and store the lines into a linked list.
+	while(fgets(buf,MAX_LINE_SIZE,input)!=NULL){
+		current = (struct node *)malloc(sizeof(struct node));
+		if(current == NULL){
+			fprintf(stderr,"malloc failed!\n");
+			exit(1);
+		}
+		if(list == NULL){
+			list = current;
+		}
+		current->prev = prev;
+		if(current->prev != NULL){
+			current->prev->next = current;
+		}
+		strcpy(current->line,buf);
+		prev = current;
+		
+	}
+
+	//since the pointer current now points to the last element in the list
+	while(current != NULL){
+		fprintf(output,current->line);
+		p = current;
+		current = current->prev;
+		free(p);
+	}
+
 	return 0; // we won't explictly close input and output because the standard didn't say anything about fclose(stdin) or fclose(stdout). Instead we shall rely on the behaviour that all stream got closed when program terminates (by returning from main or calling exit() )
 
 
 }
+
