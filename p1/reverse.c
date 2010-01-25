@@ -33,7 +33,12 @@ int main(int argc, char * argv[]){
 			}
 			output = stdout;
 			break;
-		case 3: 
+		case 3:
+			if(strcmp(argv[1],argv[2])==0){
+				fprintf(stderr,"Input and output file must differ\n");
+				exit(1);
+			}
+
 			output = fopen(argv[2],"w");
 			if(output == NULL){
 				fprintf(stderr,"Error: Cannot open file '%s'\n",argv[2]);
