@@ -101,9 +101,9 @@ int main(int argc, char * argv[]){
 		do{
 			fprintf(output,p->line);
 			//handle the special case that input file doesn't end with an EOF
-			if( p == last && !strchr(p->line,'\n') && !strchr(p->line,'\r') ){
+		/*	if( p == last && !strchr(p->line,'\n') && !strchr(p->line,'\r') ){
 				fprintf(output,"\n");
-			}
+			} */
 			p = p -> next;
 		}while(p != current->next);
 
