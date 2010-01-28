@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
 #define MAX_LINE_SIZE 1024
 
 
@@ -73,7 +74,7 @@ int main(int argc, char * argv[]){
 			exit(1);
 		}
 		int i = 0;
-		for( i == 0; i < MAX_LINE_SIZE; i++){
+		for( i = 0; i < MAX_LINE_SIZE; i++){
 			current->line[i] = '\n'; //initialize with EOLs, essencial for future check
 		}
 		if(list == NULL){
@@ -89,6 +90,7 @@ int main(int argc, char * argv[]){
 	}
 
 	//since the pointer current now points to the last element in the list
+	struct node * last = current;
 	while(current != NULL){
 		struct node * current_line_start = current;
 		while(current_line_start->prev != NULL && !is_eol(current_line_start->prev->line[MAX_LINE_SIZE - 2])){
@@ -98,6 +100,10 @@ int main(int argc, char * argv[]){
 		p = current_line_start;
 		do{
 			fprintf(output,p->line);
+			//handle the special case that input file doesn't end with an EOF
+			if( p == last && !strchr(p->line,'\n') && !strchr(p->line,'\r') ){
+				fprintf(output,"\n");
+			}
 			p = p -> next;
 		}while(p != current->next);
 
