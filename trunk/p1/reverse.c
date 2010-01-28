@@ -57,7 +57,7 @@ int main(int argc, char * argv[]){
 			}
 			break;
 		default:
-			fprintf(stderr,"Usage: reverse <input> <output>\n");
+			fprintf(stderr,"Usage: reverse [infile] [outfile]\n");
 			exit(1);
 	}
 
