@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#define MAX_LINE_SIZE 1024
 
-#define MAX_LINE_SIZE 5
-/*
-bool is_eol(char x){
-	return (x == '\n' || x == '\r');
+
+//Note that there is no bool type in C
+int is_eol(char x){
+	return (x == '\n'|| x == '\r');
 }
-*/
 
 struct node {
 	char line[MAX_LINE_SIZE];
@@ -91,7 +91,7 @@ int main(int argc, char * argv[]){
 	//since the pointer current now points to the last element in the list
 	while(current != NULL){
 		struct node * current_line_start = current;
-		while(current_line_start->prev != NULL && current_line_start->prev->line[MAX_LINE_SIZE - 2] != '\n'){
+		while(current_line_start->prev != NULL && !is_eol(current_line_start->prev->line[MAX_LINE_SIZE - 2])){
 			//fprintf(output,"%c\n",current_line_start->prev->line[MAX_LINE_SIZE - 2]);
 			current_line_start = current_line_start->prev;
 		}
