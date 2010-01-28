@@ -2,7 +2,12 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MAX_LINE_SIZE 4096
+#define MAX_LINE_SIZE 5
+/*
+bool is_eol(char x){
+	return (x == '\n' || x == '\r');
+}
+*/
 
 struct node {
 	char line[MAX_LINE_SIZE];
@@ -11,12 +16,12 @@ struct node {
 };
 
 int main(int argc, char * argv[]){
-        /*
-	if(argc > 3){
-		fprintf(stderr,"Usage: reverse <input> <output>\n");
-		exit(1);
-	}
-	*/
+	/*
+	   if(argc > 3){
+	   fprintf(stderr,"Usage: reverse <input> <output>\n");
+	   exit(1);
+	   }
+	 */
 
 	FILE *input,*output;
 
@@ -28,8 +33,8 @@ int main(int argc, char * argv[]){
 		case 2: 
 			input = fopen(argv[1],"r");
 			if(input == NULL){
-                        fprintf(stderr, "Error: Cannot open file '%s'\n",argv[1]);
-			exit(1);
+				fprintf(stderr, "Error: Cannot open file '%s'\n",argv[1]);
+				exit(1);
 			}
 			output = stdout;
 			break;
@@ -44,15 +49,15 @@ int main(int argc, char * argv[]){
 				fprintf(stderr,"Error: Cannot open file '%s'\n",argv[2]);
 				exit(1);
 			}
-		        input = fopen(argv[1],"r");
+			input = fopen(argv[1],"r");
 			if(input == NULL){
-                        fprintf(stderr, "Error: Cannot open file '%s'\n",argv[1]);
-			exit(1);
+				fprintf(stderr, "Error: Cannot open file '%s'\n",argv[1]);
+				exit(1);
 			}
-		        break;
+			break;
 		default:
 			fprintf(stderr,"Usage: reverse <input> <output>\n");
-		        exit(1);
+			exit(1);
 	}
 
 	char buf[MAX_LINE_SIZE];
@@ -67,6 +72,10 @@ int main(int argc, char * argv[]){
 			fprintf(stderr,"malloc failed!\n");
 			exit(1);
 		}
+		int i = 0;
+		for( i == 0; i < MAX_LINE_SIZE; i++){
+			current->line[i] = '\n'; //initialize with EOLs, essencial for future check
+		}
 		if(list == NULL){
 			list = current;
 		}
@@ -76,19 +85,37 @@ int main(int argc, char * argv[]){
 		}
 		strcpy(current->line,buf);
 		prev = current;
-		
+
 	}
 
 	//since the pointer current now points to the last element in the list
 	while(current != NULL){
-		fprintf(output,current->line);
-		p = current;
-		current = current->prev;
-		free(p);
+		struct node * current_line_start = current;
+		while(current_line_start->prev != NULL && current_line_start->prev->line[MAX_LINE_SIZE - 2] != '\n'){
+			//fprintf(output,"%c\n",current_line_start->prev->line[MAX_LINE_SIZE - 2]);
+			current_line_start = current_line_start->prev;
+		}
+		p = current_line_start;
+		do{
+			fprintf(output,p->line);
+			p = p -> next;
+		}while(p != current->next);
+
+		current = current_line_start->prev;
+
+	}
+
+	//free the whole list;
+	current = list;
+	while(current != NULL){
+		p = current->next;
+		free(current);
+		current = p;
 	}
 
 	return 0; // we won't explictly close input and output because the standard didn't say anything about fclose(stdin) or fclose(stdout). Instead we shall rely on the behaviour that all stream got closed when program terminates (by returning from main or calling exit() )
 
 
 }
+
 
