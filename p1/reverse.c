@@ -20,7 +20,7 @@ bool is_same_file(const char *file1, const char *file2){
 		fprintf(stderr,"malloc failed!\n");
 		exit(1);
 	}
-	if( !stat(file1,buf1) || !stat(file2,buf2) ){
+	if( stat(file1,buf1) == -1 || stat(file2,buf2) == -1 ){
 		fprintf(stderr,"can not stat file\n");
 		exit(1);
 	}
