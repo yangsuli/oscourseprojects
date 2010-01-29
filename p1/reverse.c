@@ -1,13 +1,38 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <stdbool.h>
 
 #define MAX_LINE_SIZE 1024
 
 
 //Note that there is no bool type in C
-int is_eol(char x){
+bool is_eol(char x){
 	return (x == '\n'|| x == '\r');
+}
+
+//given two string, check if they refer to the same file. If yes, return true, else return false
+bool is_same_file(const char *file1, const char *file2){
+	struct stat * buf1 = malloc(sizeof(struct stat));
+	struct stat * buf2 = malloc(sizeof(struct stat));
+	if( !buf1 || !buf2){
+		fprintf(stderr,"malloc failed!\n");
+		exit(1);
+	}
+	if( !stat(file1,buf1) || !stat(file2,buf2) ){
+		fprintf(stderr,"can not stat file\n");
+		exit(1);
+	}
+	int same;
+        if(buf1->st_ino == buf2->st_ino){
+		same = true;
+	}else{
+		same = false;
+	}
+        free(buf1);
+	free(buf2);
+	return same;
 }
 
 struct node {
@@ -55,9 +80,13 @@ int main(int argc, char * argv[]){
 				fprintf(stderr, "Error: Cannot open file '%s'\n",argv[1]);
 				exit(1);
 			}
+			if(is_same_file(argv[1],argv[2])){
+				fprintf(stderr,"Input and output file must differ\n");
+				exit(1);
+			}
 			break;
 		default:
-			fprintf(stderr,"Usage: reverse [infile] [outfile]\n");
+			fprintf(stderr,"Usage: reverse <infile> <outfile>\n");
 			exit(1);
 	}
 
@@ -90,7 +119,7 @@ int main(int argc, char * argv[]){
 	}
 
 	//since the pointer current now points to the last element in the list
-	struct node * last = current;
+	//struct node * last = current;
 	while(current != NULL){
 		struct node * current_line_start = current;
 		while(current_line_start->prev != NULL && !is_eol(current_line_start->prev->line[MAX_LINE_SIZE - 2])){
