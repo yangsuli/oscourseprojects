@@ -1,0 +1,11 @@
+0. Now it passes 19 out of 20 tests. It fails test0, but I think test0 is not correct at this time being.
+
+1. I treat '\n' and '\r' as EOF chars
+
+2. I won't explictly close input and output because the standard didn't say anything about fclose(stdin) or fclose(stdout). Instead we shall rely on the behaviour that all stream get closed when program terminates (by returning from main or calling exit() )
+
+3. The special case where file doen's end with an EOF is handled in this way: don't handle it. As suggested by the tests (-__-b) 
+
+Suli Yang
+yangsuli@gmail.com
+Department of Physics
