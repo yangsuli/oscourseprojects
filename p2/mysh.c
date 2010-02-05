@@ -12,6 +12,7 @@ const char delims_for_args[] = " \n";
 const char delims_for_cmds_serial[] = ";";
 const char delims_for_cmds_parallel[] = "+";
 const char prompt[] = "mysh> "; 
+const char *support_build_in[NUM_BUILD_IN] = {"exit","pwd","cd"};
 
 
 bool is_eol(char x){
@@ -25,10 +26,20 @@ void initialize_buf_with_eol(char *buf, int size){
 	}
 }
 
+bool check_build_in_cmd(char * str){
+	int i = 0;
+	for(i = 0; i<NUM_BUILD_IN; i++){
+		if(strcmp(str,support_build_in[i]) == 0){
+			return true;
+		}
+	}
+	return false;
+}
+
 // process the cmd line, deal with rediection and other stuff.
 //just fork, do not wait
 //if succesfully fork, return the number of processes if forked (should be 1)
-//if an empty cmd is passed, return 0
+//if an empty cmd or build in cmd is passed, return 0
 //if fork failed, exit the program
 int run_command(char *cmd){
 
@@ -46,6 +57,13 @@ int run_command(char *cmd){
 	if(argv[0] == NULL){
 		return fork_count;
 	}
+
+	if(check_build_in_cmd(argv[0]) == true){
+		//deal with build in cmd;
+		fprintf(stderr,"build in\n");
+		return fork_count;
+	}
+
 	if((pid = fork()) < 0){
 		error_and_exit();
 	}else if(pid == 0){
@@ -82,11 +100,11 @@ int main(){
 		}
 		serial_cmd_count = 0;
 		while(serial_cmds[serial_cmd_count] != NULL){
-		/*	if(strpbrk(serial_cmds[serial_cmd_count],delims_for_cmds_parallel) == NULL){
+			/*	if(strpbrk(serial_cmds[serial_cmd_count],delims_for_cmds_parallel) == NULL){
 				run_command(serial_cmds[serial_cmd_count]);
-			}else{ */
-				run_parallel_commands(serial_cmds[serial_cmd_count]);
-		/*	} */
+				}else{ */
+			run_parallel_commands(serial_cmds[serial_cmd_count]);
+			/*	} */
 			serial_cmd_count++;
 		}
 
@@ -129,26 +147,25 @@ void run_parallel_commands(char *parallel_cmd){
 	char * cmds[MAX_COMMANDS];
 	int cmd_count = 0;
 	int fork_count = 0;
+	int i = 0;
 
 	parse_args(parallel_cmd, cmds, MAX_COMMANDS, delims_for_cmds_parallel);
 
 	cmd_count = 0;
 
 	while(cmds[cmd_count] != NULL){
-                if(run_command(cmds[cmd_count]) == 1){
-	//	parse_args(cmds[cmd_count],argv[cmd_count],MAX_ARGUMENTS,delims_for_args);
-		fork_count++;
+		if(run_command(cmds[cmd_count]) == 1){
+			//	parse_args(cmds[cmd_count],argv[cmd_count],MAX_ARGUMENTS,delims_for_args);
+			fork_count++;
 		}
 		cmd_count++;
 	}
 
 
-	cmd_count = 0;
-	while(cmds[cmd_count] != NULL){
+	for(i = 0; i < fork_count; i++){
 		if(wait(NULL) == -1){
 			fprintf(stderr,"wait error\n");
 			error_and_exit();
 		}
-		cmd_count++;
 	}
 }
