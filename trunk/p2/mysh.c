@@ -70,7 +70,6 @@ int main(){
 		read_one_line(buf, MAX_LINE_LENGTH + 2, stdin);
 
 		serial_cmd_count = 0;
-		fprintf(stderr,buf);
 		//So here we assumer that '+' is more asscoiative than ';' in our syntax
 		serial_cmds[serial_cmd_count] = strtok(buf,delims_for_cmds_serial);
 		while(serial_cmds[serial_cmd_count] != NULL){
