@@ -8,6 +8,9 @@
 #include "mysh.h"
 #include <errno.h>
 
+const char delims_for_args[] = " \n";
+const char delims_for_cmds_serial[] = ";";
+const char delims_for_cmds_parallel[] = "+";
 const char prompt[] = "mysh> "; 
 
 
@@ -21,43 +24,82 @@ void initialize_buf_with_eol(char *buf, int size){
 		buf[i] = '\n';
 	}
 }
+void run_command(char *cmd){
+
+	pid_t pid;
+	int arg_count = 0;
+	char * argv[MAX_ARGUMENTS];
+
+	argv[arg_count] = strtok(cmd,delims_for_args);
+	while(argv[arg_count] != NULL){
+		arg_count++;
+		argv[arg_count] = strtok(NULL,delims_for_args);
+	}
+	//empty command, no error
+	if(argv[0] == NULL){
+		return;
+	}
+	if((pid = fork()) < 0){
+		error_and_exit();
+	}else if(pid == 0){
+		if(execvp(argv[0],argv) == -1){
+			//note that here just the child process exits.
+			//Our shell still runs (after an error msg from
+			//child appeared
+			error_and_exit();
+		}
+	}else{
+		if(wait(NULL) == -1){
+			error_and_exit();
+		}
+	}
+
+}
 
 int main(){
 
 	char buf[MAX_LINE_LENGTH + 2];
-        char * argv[MAX_ARGUMENTS]; 
-	int arg_count;
-	pid_t pid;
+	char * argv[MAX_COMMANDS][MAX_ARGUMENTS];
+	char * serial_cmds[MAX_COMMANDS];
+	char * parallel_cmds[MAX_COMMANDS];	
+	int arg_count[MAX_COMMANDS];
+	int serial_cmd_count;
+	int parallel_cmd_count;
+	pid_t pid[MAX_COMMANDS];
 
 	while(1){
 		write(STDOUT_FILENO,prompt,strlen(prompt));
 		read_one_line(buf, MAX_LINE_LENGTH + 2, stdin);
-		char delims[] = " \n";
+		run_command(buf);
+		/*		serial_cmd_count = 0;
+		//So here we assumer that '+' is more asscoiative than ';' in our syntax
+		cmds[serial_cmd_count] = strtok(buf,delims_for_cmds_serial);
+		while[cmd_count] = 
 		arg_count = 0;
-		argv[arg_count] = strtok(buf,delims);
+		argv[arg_count] = strtok(buf,delims_for_args);
 		while(argv[arg_count] != NULL){
-			arg_count++;
-			argv[arg_count] = strtok(NULL,delims);
+		arg_count++;
+		argv[arg_count] = strtok(NULL,delims_for_args);
 		}
 		if(argv[0] == NULL){
-			error_and_continue();
-			continue;
+		error_and_continue();
+		continue;
 		}
 		if((pid = fork()) < 0){
-			error_and_exit();
+		error_and_exit();
 		}else if(pid == 0){
-			if(execvp(argv[0],argv) == -1){
-				//note that here just the child process exits.
-				//Our shell still runs (after an error msg from
-				//child appeared
-				error_and_exit();
-			}
-		}else{
-			if(wait(NULL) == -1){
-				error_and_exit();
-			}
+		if(execvp(argv[0],argv) == -1){
+		//note that here just the child process exits.
+		//Our shell still runs (after an error msg from
+		//child appeared
+		error_and_exit();
 		}
-	        	
+		}else{
+		if(wait(NULL) == -1){
+		error_and_exit();
+		}
+		}*/
+
 	}
 }
 
