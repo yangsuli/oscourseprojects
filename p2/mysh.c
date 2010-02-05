@@ -70,13 +70,18 @@ int main(){
 		read_one_line(buf, MAX_LINE_LENGTH + 2, stdin);
 
 		serial_cmd_count = 0;
+		fprintf(stderr,buf);
 		//So here we assumer that '+' is more asscoiative than ';' in our syntax
-		cmds[serial_cmd_count] = strtok(buf,delims_for_cmds_serial);
-		while(cmds[serial_cmd_count] != NULL){
-			run_command(cmds[serial_cmd_count]);
+		serial_cmds[serial_cmd_count] = strtok(buf,delims_for_cmds_serial);
+		while(serial_cmds[serial_cmd_count] != NULL){
 			serial_cmd_count++;
-			cmds[serial_cmd_count] = strtok(NULL,delims_for_cmds_serial);	       }
-
+			serial_cmds[serial_cmd_count] = strtok(NULL,delims_for_cmds_serial);	      
+	       	}
+		serial_cmd_count = 0;
+		while(serial_cmds[serial_cmd_count] != NULL){
+			run_command(serial_cmds[serial_cmd_count]);
+			serial_cmd_count++;
+		}
 
 	}
 }
