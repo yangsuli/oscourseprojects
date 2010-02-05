@@ -24,10 +24,17 @@ void initialize_buf_with_eol(char *buf, int size){
 		buf[i] = '\n';
 	}
 }
-void run_command(char *cmd){
+
+// process the cmd line, deal with rediection and other stuff.
+//just fork, do not wait
+//if succesfully fork, return the number of processes if forked (should be 1)
+//if an empty cmd is passed, return 0
+//if fork failed, exit the program
+int run_command(char *cmd){
 
 	pid_t pid;
 	int arg_count = 0;
+	int fork_count = 0;
 	char * argv[MAX_ARGUMENTS];
 
 	argv[arg_count] = strtok(cmd,delims_for_args);
@@ -37,7 +44,7 @@ void run_command(char *cmd){
 	}
 	//empty command, no error
 	if(argv[0] == NULL){
-		return;
+		return fork_count;
 	}
 	if((pid = fork()) < 0){
 		error_and_exit();
@@ -49,10 +56,10 @@ void run_command(char *cmd){
 			error_and_exit();
 		}
 	}else{
-		if(wait(NULL) == -1){
-			error_and_exit();
-		}
+		fork_count++;
 	}
+
+	return fork_count;
 
 }
 
@@ -75,11 +82,11 @@ int main(){
 		}
 		serial_cmd_count = 0;
 		while(serial_cmds[serial_cmd_count] != NULL){
-			if(strpbrk(serial_cmds[serial_cmd_count],delims_for_cmds_parallel) == NULL){
+		/*	if(strpbrk(serial_cmds[serial_cmd_count],delims_for_cmds_parallel) == NULL){
 				run_command(serial_cmds[serial_cmd_count]);
-			}else{
+			}else{ */
 				run_parallel_commands(serial_cmds[serial_cmd_count]);
-			}
+		/*	} */
 			serial_cmd_count++;
 		}
 
@@ -119,41 +126,27 @@ void parse_args(char *buf, char **argv, int max_args, const char * delims){
 
 void run_parallel_commands(char *parallel_cmd){
 
-	pid_t pid[MAX_COMMANDS];
 	char * cmds[MAX_COMMANDS];
-	char * argv[MAX_COMMANDS][MAX_ARGUMENTS];
 	int cmd_count = 0;
+	int fork_count = 0;
 
 	parse_args(parallel_cmd, cmds, MAX_COMMANDS, delims_for_cmds_parallel);
-	while(cmds[cmd_count] != NULL){
-		parse_args(cmds[cmd_count],argv[cmd_count],MAX_ARGUMENTS,delims_for_args);
-		cmd_count++;
-	}
 
 	cmd_count = 0;
 
 	while(cmds[cmd_count] != NULL){
-
-		if(argv[cmd_count][0] == NULL){
-			return;
+                if(run_command(cmds[cmd_count]) == 1){
+	//	parse_args(cmds[cmd_count],argv[cmd_count],MAX_ARGUMENTS,delims_for_args);
+		fork_count++;
 		}
-		if((pid[cmd_count] = fork()) < 0){
-			error_and_exit();
-		}else if(pid == 0){
-			if(execvp(argv[cmd_count][0],argv[cmd_count]) == -1){
-				//note that here just the child process exits.
-				//Our shell still runs (after an error msg from
-				//child appeared
-				error_and_exit();
-			}
-		}else{
-			cmd_count++;
-		}
+		cmd_count++;
 	}
+
 
 	cmd_count = 0;
 	while(cmds[cmd_count] != NULL){
 		if(wait(NULL) == -1){
+			fprintf(stderr,"wait error\n");
 			error_and_exit();
 		}
 		cmd_count++;
