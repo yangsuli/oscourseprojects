@@ -60,10 +60,7 @@ int main(){
 
 	char buf[MAX_LINE_LENGTH + 2];
 	char * serial_cmds[MAX_COMMANDS];
-	char * parallel_cmds[MAX_COMMANDS];	
 	int serial_cmd_count;
-	int parallel_cmd_count;
-	pid_t pid[MAX_COMMANDS];
 
 	while(1){
 		write(STDOUT_FILENO,prompt,strlen(prompt));
@@ -75,10 +72,14 @@ int main(){
 		while(serial_cmds[serial_cmd_count] != NULL){
 			serial_cmd_count++;
 			serial_cmds[serial_cmd_count] = strtok(NULL,delims_for_cmds_serial);	      
-	       	}
+		}
 		serial_cmd_count = 0;
 		while(serial_cmds[serial_cmd_count] != NULL){
-			run_command(serial_cmds[serial_cmd_count]);
+			if(strpbrk(serial_cmds[serial_cmd_count],delims_for_cmds_parallel) == NULL){
+				run_command(serial_cmds[serial_cmd_count]);
+			}else{
+				run_parallel_commands(serial_cmds[serial_cmd_count]);
+			}
 			serial_cmd_count++;
 		}
 
@@ -105,4 +106,56 @@ void read_one_line(char * buf, int n, FILE * input){
 		read_one_line(buf,n,input);
 	}
 	i = 0;
+}
+
+void parse_args(char *buf, char **argv, int max_args, const char * delims){
+	int arg_count = 0;
+	argv[arg_count] = strtok(buf,delims);
+	while(arg_count < max_args && argv[arg_count] != NULL){
+		arg_count++;
+		argv[arg_count] = strtok(NULL,delims);
+	}
+}
+
+void run_parallel_commands(char *parallel_cmd){
+
+	pid_t pid[MAX_COMMANDS];
+	char * cmds[MAX_COMMANDS];
+	char * argv[MAX_COMMANDS][MAX_ARGUMENTS];
+	int cmd_count = 0;
+
+	parse_args(parallel_cmd, cmds, MAX_COMMANDS, delims_for_cmds_parallel);
+	while(cmds[cmd_count] != NULL){
+		parse_args(cmds[cmd_count],argv[cmd_count],MAX_ARGUMENTS,delims_for_args);
+		cmd_count++;
+	}
+
+	cmd_count = 0;
+
+	while(cmds[cmd_count] != NULL){
+
+		if(argv[cmd_count][0] == NULL){
+			return;
+		}
+		if((pid[cmd_count] = fork()) < 0){
+			error_and_exit();
+		}else if(pid == 0){
+			if(execvp(argv[cmd_count][0],argv[cmd_count]) == -1){
+				//note that here just the child process exits.
+				//Our shell still runs (after an error msg from
+				//child appeared
+				error_and_exit();
+			}
+		}else{
+			cmd_count++;
+		}
+	}
+
+	cmd_count = 0;
+	while(cmds[cmd_count] != NULL){
+		if(wait(NULL) == -1){
+			error_and_exit();
+		}
+		cmd_count++;
+	}
 }
