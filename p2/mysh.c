@@ -6,8 +6,10 @@
 #include <unistd.h>
 #include <string.h>
 #include "mysh.h"
+#include <errno.h>
 
 const char prompt[] = "mysh> "; 
+
 
 bool is_eol(char x){
 	return (x == '\n' || x == '\r');
@@ -23,10 +25,39 @@ void initialize_buf_with_eol(char *buf, int size){
 int main(){
 
 	char buf[MAX_LINE_LENGTH + 2];
+        char * argv[MAX_ARGUMENTS]; 
+	int arg_count;
+	pid_t pid;
 
 	while(1){
 		write(STDOUT_FILENO,prompt,strlen(prompt));
 		read_one_line(buf, MAX_LINE_LENGTH + 2, stdin);
+		char delims[] = " \n";
+		arg_count = 0;
+		argv[arg_count] = strtok(buf,delims);
+		while(argv[arg_count] != NULL){
+			arg_count++;
+			argv[arg_count] = strtok(NULL,delims);
+		}
+		if(argv[0] == NULL){
+			error_and_continue();
+			continue;
+		}
+		if((pid = fork()) < 0){
+			error_and_exit();
+		}else if(pid == 0){
+			if(execvp(argv[0],argv) == -1){
+				//note that here just the child process exits.
+				//Our shell still runs (after an error msg from
+				//child appeared
+				error_and_exit();
+			}
+		}else{
+			if(wait(NULL) == -1){
+				error_and_exit();
+			}
+		}
+	        	
 	}
 }
 

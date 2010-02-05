@@ -1,4 +1,5 @@
 #define MAX_LINE_LENGTH 512
+#define MAX_ARGUMENTS 512
 
 void read_one_line(char * buf, int n, FILE * input);
 
