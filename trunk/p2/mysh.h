@@ -1,6 +1,7 @@
 #define MAX_LINE_LENGTH 512
 #define MAX_ARGUMENTS 512
 #define MAX_COMMANDS 512
+#define NUM_BUILD_IN 3
 
 void read_one_line(char * buf, int n, FILE * input);
 
