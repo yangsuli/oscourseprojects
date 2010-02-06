@@ -13,3 +13,5 @@ bool is_eol(char x);
 void initialize_buf_with_eol(char *buf, int size);
 
 void run_parallel_commands(char* parallel_cmd);
+
+void parse_args(char *buf, char **argv, int max_args, const char * delims);

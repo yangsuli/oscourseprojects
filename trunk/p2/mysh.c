@@ -7,12 +7,14 @@
 #include <string.h>
 #include "mysh.h"
 #include <errno.h>
+#include <fcntl.h>
 
-const char delims_for_args[] = " \n";
-const char delims_for_cmds_serial[] = ";";
+const char delims_for_args[] = " \t";
+const char delims_for_cmds_serial[] = ";\n";
 const char delims_for_cmds_parallel[] = "+";
 const char prompt[] = "mysh> "; 
 const char *support_build_in[NUM_BUILD_IN] = {"exit","pwd","cd"};
+const char *redirection_chars = ">";
 
 
 bool is_eol(char x){
@@ -95,6 +97,37 @@ int run_command(char *cmd){
 	int arg_count = 0;
 	int fork_count = 0;
 	char * argv[MAX_ARGUMENTS];
+	char redirect_file[MAX_LINE_LENGTH];
+  	bool redirection_flag = false;
+	char * redirec_char = strpbrk(cmd,redirection_chars);
+	//if there is a redirection charactor)
+	if(redirec_char != NULL){
+		//if more than one redireciton charactors, bad syntax
+		//Note that this implementation makes it very difficult to add support to >>. But whatever....
+		if(strpbrk(redirec_char+1,redirection_chars) != NULL){
+			error_and_continue();
+			return fork_count;
+		}
+		
+		strcpy(redirect_file,redirec_char + 1);
+		
+		//change cmd, throw away all those > bla bla part
+		//so that exec could recognize
+		redirec_char[0] = '\0';
+
+		parse_args(redirect_file,argv,MAX_ARGUMENTS,delims_for_args);
+
+		if(argv[0] == NULL || argv[1] != NULL){
+			error_and_continue();
+			return fork_count;
+		}
+
+		redirection_flag = true;
+
+		strcpy(redirect_file,argv[0]);
+	}
+
+
 
 	argv[arg_count] = strtok(cmd,delims_for_args);
 	while(argv[arg_count] != NULL){
@@ -115,6 +148,16 @@ int run_command(char *cmd){
 	if((pid = fork()) < 0){
 		error_and_exit();
 	}else if(pid == 0){
+		int fd;
+		if(redirection_flag == true){
+			if((fd = open(redirect_file,O_WRONLY|O_CREAT|O_TRUNC)) == -1){
+				error_and_exit();
+			}
+			if(dup2(fd,STDOUT_FILENO) == -1){
+				error_and_exit();
+			}
+		}
+
 		if(execvp(argv[0],argv) == -1){
 			//note that here just the child process exits.
 			//Our shell still runs (after an error msg from
