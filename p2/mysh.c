@@ -239,15 +239,29 @@ int run_command(char *cmd){
 
 }
 
-int main(){
+void lauch_shell(char *batch_file){
 
 	char buf[MAX_LINE_LENGTH + 2];
 	char * serial_cmds[MAX_COMMANDS];
 	int serial_cmd_count;
+	FILE *input;
+
+	if(batch_file != NULL){
+		if((input = fopen(batch_file,"r")) == NULL){
+			error_and_exit();
+		}
+	}else{
+		input = stdin;
+	}
 
 	while(1){
-		write(STDOUT_FILENO,prompt,strlen(prompt));
-		read_one_line(buf, MAX_LINE_LENGTH + 2, stdin);
+		if(batch_file == NULL){
+			write(STDOUT_FILENO,prompt,strlen(prompt));
+		}
+		read_one_line(buf, MAX_LINE_LENGTH + 2, input);
+		if(batch_file != NULL){
+			write(STDOUT_FILENO,buf,strlen(buf));
+		}
 
 		serial_cmd_count = 0;
 		//So here we assumer that '+' is more asscoiative than ';' in our syntax
@@ -327,3 +341,4 @@ void run_parallel_commands(char *parallel_cmd){
 		}
 	}
 }
+
