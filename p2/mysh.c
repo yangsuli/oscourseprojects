@@ -1,4 +1,6 @@
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include "error.h"
 #include <stdbool.h>
@@ -150,7 +152,7 @@ int run_command(char *cmd){
 	}else if(pid == 0){
 		int fd;
 		if(redirection_flag == true){
-			if((fd = open(redirect_file,O_WRONLY|O_CREAT|O_TRUNC)) == -1){
+			if((fd = open(redirect_file,O_WRONLY|O_CREAT|O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)) == -1){
 				error_and_exit();
 			}
 			if(dup2(fd,STDOUT_FILENO) == -1){
