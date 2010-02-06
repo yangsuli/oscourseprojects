@@ -1,3 +1,6 @@
+#include <stdbool.h>
+#include <stdio.h>
+
 #define MAX_LINE_LENGTH 512
 #define MAX_ARGUMENTS 512
 #define MAX_COMMANDS 512

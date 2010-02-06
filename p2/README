@@ -1,0 +1,5 @@
+1. for build in commands exit and pwd. I allowd a sightly looser syntax. [optionalspace]exit/pwd [arguments]. And all the arguments are ingnored. Will ajust the behaviour according to the test suit
+
+2. if one excecuted cd, and there is no match for $HOME in the current environment, our shell does nothing. If one tries to cd to a non-exist directory, our shell prints out an error msg and continues.
+
+3. When you try exit+(other command), or (other command)+exit, the behavior is undefined. Depend on the schuduling algorithm of the kernel. 

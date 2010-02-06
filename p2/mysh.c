@@ -36,6 +36,54 @@ bool check_build_in_cmd(char * str){
 	return false;
 }
 
+//this function doesn't deal with redirection and other stuff. It assumed that the argv[] passed to it is purely command arguments.
+void deal_with_build_in(char *argv[]){
+	if(strcmp(argv[0],"exit") == 0){
+		if(argv[1] != NULL){
+			error_and_continue();
+			return;
+		}
+		//if the first token is "exit", exit the program. If there are exta arguments, error
+		exit(0);
+	}else if(strcmp(argv[0],"pwd") == 0){
+		if(argv[1] != NULL){
+			error_and_continue();
+			return;
+		}
+		char buf[512];
+		if(getcwd(buf,512) == NULL){
+			error_and_exit();
+		}
+		if(write(STDOUT_FILENO,buf,strlen(buf)) != strlen(buf) || write(STDOUT_FILENO,"\n",2) != 2){
+			error_and_exit();
+		}
+	}else if(strcmp(argv[0],"cd") == 0){
+		if(argv[2] != NULL){
+			error_and_continue();
+			return;
+		}
+		char *dir = argv[1];
+		if(dir == NULL){
+			dir = getenv("HOME");
+			fprintf(stderr,"%pyangsuli\n",dir);
+		}
+
+		//if there is no match in $HOME in current enviorment, do nothing
+		if(dir != NULL){
+			if(chdir(dir) == -1){
+				//dir doesn't or other stuff
+				error_and_continue();
+				return;
+			}
+		}
+	}else{
+		//non supproted build_in cmd, shouldn't happen
+		error_and_exit();
+	}
+
+
+}
+
 // process the cmd line, deal with rediection and other stuff.
 //just fork, do not wait
 //if succesfully fork, return the number of processes if forked (should be 1)
@@ -60,7 +108,7 @@ int run_command(char *cmd){
 
 	if(check_build_in_cmd(argv[0]) == true){
 		//deal with build in cmd;
-		fprintf(stderr,"build in\n");
+		deal_with_build_in(argv);
 		return fork_count;
 	}
 
