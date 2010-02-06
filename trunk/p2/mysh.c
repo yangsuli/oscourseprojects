@@ -17,6 +17,8 @@ const char delims_for_cmds_parallel[] = "+";
 const char prompt[] = "mysh> "; 
 const char *support_build_in[NUM_BUILD_IN] = {"exit","pwd","cd"};
 const char *redirection_chars = ">";
+const char *grep_chars = "=";
+const char *grep_path = "/bin/grep";
 
 
 bool is_eol(char x){
@@ -69,7 +71,6 @@ void deal_with_build_in(char *argv[]){
 		char *dir = argv[1];
 		if(dir == NULL){
 			dir = getenv("HOME");
-			fprintf(stderr,"%pyangsuli\n",dir);
 		}
 
 		//if there is no match in $HOME in current enviorment, do nothing
@@ -100,19 +101,23 @@ int run_command(char *cmd){
 	int fork_count = 0;
 	char * argv[MAX_ARGUMENTS];
 	char redirect_file[MAX_LINE_LENGTH];
-  	bool redirection_flag = false;
+	bool redirection_flag = false;
+	bool grep_flag = false;
+	char * keyword;
 	char * redirec_char = strpbrk(cmd,redirection_chars);
+	char * grep_char = strpbrk(cmd,grep_chars);
+
 	//if there is a redirection charactor)
 	if(redirec_char != NULL){
-		//if more than one redireciton charactors, bad syntax
+		//if more than one redireciton charactors or grepping char, bad syntax
 		//Note that this implementation makes it very difficult to add support to >>. But whatever....
-		if(strpbrk(redirec_char+1,redirection_chars) != NULL){
+		if(strpbrk(redirec_char+1,redirection_chars) != NULL || grep_char != NULL){
 			error_and_continue();
 			return fork_count;
 		}
-		
+
 		strcpy(redirect_file,redirec_char + 1);
-		
+
 		//change cmd, throw away all those > bla bla part
 		//so that exec could recognize
 		redirec_char[0] = '\0';
@@ -127,8 +132,34 @@ int run_command(char *cmd){
 		redirection_flag = true;
 
 		strcpy(redirect_file,argv[0]);
-	}
 
+	}else if(grep_char != NULL){
+
+		//change cmd, throw away those =...= output file stuff
+		//so that exec could recognize
+		grep_char[0] = '\0';
+
+		parse_args(grep_char+1,argv,MAX_ARGUMENTS,grep_chars);
+
+		if(argv[0] == NULL || argv[1] == NULL || argv[2] != NULL){
+			error_and_continue();
+			return fork_count;
+		}
+
+		//Note that here we allow whitespaces in keyword
+		keyword = argv[0];
+
+		parse_args(argv[1],argv,MAX_ARGUMENTS,delims_for_args);
+
+		//if no outpuf file or more than one output file
+		if(argv[0] == NULL || argv[1] != NULL){
+			error_and_continue();
+			return fork_count;
+		}
+		grep_flag = true;
+
+		strcpy(redirect_file,argv[0]);
+	}
 
 
 	argv[arg_count] = strtok(cmd,delims_for_args);
@@ -158,7 +189,41 @@ int run_command(char *cmd){
 			if(dup2(fd,STDOUT_FILENO) == -1){
 				error_and_exit();
 			}
+		}else if(grep_flag == true){
+			int fd;
+			int filedes[2];
+			pid_t pid;
+			if(pipe(filedes) == -1){
+				error_and_exit();
+			}
+			if((pid = fork()) < 0){
+				error_and_exit();
+			}else if(pid > 0){//parent write the pipe
+				close(filedes[0]);
+				if(dup2(filedes[1],STDOUT_FILENO) == -1){
+					error_and_exit();
+				}
+			}else{
+				close(filedes[1]);
+				if(dup2(filedes[0],STDIN_FILENO) == -1){
+					error_and_exit();
+				}
+				if((fd = open(redirect_file,O_WRONLY|O_CREAT|O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)) == -1){
+					error_and_exit();
+				}
+				if(dup2(fd,STDOUT_FILENO) == -1){
+					error_and_exit();
+				}
+				char *grep_argv[3];
+				grep_argv[0] = grep_path;
+				grep_argv[1] = keyword;
+				grep_argv[2] = NULL;
+				if(execvp(grep_argv[0],grep_argv) == -1){
+					error_and_exit();
+				}
+			}
 		}
+
 
 		if(execvp(argv[0],argv) == -1){
 			//note that here just the child process exits.
