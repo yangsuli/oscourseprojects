@@ -249,6 +249,7 @@ void lauch_shell(char *batch_file){
 	char * serial_cmds[MAX_COMMANDS];
 	int serial_cmd_count;
 	FILE *input;
+	bool read_flag;
 
 	if(batch_file != NULL){
 		if((input = fopen(batch_file,"r")) == NULL){
@@ -262,13 +263,14 @@ void lauch_shell(char *batch_file){
 		if(batch_file == NULL){
 			write(STDOUT_FILENO,prompt,strlen(prompt));
 		}
-		if(read_one_line(buf, MAX_LINE_LENGTH + 2, input) == false){
-			continue;
-		}
+		read_flag = read_one_line(buf, MAX_LINE_LENGTH + 2, input);
 		if(batch_file != NULL){
 			write(STDOUT_FILENO,buf,strlen(buf));
 		}
 
+		if(read_flag == false){
+			continue;
+		}
 		serial_cmd_count = 0;
 		//So here we assumer that '+' is more asscoiative than ';' in our syntax
 		serial_cmds[serial_cmd_count] = strtok(buf,delims_for_cmds_serial);
@@ -290,8 +292,8 @@ void lauch_shell(char *batch_file){
 }
 
 bool read_one_line(char * buf, int n, FILE * input){
-	bool correct_flag = true;
 	static int i = 0;
+	bool flag = true;
 	//always intialize the buf, so that one can tell if the command line read in is too long. There might be a better way of doing this....
 	initialize_buf_with_eol(buf,n);
 
@@ -302,17 +304,21 @@ bool read_one_line(char * buf, int n, FILE * input){
 
 	//if the command line is too long
 	if( !is_eol(buf[n - 2]) ){
-		correct_flag = false;
+		flag = false;
 		//read till the end of this line
 		if(i == 0){
 			error_and_continue();
 		}
 		i++;
+		//print out the content in buf;
+	        if(write(STDOUT_FILENO,buf,strlen(buf)) != strlen(buf)){
+			error_and_exit();
+		}
 		read_one_line(buf,n,input);
 	}
 	i = 0;
+	return flag;
 
-	return correct_flag;
 }
 
 void parse_args(char *buf, char **argv, int max_args, const char * delims){
