@@ -164,6 +164,9 @@ int run_command(char *cmd){
 
 
 	argv[arg_count] = strtok(cmd,delims_for_args);
+	if(argv[0] == NULL && (grep_flag == true || redirection_flag == true)){
+		error_and_continue();
+	}
 	while(argv[arg_count] != NULL){
 		arg_count++;
 		argv[arg_count] = strtok(NULL,delims_for_args);
