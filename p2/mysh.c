@@ -60,7 +60,8 @@ void deal_with_build_in(char *argv[]){
 		if(getcwd(buf,512) == NULL){
 			error_and_exit();
 		}
-		if(write(STDOUT_FILENO,buf,strlen(buf)) != strlen(buf) || write(STDOUT_FILENO,"\n",2) != 2){
+		strcat(buf,"\n");
+		if(write(STDOUT_FILENO,buf,strlen(buf)) != strlen(buf)/* || write(STDOUT_FILENO,"\n",2) != 2*/){
 			error_and_exit();
 		}
 	}else if(strcmp(argv[0],"cd") == 0){
@@ -258,7 +259,9 @@ void lauch_shell(char *batch_file){
 		if(batch_file == NULL){
 			write(STDOUT_FILENO,prompt,strlen(prompt));
 		}
-		read_one_line(buf, MAX_LINE_LENGTH + 2, input);
+		if(read_one_line(buf, MAX_LINE_LENGTH + 2, input) == false){
+			continue;
+		}
 		if(batch_file != NULL){
 			write(STDOUT_FILENO,buf,strlen(buf));
 		}
@@ -283,7 +286,8 @@ void lauch_shell(char *batch_file){
 	}
 }
 
-void read_one_line(char * buf, int n, FILE * input){
+bool read_one_line(char * buf, int n, FILE * input){
+	bool correct_flag = true;
 	static int i = 0;
 	//always intialize the buf, so that one can tell if the command line read in is too long. There might be a better way of doing this....
 	initialize_buf_with_eol(buf,n);
@@ -295,6 +299,7 @@ void read_one_line(char * buf, int n, FILE * input){
 
 	//if the command line is too long
 	if( !is_eol(buf[n - 2]) ){
+		correct_flag = false;
 		//read till the end of this line
 		if(i == 0){
 			error_and_continue();
@@ -303,6 +308,8 @@ void read_one_line(char * buf, int n, FILE * input){
 		read_one_line(buf,n,input);
 	}
 	i = 0;
+
+	return correct_flag;
 }
 
 void parse_args(char *buf, char **argv, int max_args, const char * delims){
