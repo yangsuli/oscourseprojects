@@ -29,11 +29,29 @@ struct malloc_chunk{
 
 #define FREE_PATTERN 0xDEADBEEF
 #define PAD_PATTERN 0xABCDDCBA
+#define ALIGN_SIZE 4
+
+#define unlink(P,BK,FD) {\
+	BK = P -> bk;\
+	FD = P -> fd;\
+	FD -> bk = BK;\
+	BK -> fd = FD;\
+}
+
+/*
+#define unlink(P) {\
+	P -> bk -> fd = P -> fd; \
+	P -> fd -> bk = P -> bk; \
+}
+*/
 
 int m_error;
 int m_debug;
 struct malloc_chunk * top; //head of our free list
 size_t heap_size;
+
+struct malloc_chunk *p;
+struct malloc_chunk *q;
 
 int Mem_Init(int sizeOfRegion, int debug) {
 	static int times = 0;
@@ -42,7 +60,7 @@ int Mem_Init(int sizeOfRegion, int debug) {
 		return -1;
 	}else{
 		int page_size = getpagesize();
-		sizeOfRegion = (sizeOfRegion/page_size + 1) * page_size;
+		sizeOfRegion = (sizeOfRegion%page_size == 0) ? sizeOfRegion : (sizeOfRegion/page_size + 1) * page_size;
 	}
 
 	if(times > 0){
@@ -88,9 +106,17 @@ int Mem_Init(int sizeOfRegion, int debug) {
 	return 0;
 }
 
-	void *
-Mem_Alloc(int size) 
+void *Mem_Alloc(int size) 
 {
+	int aligned_size;
+
+	if(size <= 0){
+		return NULL;
+	}else{
+		aligned_size = size%ALIGN_SIZE == 0 ? size : (size/ALIGN_SIZE + 1)*ALIGN_SIZE;
+	}
+
+	//search Best Fit in free list
 	return NULL;
 }
 
@@ -110,6 +136,7 @@ void Mem_Dump(){
 int main(){
 	fprintf(stdout,"%d %d\n",sizeof(FREE_PATTERN),sizeof(struct malloc_chunk));
 	Mem_Init(3,1);
+	unlink(top->fd,p,q);
 	fprintf(stdout,"%p %d %d %p %p\n",top,top->prev_size,top->head,top->fd,top->bk);
 	Mem_Dump();
 	
