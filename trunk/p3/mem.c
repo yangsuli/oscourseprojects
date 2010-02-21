@@ -27,6 +27,7 @@ struct malloc_chunk{
 
 #define FREE_PATTERN 0xDEADBEEF
 #define PAD_PATTERN 0xABCDDCBA
+#define PAD_SIZE 64
 #define ALIGN_SIZE 4
 
 #define unlink(P,BK,FD) {\
@@ -95,7 +96,7 @@ int Mem_Init(int sizeOfRegion, int debug) {
 	tail = (struct malloc_chunk *)((char *)top + heap_size - sizeof(struct malloc_chunk));
 	tail -> fd = top;
 	top -> bk = tail;
-	 //size of the top and tail chunks would always be 0, and it's always free, to simplify our free list
+	//size of the top and tail chunks would always be 0, and it's always free, to simplify our free list
 	top -> fd = (struct malloc_chunk *)((char*) top + sizeof(struct malloc_chunk));
 	tail -> bk = top -> fd;
 	top -> prev_size = 0;
@@ -109,7 +110,16 @@ int Mem_Init(int sizeOfRegion, int debug) {
 	if(m_debug != 0){//debug mode
 		//fill all free memory with a well-know patter
 		int i = 2 * sizeof(struct malloc_chunk);
-		for (; i < sizeOfRegion - sizeof(struct malloc_chunk); i += sizeof(FREE_PATTERN)){ *(unsigned int *)((char *)top + i) = FREE_PATTERN;
+		for (; i < 2 * sizeof(struct malloc_chunk) + PAD_SIZE; i += sizeof(PAD_PATTERN)){
+			*(unsigned int *)((char *)top + i) = PAD_PATTERN;
+		}
+
+		for (; i < sizeOfRegion - sizeof(struct malloc_chunk) - PAD_SIZE; i += sizeof(FREE_PATTERN)){ 
+			*(unsigned int *)((char *)top + i) = FREE_PATTERN;
+		}
+
+		for (; i < sizeOfRegion - sizeof(struct malloc_chunk); i += sizeof(PAD_PATTERN)){
+			*(unsigned int *)((char *)top + i) = PAD_PATTERN;
 		}
 	}
 
@@ -119,20 +129,61 @@ int Mem_Init(int sizeOfRegion, int debug) {
 	return 0;
 }
 
+int check_free_pattern(struct malloc_chunk *ptr){
+	//for chunk doesn't have that much space to store debug info
+	if ( get_size(ptr -> head) < 2 * PAD_SIZE){
+		return 0;
+	}
+
+	int i = 0;
+	for(; i < PAD_SIZE; i+= sizeof(PAD_PATTERN)){
+		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i) != PAD_PATTERN){
+			return -1;
+		}
+	}
+			
+	for(; i < get_size(ptr -> head) - PAD_SIZE; i+=sizeof(FREE_PATTERN)){
+		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i) != FREE_PATTERN){
+			return -1;
+		}
+	}
+
+	for(; i < get_size(ptr -> head); i += sizeof(PAD_PATTERN)){
+		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i) != PAD_PATTERN){
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+
 void *Mem_Alloc(int size) 
 {
-	int aligned_size;
-
 	if(size <= 0){
 		return NULL;
-	}else{
-		aligned_size = (size%ALIGN_SIZE == 0 )? size : (size/ALIGN_SIZE + 1)*ALIGN_SIZE;
 	}
+
+	int real_size;
+	if(m_debug == 0){
+		real_size = size;
+	}else{
+		real_size = size + 2 * PAD_SIZE;
+	}
+	int aligned_size;
+
+	aligned_size = (real_size%ALIGN_SIZE == 0 )? real_size : (real_size/ALIGN_SIZE + 1)*ALIGN_SIZE;
 
 	//search Best Fit in free list
 	struct malloc_chunk * bf = top;
 	struct malloc_chunk * curr = top -> fd;
 	while (curr != top){
+		if(m_debug != 0){//debug mode
+		       if(check_free_pattern(curr) == -1){
+			       m_error = E_CORRUPT_FREESPACE;
+			       return NULL;
+		       }
+		}
 		if( bf == top){
 			if(get_size(curr -> head) >= aligned_size){
 				bf = curr;
