@@ -209,6 +209,9 @@ void *Mem_Alloc(int size)
 		unlink(bf,p,q);
 		set_next_use(prev -> head);
 		set_prev_use(next -> head);
+		if(m_debug != 0){
+			return (void *)((char *)(bf + 1) + PAD_SIZE);
+		}
 		return (void *)(bf + 1);
 	}else{
 		unlink(bf,p,q);
@@ -222,6 +225,19 @@ void *Mem_Alloc(int size)
 		next -> prev_size = get_size(remainder -> head);
 		insert(remainder);
 		bf -> head = aligned_size | get_use (bf -> head);
+		if(m_debug != 0){
+			if(get_size(remainder -> head) >= 2*PAD_SIZE){
+				int i = 0;
+				for(; i<PAD_SIZE; i+=sizeof(PAD_PATTERN)){
+					*(unsigned *)((char *)remainder + sizeof(struct malloc_chunk) + i) = PAD_PATTERN;
+				}
+			}
+			int j = 0;
+			for(; j<PAD_SIZE; j+=sizeof(PAD_PATTERN)){
+				*(unsigned *)((char *)bf + sizeof(struct malloc_chunk) + get_size(bf -> head) - PAD_SIZE + j) = PAD_PATTERN;
+			}
+			return (void *)((char *)(bf + 1) + PAD_SIZE);
+		}
 		return (void *)(bf+1);
 	}
 
