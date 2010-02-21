@@ -60,6 +60,8 @@ size_t heap_size;
 struct malloc_chunk *p;
 struct malloc_chunk *q; //p and q are just some temp variables to do unlink
 
+int check_written_pattern(struct malloc_chunk *ptr);
+
 int Mem_Init(int sizeOfRegion, int debug) {
 	static int times = 0;
 	//check arguments, round up if necessary
@@ -129,6 +131,22 @@ int Mem_Init(int sizeOfRegion, int debug) {
 	return 0;
 }
 
+void write_free_pattern(struct malloc_chunk *ptr){
+
+	int i =  sizeof(struct malloc_chunk);
+	for (; i < sizeof(struct malloc_chunk) + PAD_SIZE; i += sizeof(PAD_PATTERN)){
+		*(unsigned int *)((char *)ptr + i) = PAD_PATTERN;
+	}
+
+	for (; i < get_size(ptr -> head) - PAD_SIZE; i += sizeof(FREE_PATTERN)){ 
+		*(unsigned int *)((char *)ptr + i) = FREE_PATTERN;
+	}
+
+	for (; i < get_size(ptr -> head); i += sizeof(PAD_PATTERN)){
+		*(unsigned int *)((char *)ptr + i) = PAD_PATTERN;
+	}
+}
+
 int check_free_pattern(struct malloc_chunk *ptr){
 	//for chunk doesn't have that much space to store debug info
 	if ( get_size(ptr -> head) < 2 * PAD_SIZE){
@@ -141,7 +159,7 @@ int check_free_pattern(struct malloc_chunk *ptr){
 			return -1;
 		}
 	}
-			
+
 	for(; i < get_size(ptr -> head) - PAD_SIZE; i+=sizeof(FREE_PATTERN)){
 		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i) != FREE_PATTERN){
 			return -1;
@@ -179,10 +197,10 @@ void *Mem_Alloc(int size)
 	struct malloc_chunk * curr = top -> fd;
 	while (curr != top){
 		if(m_debug != 0){//debug mode
-		       if(check_free_pattern(curr) == -1){
-			       m_error = E_CORRUPT_FREESPACE;
-			       return NULL;
-		       }
+			if(check_free_pattern(curr) == -1){
+				m_error = E_CORRUPT_FREESPACE;
+				return NULL;
+			}
 		}
 		if( bf == top){
 			if(get_size(curr -> head) >= aligned_size){
@@ -246,6 +264,58 @@ void *Mem_Alloc(int size)
 }
 
 int Mem_Free(void *ptr) {
+	if( ptr == NULL){
+		return 0;
+	}
+
+	struct malloc_chunk * m_ptr;
+	if(m_debug == 0){
+		m_ptr = (struct malloc_chunk *)((char *)ptr - sizeof(struct malloc_chunk));
+	}else{
+		m_ptr = (struct malloc_chunk *)((char *)ptr - sizeof(struct malloc_chunk) - PAD_SIZE);
+	}
+
+	if(m_debug != 0){//check whether padding has been overwritten
+		if(check_written_pattern(m_ptr) == -1){
+			m_error = E_PADDING_OVERWRITTEN;
+			return -1;
+		}
+	}
+
+
+	struct malloc_chunk * prev = (struct malloc_chunk *)((char *)m_ptr - m_ptr -> prev_size - sizeof(struct malloc_chunk));
+	struct malloc_chunk * next = (struct malloc_chunk *)((char *)m_ptr + get_size(m_ptr->head) + sizeof(struct malloc_chunk));
+
+	if ( next_in_use( m_ptr -> head) == 0){
+		unlink(next,p,q);
+		m_ptr -> head += get_size(next -> head) + sizeof(struct malloc_chunk);
+		if(next_in_use(next -> head) == 0){
+			clr_next_use(m_ptr -> head);
+		}else{
+			set_next_use(m_ptr -> head);
+		}
+	}else{
+		clr_prev_use(next -> head);
+	}
+
+	if ( prev_in_use( m_ptr -> head) != 0){
+		clr_next_use( prev -> head);
+	}else{
+		prev -> head += get_size(m_ptr -> head) + sizeof(struct malloc_chunk);
+		if(next_in_use(m_ptr -> head) == 0){
+			clr_next_use( prev -> head);
+		}else{ //really unnecessary, because m_ptr was previously in use;
+			//	set_next_use (prev -> head);
+		}
+		unlink(prev,p,q);
+		m_ptr = prev;
+	}
+
+	insert(m_ptr);
+	if( m_debug != 0){
+	write_free_pattern(m_ptr);
+	}
+
 	return -1;
 }
 
@@ -257,11 +327,37 @@ void Mem_Dump(){
 }
 
 int main(){
-	fprintf(stdout,"%d %d\n",sizeof(FREE_PATTERN),sizeof(struct malloc_chunk));
+	fprintf(stdout,"%d %d\n",sizeof(FREE_PATTERN),sizeof(double));
 	Mem_Init(3,1);
 	fprintf(stdout,"%p %d %d %p %p\n",top,top->prev_size,top->head,top->fd,top->bk);
-	Mem_Alloc(7);
+	double * p = Mem_Alloc(7);
+	* p = 0;
+	Mem_Dump();
+	Mem_Free(p);
+	fprintf(stdout, "yangsuli\n");
 	Mem_Dump();
 
 	return 0;
 }
+
+int check_written_pattern(struct malloc_chunk *ptr){
+
+	int i = 0;
+	for(; i < PAD_SIZE; i+= sizeof(PAD_PATTERN)){
+		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i) != PAD_PATTERN){
+			return -1;
+		}
+	}
+
+	for(; i < get_size(ptr -> head) - PAD_SIZE; i+=sizeof(FREE_PATTERN)){
+	}
+
+	for(; i < get_size(ptr -> head); i += sizeof(PAD_PATTERN)){
+		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i) != PAD_PATTERN){
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
