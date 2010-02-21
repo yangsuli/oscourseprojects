@@ -138,11 +138,11 @@ void write_free_pattern(struct malloc_chunk *ptr){
 		*(unsigned int *)((char *)ptr + i) = PAD_PATTERN;
 	}
 
-	for (; i < get_size(ptr -> head) - PAD_SIZE; i += sizeof(FREE_PATTERN)){ 
+	for (; i < sizeof(struct malloc_chunk) + get_size(ptr -> head) - PAD_SIZE; i += sizeof(FREE_PATTERN)){ 
 		*(unsigned int *)((char *)ptr + i) = FREE_PATTERN;
 	}
 
-	for (; i < get_size(ptr -> head); i += sizeof(PAD_PATTERN)){
+	for (; i < sizeof(struct malloc_chunk) + get_size(ptr -> head); i += sizeof(PAD_PATTERN)){
 		*(unsigned int *)((char *)ptr + i) = PAD_PATTERN;
 	}
 }
