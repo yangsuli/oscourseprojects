@@ -286,9 +286,9 @@ int Mem_Free(void *ptr) {
 	struct malloc_chunk * prev = (struct malloc_chunk *)((char *)m_ptr - m_ptr -> prev_size - sizeof(struct malloc_chunk));
 	struct malloc_chunk * next = (struct malloc_chunk *)((char *)m_ptr + get_size(m_ptr->head) + sizeof(struct malloc_chunk));
 
-	if ( next_in_use( m_ptr -> head) == 0){
+	if ( next_in_use( m_ptr -> head) == 0 && next != tail){
 		unlink(next,p,q);
-		m_ptr -> head += get_size(next -> head) + sizeof(struct malloc_chunk);
+		m_ptr -> head += (get_size(next -> head) + sizeof(struct malloc_chunk));           
 		if(next_in_use(next -> head) == 0){
 			clr_next_use(m_ptr -> head);
 		}else{
@@ -298,17 +298,17 @@ int Mem_Free(void *ptr) {
 		clr_prev_use(next -> head);
 	}
 
-	if ( prev_in_use( m_ptr -> head) != 0){
-		clr_next_use( prev -> head);
-	}else{
-		prev -> head += get_size(m_ptr -> head) + sizeof(struct malloc_chunk);
+	if ( prev_in_use( m_ptr -> head) == 0 && prev != top){
+		prev -> head += (get_size(m_ptr -> head) + sizeof(struct malloc_chunk));
 		if(next_in_use(m_ptr -> head) == 0){
 			clr_next_use( prev -> head);
-		}else{ //really unnecessary, because m_ptr was previously in use;
-			//	set_next_use (prev -> head);
+		}else{ 
+			set_next_use (prev -> head);
 		}
 		unlink(prev,p,q);
 		m_ptr = prev;
+	}else{
+		clr_next_use( prev -> head);
 	}
 
 	insert(m_ptr);
