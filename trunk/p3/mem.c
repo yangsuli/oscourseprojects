@@ -29,6 +29,7 @@ struct malloc_chunk{
 #define PAD_PATTERN 0xABCDDCBA
 #define PAD_SIZE 64
 #define ALIGN_SIZE 4
+#define MAGIC_POINTER 0x0000001
 
 #define unlink(P,BK,FD) {\
 	BK = P -> bk;\
@@ -66,6 +67,10 @@ int Mem_Init(int sizeOfRegion, int debug) {
 	static int times = 0;
 	//check arguments, round up if necessary
 	if(sizeOfRegion <= 0){
+		m_error = E_BAD_ARGS;
+		return -1;
+	}else if(debug != 0 && debug != 1){
+		m_error = E_BAD_ARGS;
 		return -1;
 	}else{
 		int page_size = getpagesize();
@@ -228,6 +233,7 @@ void *Mem_Alloc(int size)
 		set_next_use(prev -> head);
 		set_prev_use(next -> head);
 		if(m_debug != 0){
+			bf -> fd = (struct malloc_chunk *)MAGIC_POINTER;
 			return (void *)((char *)(bf + 1) + PAD_SIZE);
 		}
 		return (void *)(bf + 1);
@@ -254,6 +260,7 @@ void *Mem_Alloc(int size)
 			for(; j<PAD_SIZE; j+=sizeof(PAD_PATTERN)){
 				*(unsigned *)((char *)bf + sizeof(struct malloc_chunk) + get_size(bf -> head) - PAD_SIZE + j) = PAD_PATTERN;
 			}
+			bf -> fd = (struct malloc_chunk *)MAGIC_POINTER;
 			return (void *)((char *)(bf + 1) + PAD_SIZE);
 		}
 		return (void *)(bf+1);
@@ -276,6 +283,10 @@ int Mem_Free(void *ptr) {
 	}
 
 	if(m_debug != 0){//check whether padding has been overwritten
+		if(m_ptr -> fd != (struct malloc_chunk *)MAGIC_POINTER){
+			m_error = E_BAD_POINTER;
+			return -1;
+		}
 		if(check_written_pattern(m_ptr) == -1){
 			m_error = E_PADDING_OVERWRITTEN;
 			return -1;
@@ -316,7 +327,8 @@ int Mem_Free(void *ptr) {
 	write_free_pattern(m_ptr);
 	}
 
-	return -1;
+	//return -1;
+	return 0;
 }
 
 void Mem_Dump(){
@@ -325,7 +337,7 @@ void Mem_Dump(){
 		fprintf(stdout,"%08x",*(unsigned int *)((char*)top + i));
 	}
 }
-
+/*
 int main(){
 	fprintf(stdout,"%d %d\n",sizeof(FREE_PATTERN),sizeof(double));
 	Mem_Init(3,1);
@@ -339,7 +351,7 @@ int main(){
 
 	return 0;
 }
-
+*/
 int check_written_pattern(struct malloc_chunk *ptr){
 
 	int i = 0;
