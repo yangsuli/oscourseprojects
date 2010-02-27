@@ -272,7 +272,8 @@ void *Mem_Alloc(int size)
 
 int Mem_Free(void *ptr) {
 	if( ptr == NULL){
-		return 0;
+		//return 0;
+		return -1;
 	}
 
 	struct malloc_chunk * m_ptr;
