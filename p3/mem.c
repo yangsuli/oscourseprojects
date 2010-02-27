@@ -300,6 +300,7 @@ int Mem_Free(void *ptr) {
 
 	struct malloc_chunk * prev = (struct malloc_chunk *)((char *)m_ptr - m_ptr -> prev_size - sizeof(struct malloc_chunk));
 	struct malloc_chunk * next = (struct malloc_chunk *)((char *)m_ptr + get_size(m_ptr->head) + sizeof(struct malloc_chunk));
+	struct malloc_chunk * n_next = (struct malloc_chunk *)((char *)next + get_size(next->head) + sizeof(struct malloc_chunk));
 
 	if ( next_in_use( m_ptr -> head) == 0 && next != tail){
 		unlink(next,p,q);
@@ -309,6 +310,7 @@ int Mem_Free(void *ptr) {
 		}else{
 			set_next_use(m_ptr -> head);
 		}
+		n_next -> prev_size = get_size(m_ptr -> head);
 	}else{
 		clr_prev_use(next -> head);
 	}
@@ -320,6 +322,7 @@ int Mem_Free(void *ptr) {
 		}else{ 
 			set_next_use (prev -> head);
 		}
+		next -> prev_size = get_size(prev -> head);
 		unlink(prev,p,q);
 		m_ptr = prev;
 	}else{
