@@ -7,8 +7,8 @@
 #include <sys/mman.h>
 
 struct malloc_chunk{
-	short prev_size;  /*size of previous chunk, if free*/
-	short head; /*size and inuse bit*/
+	size_t prev_size;  /*size of previous chunk, if free*/
+	size_t head; /*size and inuse bit*/
 	struct malloc_chunk *fd;
 	struct malloc_chunk *bk;
 };
