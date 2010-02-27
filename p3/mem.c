@@ -241,6 +241,7 @@ void *Mem_Alloc(int size)
 		unlink(bf,p,q);
 		struct malloc_chunk *remainder = (struct malloc_chunk *)((char *)bf + sizeof(struct malloc_chunk) + aligned_size);
 		remainder -> head = get_size(bf -> head) - aligned_size - sizeof(struct malloc_chunk);
+		set_next_use(prev -> head);
 		set_prev_use(remainder -> head);
 		next_in_use(bf -> head) ? set_next_use(remainder -> head):0;
 		clr_next_use(bf -> head);
