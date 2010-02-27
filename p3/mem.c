@@ -18,10 +18,10 @@ struct malloc_chunk{
 #define ADDR_MASK 0x03
 #define prev_in_use(head) (head & PREV_USE_BIT)
 #define next_in_use(head) (head & NEXT_USE_BIT)
-#define set_next_use(head) (head = head | PREV_USE_BIT)
-#define set_prev_use(head) (head = head | NEXT_USE_BIT)
-#define clr_next_use(head) (head = head & (~PREV_USE_BIT))
-#define clr_prev_use(head) (head = head & (~NEXT_USE_BIT))
+#define set_prev_use(head) (head = head | PREV_USE_BIT)
+#define set_next_use(head) (head = head | NEXT_USE_BIT)
+#define clr_prev_use(head) (head = head & (~PREV_USE_BIT))
+#define clr_next_use(head) (head = head & (~NEXT_USE_BIT))
 #define get_size(head) (head & (~ADDR_MASK))
 #define get_use(head) (head & ADDR_MASK)
 
