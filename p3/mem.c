@@ -117,7 +117,7 @@ int Mem_Init(int sizeOfRegion, int debug) {
 		//fill all free memory with a well-know patter
 		int i = 2 * sizeof(struct malloc_chunk);
 		for (; i < 2 * sizeof(struct malloc_chunk) + PAD_SIZE; i += sizeof(PAD_PATTERN)){
-			*(unsigned int *)((char *)top + i) = PAD_PATTERN;
+			*(unsigned int *)((char *)top + i) = FREE_PATTERN;
 		}
 
 		for (; i < sizeOfRegion - sizeof(struct malloc_chunk) - PAD_SIZE; i += sizeof(FREE_PATTERN)){ 
@@ -125,7 +125,7 @@ int Mem_Init(int sizeOfRegion, int debug) {
 		}
 
 		for (; i < sizeOfRegion - sizeof(struct malloc_chunk); i += sizeof(PAD_PATTERN)){
-			*(unsigned int *)((char *)top + i) = PAD_PATTERN;
+			*(unsigned int *)((char *)top + i) = FREE_PATTERN;
 		}
 	}
 
@@ -139,7 +139,7 @@ void write_free_pattern(struct malloc_chunk *ptr){
 
 	int i =  sizeof(struct malloc_chunk);
 	for (; i < sizeof(struct malloc_chunk) + PAD_SIZE; i += sizeof(PAD_PATTERN)){
-		*(unsigned int *)((char *)ptr + i) = PAD_PATTERN;
+		*(unsigned int *)((char *)ptr + i) = FREE_PATTERN;
 	}
 
 	for (; i < sizeof(struct malloc_chunk) + get_size(ptr -> head) - PAD_SIZE; i += sizeof(FREE_PATTERN)){ 
@@ -147,7 +147,7 @@ void write_free_pattern(struct malloc_chunk *ptr){
 	}
 
 	for (; i < sizeof(struct malloc_chunk) + get_size(ptr -> head); i += sizeof(PAD_PATTERN)){
-		*(unsigned int *)((char *)ptr + i) = PAD_PATTERN;
+		*(unsigned int *)((char *)ptr + i) = FREE_PATTERN;
 	}
 }
 
@@ -159,7 +159,7 @@ int check_free_pattern(struct malloc_chunk *ptr){
 
 	int i = 0;
 	for(; i < PAD_SIZE; i+= sizeof(PAD_PATTERN)){
-		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i) != PAD_PATTERN){
+		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i) != FREE_PATTERN){
 			return -1;
 		}
 	}
@@ -171,7 +171,7 @@ int check_free_pattern(struct malloc_chunk *ptr){
 	}
 
 	for(; i < get_size(ptr -> head); i += sizeof(PAD_PATTERN)){
-		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i) != PAD_PATTERN){
+		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i) != FREE_PATTERN){
 			return -1;
 		}
 	}
@@ -232,6 +232,16 @@ void *Mem_Alloc(int size)
 		set_next_use(prev -> head);
 		set_prev_use(next -> head);
 		if(m_debug != 0){
+				int i = 0;
+				for(; i<PAD_SIZE; i+=sizeof(PAD_PATTERN)){
+					*(unsigned *)((char *)bf + sizeof(struct malloc_chunk) + i) = PAD_PATTERN;
+				}
+			int j = 0;
+			for(; j<PAD_SIZE; j+=sizeof(PAD_PATTERN)){
+				*(unsigned *)((char *)bf + sizeof(struct malloc_chunk) + get_size(bf -> head) - PAD_SIZE + j) = PAD_PATTERN;
+			}
+		}
+		if(m_debug != 0){
 			bf -> fd = (struct malloc_chunk *)MAGIC_POINTER;
 			return (void *)((char *)(bf + 1) + PAD_SIZE);
 		}
@@ -251,12 +261,10 @@ void *Mem_Alloc(int size)
 		insert(remainder);
 		bf -> head = aligned_size | get_use (bf -> head);
 		if(m_debug != 0){
-			if(get_size(remainder -> head) >= 2*PAD_SIZE){
 				int i = 0;
 				for(; i<PAD_SIZE; i+=sizeof(PAD_PATTERN)){
-					*(unsigned *)((char *)remainder + sizeof(struct malloc_chunk) + i) = PAD_PATTERN;
+					*(unsigned *)((char *)bf + sizeof(struct malloc_chunk) + i) = PAD_PATTERN;
 				}
-			}
 			int j = 0;
 			for(; j<PAD_SIZE; j+=sizeof(PAD_PATTERN)){
 				*(unsigned *)((char *)bf + sizeof(struct malloc_chunk) + get_size(bf -> head) - PAD_SIZE + j) = PAD_PATTERN;
