@@ -80,7 +80,6 @@ int Mem_Init(int sizeOfRegion, int debug) {
 	if(times > 0){
 		return -1;
 	}
-
 	m_debug = debug;
 	heap_size = sizeOfRegion;
 
@@ -236,6 +235,7 @@ void *Mem_Alloc(int size)
 			bf -> fd = (struct malloc_chunk *)MAGIC_POINTER;
 			return (void *)((char *)(bf + 1) + PAD_SIZE);
 		}
+			bf -> fd = (struct malloc_chunk *)MAGIC_POINTER;
 		return (void *)(bf + 1);
 	}else{
 		unlink(bf,p,q);
@@ -263,6 +263,7 @@ void *Mem_Alloc(int size)
 			bf -> fd = (struct malloc_chunk *)MAGIC_POINTER;
 			return (void *)((char *)(bf + 1) + PAD_SIZE);
 		}
+			bf -> fd = (struct malloc_chunk *)MAGIC_POINTER;
 		return (void *)(bf+1);
 	}
 
@@ -277,17 +278,18 @@ int Mem_Free(void *ptr) {
 	}
 
 	struct malloc_chunk * m_ptr;
+
 	if(m_debug == 0){
 		m_ptr = (struct malloc_chunk *)((char *)ptr - sizeof(struct malloc_chunk));
 	}else{
 		m_ptr = (struct malloc_chunk *)((char *)ptr - sizeof(struct malloc_chunk) - PAD_SIZE);
 	}
 
-	if(m_debug != 0){//check whether padding has been overwritten
 		if(m_ptr -> fd != (struct malloc_chunk *)MAGIC_POINTER){
 			m_error = E_BAD_POINTER;
 			return -1;
 		}
+	if(m_debug != 0){//check whether padding has been overwritten
 		if(check_written_pattern(m_ptr) == -1){
 			m_error = E_PADDING_OVERWRITTEN;
 			return -1;
@@ -326,8 +328,7 @@ int Mem_Free(void *ptr) {
 	insert(m_ptr);
 	if( m_debug != 0){
 	write_free_pattern(m_ptr);
-	}
-
+	} 
 	//return -1;
 	return 0;
 }
@@ -343,16 +344,16 @@ int main(){
 	fprintf(stdout,"%d %d\n",sizeof(FREE_PATTERN),sizeof(double));
 	Mem_Init(3,1);
 	fprintf(stdout,"%p %d %d %p %p\n",top,top->prev_size,top->head,top->fd,top->bk);
-	double * p = Mem_Alloc(7);
+	double * p = Mem_Alloc(100);
 	* p = 0;
 	Mem_Dump();
-	Mem_Free(p);
+	Mem_Free(p + 10);
 	fprintf(stdout, "yangsuli\n");
 	Mem_Dump();
 
 	return 0;
-}
-*/
+}*/
+
 int check_written_pattern(struct malloc_chunk *ptr){
 
 	int i = 0;
