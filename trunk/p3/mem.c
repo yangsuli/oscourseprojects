@@ -7,8 +7,8 @@
 #include <sys/mman.h>
 
 struct malloc_chunk{
-	size_t prev_size;  /*size of previous chunk, if free*/
-	size_t head; /*size and inuse bit*/
+	short prev_size;  /*size of previous chunk, if free*/
+	short head; /*size and inuse bit*/
 	struct malloc_chunk *fd;
 	struct malloc_chunk *bk;
 };
@@ -138,43 +138,44 @@ int Mem_Init(int sizeOfRegion, int debug) {
 void write_free_pattern(struct malloc_chunk *ptr){
 
 	int i =  sizeof(struct malloc_chunk);
-	for (; i < sizeof(struct malloc_chunk) + PAD_SIZE; i += sizeof(PAD_PATTERN)){
+/*	for (; i < sizeof(struct malloc_chunk) + PAD_SIZE; i += sizeof(PAD_PATTERN)){
+		*(unsigned int *)((char *)ptr + i) = FREE_PATTERN;
+	} */
+
+	for (; i < sizeof(struct malloc_chunk) + get_size(ptr -> head); i += sizeof(FREE_PATTERN)){ 
 		*(unsigned int *)((char *)ptr + i) = FREE_PATTERN;
 	}
-
-	for (; i < sizeof(struct malloc_chunk) + get_size(ptr -> head) - PAD_SIZE; i += sizeof(FREE_PATTERN)){ 
-		*(unsigned int *)((char *)ptr + i) = FREE_PATTERN;
-	}
-
+/*
 	for (; i < sizeof(struct malloc_chunk) + get_size(ptr -> head); i += sizeof(PAD_PATTERN)){
 		*(unsigned int *)((char *)ptr + i) = FREE_PATTERN;
-	}
+	 }*/
 }
 
 int check_free_pattern(struct malloc_chunk *ptr){
 	//for chunk doesn't have that much space to store debug info
-	if ( get_size(ptr -> head) < 2 * PAD_SIZE){
+	/*if ( get_size(ptr -> head) < 2 * PAD_SIZE){
 		return 0;
 	}
+	*/
 
 	int i = 0;
-	for(; i < PAD_SIZE; i+= sizeof(PAD_PATTERN)){
+	/*for(; i < PAD_SIZE; i+= sizeof(PAD_PATTERN)){
+		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i) != FREE_PATTERN){
+			return -1;
+		}
+	}*/
+
+	for(; i < get_size(ptr -> head); i+=sizeof(FREE_PATTERN)){
 		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i) != FREE_PATTERN){
 			return -1;
 		}
 	}
 
-	for(; i < get_size(ptr -> head) - PAD_SIZE; i+=sizeof(FREE_PATTERN)){
+	/*for(; i < get_size(ptr -> head); i += sizeof(PAD_PATTERN)){
 		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i) != FREE_PATTERN){
 			return -1;
 		}
-	}
-
-	for(; i < get_size(ptr -> head); i += sizeof(PAD_PATTERN)){
-		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i) != FREE_PATTERN){
-			return -1;
-		}
-	}
+	}*/
 
 	return 0;
 }
@@ -330,7 +331,11 @@ int Mem_Free(void *ptr) {
 		}else{ 
 			set_next_use (prev -> head);
 		}
+		if(next_in_use( m_ptr -> head) == 0 && next != tail){
+			n_next -> prev_size = get_size(prev -> head);
+		}else{
 		next -> prev_size = get_size(prev -> head);
+		}
 		unlink(prev,p,q);
 		m_ptr = prev;
 	}else{
@@ -348,8 +353,9 @@ int Mem_Free(void *ptr) {
 void Mem_Dump(){
 	int i = 0;
 	for(; i < heap_size; i += sizeof(FREE_PATTERN)){
-		fprintf(stdout,"%08x",*(unsigned int *)((char*)top + i));
+		fprintf(stderr,"%08x",*(unsigned int *)((char*)top + i));
 	}
+	fprintf(stderr,"dump over\n");
 }
 /*
 int main(){
