@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <stdbool.h>
 
 struct malloc_chunk{
 	unsigned short prev_size;  /*size of previous chunk, if free*/
@@ -54,8 +55,9 @@ P -> fd -> bk = P -> bk; \
 
 int m_error;
 int m_debug;
-struct malloc_chunk * top; //head of our free list
-struct malloc_chunk * tail;
+struct malloc_chunk top_chunk;
+struct malloc_chunk * top = &top_chunk ; //head of our free list
+struct malloc_chunk * heap;
 size_t heap_size;
 
 struct malloc_chunk *p;
@@ -98,35 +100,34 @@ int Mem_Init(int sizeOfRegion, int debug) {
 	}
 
 	//set up the memory we got
-	top = (struct malloc_chunk *)ptr;
-	tail = (struct malloc_chunk *)((char *)top + heap_size - sizeof(struct malloc_chunk));
-	tail -> fd = top;
-	top -> bk = tail;
+	heap = top -> bk = top -> fd = (struct malloc_chunk *)ptr;
+	//tail = (struct malloc_chunk *)((char *)top + heap_size - sizeof(struct malloc_chunk));
+	//tail -> fd = top;
+	//top -> bk = tail;
 	//size of the top and tail chunks would always be 0, and it's always free, to simplify our free list
-	top -> fd = (struct malloc_chunk *)((char*) top + sizeof(struct malloc_chunk));
-	tail -> bk = top -> fd;
+	//top -> fd = (struct malloc_chunk *)((char*) top + sizeof(struct malloc_chunk));
+	//tail -> bk = top -> fd;
 	top -> prev_size = 0;
 	top -> head = 0;
-	tail -> prev_size = top -> fd -> head = sizeOfRegion - 3 * sizeof(struct malloc_chunk);
-	top -> fd -> fd = tail;
+	//tail -> prev_size = top -> fd -> head = sizeOfRegion - 3 * sizeof(struct malloc_chunk);
+	/*top -> fd -> fd = tail;
 	top -> fd -> bk = top;
 	top -> fd -> prev_size = 0;
-
-
+	*/
+	struct malloc_chunk * m_ptr = (struct malloc_chunk *)ptr;
+	m_ptr -> fd = m_ptr -> bk = top;
+	m_ptr -> prev_size = 0;
+	m_ptr -> head = sizeOfRegion - sizeof(struct malloc_chunk);
+	set_prev_use(m_ptr -> head);
+	set_next_use(m_ptr -> head);
 	if(m_debug != 0){//debug mode
 		//fill all free memory with a well-know patter
-		int i = 2 * sizeof(struct malloc_chunk);
-		for (; i < 2 * sizeof(struct malloc_chunk) + PAD_SIZE; i += sizeof(PAD_PATTERN)){
-			*(unsigned int *)((char *)top + i) = FREE_PATTERN;
+		int i =  sizeof(struct malloc_chunk);
+		for (; i <  sizeOfRegion; i += sizeof(FREE_PATTERN)){
+			*(unsigned int *)((char *)m_ptr + i) = FREE_PATTERN;
 		}
 
-		for (; i < sizeOfRegion - sizeof(struct malloc_chunk) - PAD_SIZE; i += sizeof(FREE_PATTERN)){ 
-			*(unsigned int *)((char *)top + i) = FREE_PATTERN;
-		}
 
-		for (; i < sizeOfRegion - sizeof(struct malloc_chunk); i += sizeof(PAD_PATTERN)){
-			*(unsigned int *)((char *)top + i) = FREE_PATTERN;
-		}
 	}
 
 	// close the device (don't worry, mapping should be unaffected)
@@ -227,11 +228,21 @@ void *Mem_Alloc(int size)
 	struct malloc_chunk * prev;
 	struct malloc_chunk * next;
 	prev = (struct malloc_chunk *)((char *)bf - (bf -> prev_size) - sizeof(struct malloc_chunk));
+	if ( prev < heap){
+		prev = NULL;
+	}
 	next = (struct malloc_chunk *)((char *)bf + sizeof(struct malloc_chunk) + get_size(bf -> head));
+	if ( (char *)next > (char *)heap + heap_size - sizeof(struct malloc_chunk)){
+		next = NULL;
+	}
 	if((get_size(bf -> head) - aligned_size) <= sizeof(struct malloc_chunk)){
 		unlink(bf,p,q);
-		set_next_use(prev -> head);
-		set_prev_use(next -> head);
+		if(prev != NULL){
+			set_next_use(prev -> head);
+		}
+		if(next != NULL){
+			set_prev_use(next -> head);
+		}
 		if(m_debug != 0){
 				int i = 0;
 				for(; i<PAD_SIZE; i+=sizeof(PAD_PATTERN)){
@@ -252,13 +263,17 @@ void *Mem_Alloc(int size)
 		unlink(bf,p,q);
 		struct malloc_chunk *remainder = (struct malloc_chunk *)((char *)bf + sizeof(struct malloc_chunk) + aligned_size);
 		remainder -> head = get_size(bf -> head) - aligned_size - sizeof(struct malloc_chunk);
+		if(prev != NULL){
 		set_next_use(prev -> head);
+		}
 		set_prev_use(remainder -> head);
 		next_in_use(bf -> head) ? set_next_use(remainder -> head):0;
 		clr_next_use(bf -> head);
-		clr_prev_use(next -> head);
+	//	clr_prev_use(next -> head);
 		remainder -> prev_size = aligned_size;
+		if( next != NULL){
 		next -> prev_size = get_size(remainder -> head);
+		}
 		insert(remainder);
 		bf -> head = aligned_size | get_use (bf -> head);
 		if(m_debug != 0){
@@ -308,10 +323,22 @@ int Mem_Free(void *ptr) {
 
 
 	struct malloc_chunk * prev = (struct malloc_chunk *)((char *)m_ptr - m_ptr -> prev_size - sizeof(struct malloc_chunk));
+	if ( prev < heap){
+		prev = NULL;
+	}
 	struct malloc_chunk * next = (struct malloc_chunk *)((char *)m_ptr + get_size(m_ptr->head) + sizeof(struct malloc_chunk));
+	if ( (char *) next > (char *)heap + heap_size - sizeof(struct malloc_chunk)){
+		next = NULL;
+	}
 	struct malloc_chunk * n_next = (struct malloc_chunk *)((char *)next + get_size(next->head) + sizeof(struct malloc_chunk));
+	if( (char *) n_next > (char *)heap + heap_size - sizeof(struct malloc_chunk)){
+		n_next = NULL;
+	}
+	
+	bool next_merged = false;
+	bool prev_merged = false;
 
-	if ( next_in_use( m_ptr -> head) == 0 && next != tail){
+	if ( next_in_use( m_ptr -> head) == 0 && next != NULL){
 		unlink(next,p,q);
 		m_ptr -> head += (get_size(next -> head) + sizeof(struct malloc_chunk));           
 		if(next_in_use(next -> head) == 0){
@@ -319,27 +346,34 @@ int Mem_Free(void *ptr) {
 		}else{
 			set_next_use(m_ptr -> head);
 		}
+		if(n_next != NULL){
 		n_next -> prev_size = get_size(m_ptr -> head);
-	}else{
+		}
+		next_merged = true;
+	}else if(next != NULL){
 		clr_prev_use(next -> head);
+	}else{
+		fprintf(stderr,"inconsistancy. yangsuli\n");
 	}
 
-	if ( prev_in_use( m_ptr -> head) == 0 && prev != top){
+	if ( prev_in_use( m_ptr -> head) == 0 && prev != NULL){
 		prev -> head += (get_size(m_ptr -> head) + sizeof(struct malloc_chunk));
 		if(next_in_use(m_ptr -> head) == 0){
 			clr_next_use( prev -> head);
 		}else{ 
 			set_next_use (prev -> head);
 		}
-		if(next_in_use( m_ptr -> head) == 0 && next != tail){
+		if(next_merged == true && n_next != NULL){
 			n_next -> prev_size = get_size(prev -> head);
+		}else if(n_next == NULL){
 		}else{
 		next -> prev_size = get_size(prev -> head);
 		}
 		unlink(prev,p,q);
 		m_ptr = prev;
-	}else{
+	}else if(prev != NULL){
 		clr_next_use( prev -> head);
+	}else{
 	}
 
 	insert(m_ptr);
@@ -353,7 +387,7 @@ int Mem_Free(void *ptr) {
 void Mem_Dump(){
 	int i = 0;
 	for(; i < heap_size; i += sizeof(FREE_PATTERN)){
-		fprintf(stderr,"%08x",*(unsigned int *)((char*)top + i));
+		fprintf(stderr,"%08x",*(unsigned int *)((char*)heap + i));
 	}
 	fprintf(stderr,"dump over\n");
 }
