@@ -330,7 +330,12 @@ int Mem_Free(void *ptr) {
 	if ( (char *) next > (char *)heap + heap_size - sizeof(struct malloc_chunk)){
 		next = NULL;
 	}
-	struct malloc_chunk * n_next = (struct malloc_chunk *)((char *)next + get_size(next->head) + sizeof(struct malloc_chunk));
+	struct malloc_chunk * n_next;
+	if( next != NULL){
+	/*struct malloc_chunk * */ n_next = (struct malloc_chunk *)((char *)next + get_size(next->head) + sizeof(struct malloc_chunk));
+	}else{
+	/*struct malloc_chunk * */ n_next = NULL;
+	}
 	if( (char *) n_next > (char *)heap + heap_size - sizeof(struct malloc_chunk)){
 		n_next = NULL;
 	}
