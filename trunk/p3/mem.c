@@ -341,7 +341,7 @@ int Mem_Free(void *ptr) {
 	}
 	
 	bool next_merged = false;
-	bool prev_merged = false;
+	//bool prev_merged = false;
 
 	if ( next_in_use( m_ptr -> head) == 0 && next != NULL){
 		unlink(next,p,q);
@@ -355,8 +355,9 @@ int Mem_Free(void *ptr) {
 		n_next -> prev_size = get_size(m_ptr -> head);
 		}
 		next_merged = true;
-	}else if(next != NULL){
+	}else if( next_in_use( m_ptr -> head) != 0 && next != NULL){
 		clr_prev_use(next -> head);
+	}else if( next_in_use( m_ptr -> head) != 0 && next == NULL){
 	}else{
 		fprintf(stderr,"inconsistancy. yangsuli\n");
 	}
@@ -370,8 +371,8 @@ int Mem_Free(void *ptr) {
 		}
 		if(next_merged == true && n_next != NULL){
 			n_next -> prev_size = get_size(prev -> head);
-		}else if(n_next == NULL){
-		}else{
+		}else if(next_merged == true && n_next == NULL){
+		}else if(next_merged == false && next != NULL){
 		next -> prev_size = get_size(prev -> head);
 		}
 		unlink(prev,p,q);
