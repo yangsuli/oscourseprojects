@@ -8,8 +8,8 @@
 #include <stdbool.h>
 
 struct malloc_chunk{
-	unsigned short prev_size;  /*size of previous chunk, if free*/
-	unsigned short head; /*size and inuse bit*/
+	size_t prev_size;  /*size of previous chunk, if free*/
+	size_t head; /*size and inuse bit*/
 	struct malloc_chunk *fd;
 	struct malloc_chunk *bk;
 };
@@ -198,6 +198,8 @@ void *Mem_Alloc(int size)
 
 	aligned_size = (real_size%ALIGN_SIZE == 0 )? real_size : (real_size/ALIGN_SIZE + 1)*ALIGN_SIZE;
 
+	aligned_size = aligned_size - 4;
+
 	//search Best Fit in free list
 	struct malloc_chunk * bf = top;
 	struct malloc_chunk * curr = top -> fd;
@@ -246,7 +248,7 @@ void *Mem_Alloc(int size)
 		if(m_debug != 0){
 				int i = 0;
 				for(; i<PAD_SIZE; i+=sizeof(PAD_PATTERN)){
-					*(unsigned *)((char *)bf + sizeof(struct malloc_chunk) + i) = PAD_PATTERN;
+					*(unsigned *)((char *)bf + sizeof(struct malloc_chunk) + i - 4) = PAD_PATTERN;
 				}
 			int j = 0;
 			for(; j<PAD_SIZE; j+=sizeof(PAD_PATTERN)){
@@ -255,10 +257,10 @@ void *Mem_Alloc(int size)
 		}
 		if(m_debug != 0){
 			bf -> fd = (struct malloc_chunk *)MAGIC_POINTER;
-			return (void *)((char *)(bf + 1) + PAD_SIZE);
+			return (void *)((char *)(bf + 1) + PAD_SIZE - 4);
 		}
 			bf -> fd = (struct malloc_chunk *)MAGIC_POINTER;
-		return (void *)(bf + 1);
+		return (void *)(bf + 1) - 4;
 	}else{
 		unlink(bf,p,q);
 		struct malloc_chunk *remainder = (struct malloc_chunk *)((char *)bf + sizeof(struct malloc_chunk) + aligned_size);
@@ -279,17 +281,17 @@ void *Mem_Alloc(int size)
 		if(m_debug != 0){
 				int i = 0;
 				for(; i<PAD_SIZE; i+=sizeof(PAD_PATTERN)){
-					*(unsigned *)((char *)bf + sizeof(struct malloc_chunk) + i) = PAD_PATTERN;
+					*(unsigned *)((char *)bf + sizeof(struct malloc_chunk) + i -4 ) = PAD_PATTERN;
 				}
 			int j = 0;
 			for(; j<PAD_SIZE; j+=sizeof(PAD_PATTERN)){
 				*(unsigned *)((char *)bf + sizeof(struct malloc_chunk) + get_size(bf -> head) - PAD_SIZE + j) = PAD_PATTERN;
 			}
 			bf -> fd = (struct malloc_chunk *)MAGIC_POINTER;
-			return (void *)((char *)(bf + 1) + PAD_SIZE);
+			return (void *)((char *)(bf + 1) + PAD_SIZE - 4);
 		}
 			bf -> fd = (struct malloc_chunk *)MAGIC_POINTER;
-		return (void *)(bf+1);
+		return (void *)(bf+1) - 4;
 	}
 
 	//should not get here
@@ -301,6 +303,8 @@ int Mem_Free(void *ptr) {
 		//return 0;
 		return -1;
 	}
+
+	ptr = ptr + 4;
 
 	struct malloc_chunk * m_ptr;
 
@@ -416,7 +420,7 @@ int check_written_pattern(struct malloc_chunk *ptr){
 
 	int i = 0;
 	for(; i < PAD_SIZE; i+= sizeof(PAD_PATTERN)){
-		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i) != PAD_PATTERN){
+		if(*(unsigned int *)((char *)ptr + sizeof(struct malloc_chunk) + i - 4) != PAD_PATTERN){
 			return -1;
 		}
 	}
