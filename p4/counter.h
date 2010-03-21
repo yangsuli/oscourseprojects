@@ -3,11 +3,13 @@
 
 #include <pthread.h>
 #include "lock_type.h"
+#include "spinlock.h"
 
 
 typedef struct __counter_t {
 	int count;
 	LOCK_TYPE counter_lock; //to protect count
+	//spinlock_t counter_lock; //just for debug purpose
 } counter_t;
 
 void Counter_Init(counter_t *c, int value);
