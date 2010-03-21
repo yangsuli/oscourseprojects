@@ -3,7 +3,7 @@
 #ifdef SPINLOCK
 #define LOCK_TYPE spinlock_t
 #define LOCK_INITIALIZER SPINLOCK_INITIALIZER
-#define LOCK_INIT(lock_p,attr_p) spinlock_init(lock_p,attr_p)
+#define LOCK_INIT(lock_p,null_p) spinlock_init(lock_p,null_p)
 #define LOCK(lock_p) spinlock_acquire(lock_p)
 #define UNLOCK(lock_p) spinlock_release(lock_p)
 #elif defined PTHREAD_LOCK
