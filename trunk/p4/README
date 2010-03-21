@@ -1,0 +1,1 @@
+1. Note that we added List_Destroy and Hash_Destroy routines. And one has to call those routings after he/she calls List_Init/Hash_Init to prevent memory leak.
