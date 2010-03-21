@@ -1,8 +1,13 @@
 #ifndef __hash_h__
 #define __hash_h__
 
+#include "list.h"
+#include "lock_type.h"
+
 typedef struct __hash_t {
-    // your definition of hash_t goes here
+	int num_buckets;
+	list_t **table;
+	LOCK_TYPE *locks; //one lock per bucket
 } hash_t;
 
 void Hash_Init(hash_t *h, int numbuckets);
