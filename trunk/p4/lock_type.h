@@ -1,3 +1,6 @@
+#ifndef __lock_type_h__
+#define __lock_type_h__
+
 #include <pthread.h>
 
 #ifdef SPINLOCK
@@ -12,4 +15,6 @@
 #define LOCK_INIT(lock_p,attr_p) pthread_mutex_init(lock_p,attr_p)
 #define LOCK(lock_p) pthread_mutex_lock(lock_p)
 #define UNLOCK(lock_p) pthread_mutex_unlock(lock_p)
+#endif
+
 #endif
