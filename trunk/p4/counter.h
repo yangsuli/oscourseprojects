@@ -2,10 +2,12 @@
 #define __counter_h__
 
 #include <pthread.h>
+#include "lock_type.h"
+
 
 typedef struct __counter_t {
 	int count;
-	pthread_mutex_t counter_lock; //to protect count
+	LOCK_TYPE counter_lock; //to protect count
 } counter_t;
 
 void Counter_Init(counter_t *c, int value);
