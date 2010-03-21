@@ -1,8 +1,11 @@
 #ifndef __counter_h__
 #define __counter_h__
 
+#include <pthread.h>
+
 typedef struct __counter_t {
-    // your definition of counter_t goes here
+	int count;
+	pthread_mutex_t counter_lock; //to protect count
 } counter_t;
 
 void Counter_Init(counter_t *c, int value);
