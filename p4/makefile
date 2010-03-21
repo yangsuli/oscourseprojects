@@ -15,3 +15,6 @@ libcounter_pthread.so:counter_pthread.o
 
 counter_pthread.o: counter.c counter.h lock_type.h
 	gcc -g -c -fpic counter.c -o counter_pthread.o -D PTHREAD_LOCK
+
+clean:
+	rm -rf *.o
