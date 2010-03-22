@@ -28,4 +28,6 @@ void spinlock_release(spinlock_t *lock);
 
 void spinlock_init(spinlock_t *lock, void * null_ptr);
 
+void spinlock_destroy(spinlock_t *lock);
+
 #endif

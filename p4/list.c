@@ -12,6 +12,7 @@ void List_Init(list_t *l){//initialize the list with a header node
 
 void List_Destroy(list_t *l){
 	free(l -> head);
+	LOCK_DESTROY(&l->list_lock);
 }
 
 void List_Insert(list_t *l, void *element, unsigned int key){
