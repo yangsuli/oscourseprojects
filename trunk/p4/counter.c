@@ -28,3 +28,7 @@ void Counter_Decrement(counter_t *c){
 	c -> count --;
 	UNLOCK(&c->counter_lock);
 }
+
+void Counter_Destroy(counter_t *c){
+	LOCK_DESTROY(&c->counter_lock);
+}

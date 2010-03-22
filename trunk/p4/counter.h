@@ -9,9 +9,9 @@
 typedef struct __counter_t {
 	int count;
 	LOCK_TYPE counter_lock; //to protect count
-	//spinlock_t counter_lock; //just for debug purpose
 } counter_t;
 
+void Counter_Destroy(counter_t *c);
 void Counter_Init(counter_t *c, int value);
 int  Counter_GetValue(counter_t *c);
 void Counter_Increment(counter_t *c);

@@ -42,3 +42,6 @@ void spinlock_release(spinlock_t *lock)
 	lock->flag=0;
 }
 
+
+void spinlock_destroy(spinlock_t *lock){
+}//empty body. Just to mimic pthread_mutex behavior
