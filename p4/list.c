@@ -1,5 +1,6 @@
 #include "list.h"
 #include "lock_type.h"
+#include <assert.h>
 
 void List_Init(list_t *l){//initialize the list with a header node
 	l -> head = (struct list_item *)malloc(sizeof(struct list_item));
@@ -14,7 +15,7 @@ void List_Destroy(list_t *l){
 }
 
 void List_Insert(list_t *l, void *element, unsigned int key){
-	struct list_item new_item = (struct list_item *)malloc(sizeof(struct list_item));
+	struct list_item *new_item = (struct list_item *)malloc(sizeof(struct list_item));
 	assert(new_item != NULL);
 	new_item -> element = element;
 	new_item -> key = key;
@@ -64,7 +65,7 @@ void * List_Lookup(list_t *l, unsigned int key){
 
 	UNLOCK(&l->list_lock);
 
-	return NULL;
+	return found;
 }
 
 

@@ -2,6 +2,7 @@
 #define __lock_type_h__
 
 #include <pthread.h>
+#include "spinlock.h"
 
 #ifdef SPINLOCK
 #define LOCK_TYPE spinlock_t
