@@ -1,5 +1,5 @@
 a.out: test.c libcounter.so liblist.so libhash.so counter.h lock_type.h list.h
-	gcc -g -L . -lcounter -llist -lhash test.c -D SPINLOCK
+	gcc -g -L . -lcounter -llist -lhash -lpthread test.c -D SPINLOCK
 
 libhash.so:hash.o spinlock.o
 	gcc -g -shared -o libhash.so hash.o spinlock.o
@@ -33,6 +33,12 @@ liblist_pthread.so:list_pthread.o
 
 list_pthread.o:list.c list.h lock_type.h
 	gcc -g -c -fpic list.c -o list_pthread.o -D PTHREAD_LOCK
+
+libhash_pthread.so:hash_pthread.o
+	gcc -g -shared -o libhash_pthread.so hash_pthread.o
+
+hash_pthread.o:hash.c hash.h lock_type.h
+	gcc -g -c -fpic hash.c -o hash_pthread.o -D PTHREAD_LOCK
 
 clean:
 	rm -rf *.o
