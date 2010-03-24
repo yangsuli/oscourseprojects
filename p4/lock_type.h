@@ -18,6 +18,13 @@
 #define LOCK(lock_p) pthread_mutex_lock(lock_p)
 #define UNLOCK(lock_p) pthread_mutex_unlock(lock_p)
 #define LOCK_DESTROY(lock_p) pthread_mutex_destroy(lock_p)
+#else
+#define LOCK_TYPE spinlock_t
+#define LOCK_INITIALIZER SPINLOCK_INITIALIZER
+#define LOCK_INIT(lock_p,null_p) spinlock_init(lock_p,null_p)
+#define LOCK(lock_p) spinlock_acquire(lock_p)
+#define UNLOCK(lock_p) spinlock_release(lock_p)
+#define LOCK_DESTROY(lock_p) spinlock_destroy(lock_p)
 #endif
 
 #endif
