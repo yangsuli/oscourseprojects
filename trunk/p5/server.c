@@ -17,6 +17,20 @@
 
 #define MAXSIZE 256
 
+int num_filled = 0;
+pthread_cond_t empty, full;
+pthread_mutex_t mutex;
+request_type * buffer_ptr;
+pthread_t * threads_ptr;
+int fill = 0;
+int use = 0;
+int buffer_size;
+
+typedef __request_type{
+	int conn_fd;
+} request_type;
+
+
 void getargs(int *port, int *num_threads,int *buffer_size, char **policy_ptr, int *N , int argc, char *argv[])
 {
     if (argc != 5 && argc != 6) 
@@ -79,6 +93,30 @@ int main(int argc, char *argv[])
     int N;
     getargs(&port,&threads,&buffers,policy_ptr,&N,argc, argv);
 
+    buffer_size = buffers;
+
+    buffer_ptr = (request_type *)malloc(sizeof(request_type) * buffers);
+    if(buffer_ptr == NULL){
+	    unix_error("malloc error\n");
+    }
+
+    threads_ptr = (pthread_t *) malloc(sizeof(pthread_t) * threads);
+    if(threads_ptr == NULL){
+	    unix_error("mallock error\n");
+    }
+
+    int i;
+    for( i = 0; i < threads; i++){
+	    Pthread_create(&threads_ptr[i],NULL, worker,NULL);
+    }
+
+ //   pthread_cond_t empty, full;
+ //   pthread_mutex_t mutex;
+
+    Pthread_cond_init(&empty, NULL);
+    Pthread_cond_init(&full,NULL);
+    Pthread_mutex_init(&mutex,NULL);
+
     listenfd = Open_listenfd(port);
 
     // 
@@ -96,10 +134,40 @@ int main(int argc, char *argv[])
         // Save the relevant info in a buffer and have one of the worker threads 
         // do the work.
         // 
+	
+	request_type curr_request;
+	curr_request.conn_fd = connfd;
+
+	Pthread_mutex_lock(&mutex);
+	while(num_filled == buffers){
+		Pthread_cond_wait(&empty, &mutex);
+	}
+	put_in_buffer(curr_request);
+	Pthread_cond_signal(&fill);
+	Pthread_mutex_unlock(&mutex);
+/*
+    worker should handle the request
         requestHandle(connfd);
 
         Close(connfd);
+
+	*/
     }
 
 }
+
+
+void put_in_buffer(request_type request){
+	buffer[fill] = request;
+	fill = (fill + 1)%buffer_size;
+	numfilled++;
+}
+
+request_type get_from_buffer(){
+	request_type tmp = buffer[use];
+	use = (use + 1) % MAX;
+	numfilled--;
+	return tmp;
+
+
 
