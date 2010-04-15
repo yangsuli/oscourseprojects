@@ -18,10 +18,10 @@ server: server.o request.o cs537.o
 	$(CC) $(CFLAGS) -o server server.o request.o cs537.o $(LIBS)
 
 client: client.o cs537.o
-	$(CC) $(CFLAGS) -o client client.o cs537.o
+	$(CC) $(CFLAGS) -o client client.o cs537.o $(LIBS)
 
 output.cgi: output.c
-	$(CC) $(CFLAGS) -o output.cgi output.c
+	$(CC) $(CFLAGS) -o output.cgi output.c $(LIBS)
 
 .c.o:
 	$(CC) $(CFLAGS) -o $@ -c $<
