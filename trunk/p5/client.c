@@ -19,6 +19,11 @@
  *
  * When we test your server, we will be using modifications to this client.
  *
+ *  Example of using this is the following -- assuming server is running on
+ *  port N
+ *
+ *  ./client localhost N /output.cgi; ./client localhost N /output.cgi
+ *
  */
 
 #include "cs537.h"
