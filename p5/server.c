@@ -30,34 +30,34 @@ int num_threads;
 
 void getargs(int *port, int *num_threads,int *buffer_size, char **policy_ptr, int *N , int argc, char *argv[])
 {
-	if (argc != 5 && argc != 6) 
-	{
-		//      fprintf(stderr, "Usage: %s <port>\n", argv[0]);
-		fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
+    if (argc != 5 && argc != 6) 
+    {
+        //      fprintf(stderr, "Usage: %s <port>\n", argv[0]);
+        fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
 
-		exit(1);
-	}
-	*port = atoi(argv[1]);
-	*num_threads = atoi(argv[2]);
-	*buffer_size = atoi(argv[3]);
-	strcpy(*policy_ptr, argv[4]);
+        exit(1);
+    }
+    *port = atoi(argv[1]);
+    *num_threads = atoi(argv[2]);
+    *buffer_size = atoi(argv[3]);
+    strcpy(*policy_ptr, argv[4]);
 
-	if(strcasecmp(*policy_ptr,"SFF-BS") == 0){
-		if(argc != 6){
-			fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
-			exit(1);
-		}
-		*N = atoi(argv[5]);
-	}else if(strcasecmp(*policy_ptr,"SFF") == 0 || strcasecmp(*policy_ptr, "FIFO") == 0){
-		if(argc != 5){
-			fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
-			exit(1);
-		}
-		*N = 0;
-	}else{
-		fprintf(stderr, "policy has to be FIFO, SFF, or SFF-BS\n");
-		exit(1);
-	}
+    if(strcasecmp(*policy_ptr,"SFF-BS") == 0){
+        if(argc != 6){
+            fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
+            exit(1);
+        }
+        *N = atoi(argv[5]);
+    }else if(strcasecmp(*policy_ptr,"SFF") == 0 || strcasecmp(*policy_ptr, "FIFO") == 0){
+        if(argc != 5){
+            fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
+            exit(1);
+        }
+        *N = 0;
+    }else{
+        fprintf(stderr, "policy has to be FIFO, SFF, or SFF-BS\n");
+        exit(1);
+    }
 }
 
 ///////////  test argument stuff ////
@@ -79,130 +79,140 @@ void getargs(int *port, int *num_threads,int *buffer_size, char **policy_ptr, in
 
 void * worker(void *arg){
 
-	int stat_tid;
-	for(stat_tid = 0; stat_tid < num_threads; stat_tid++){
-		if(pthread_equal(pthread_self(),threads_ptr[stat_tid].tid) != 0){
-			break;
-		}
-	}
-	threads_ptr[stat_tid].Stat_thread_id = stat_tid;
-	while(1){
-		Pthread_mutex_lock(&mutex);
-		while(num_filled == 0){
-			Pthread_cond_wait(&full,&mutex);
-		}
-		request_type curr_request = get_from_buffer();
-		Pthread_cond_signal(&empty);
-		Pthread_mutex_unlock(&mutex);
-		int connfd = curr_request.conn_fd;
-		double time_picked = GetTime();
-		curr_request.Stat_req_dispatch = time_picked - curr_request.Stat_req_arrival;
-		requestHandle(curr_request,&threads_ptr[stat_tid]);
-		Close(connfd);
-	}
+    // find and save the stat_tid "thread id" of the current thread
+    // this is executed only one time
+    int stat_tid;
+    for(stat_tid = 0; stat_tid < num_threads; stat_tid++){
+        if(pthread_equal(pthread_self(),threads_ptr[stat_tid].tid) != 0){
+            break;
+        }
+    }
+    threads_ptr[stat_tid].Stat_thread_id = stat_tid;  
+
+    // workers will never leave this while loop
+    while(1){
+        Pthread_mutex_lock(&mutex);
+        while(num_filled == 0){
+            Pthread_cond_wait(&full,&mutex);
+        }
+
+        // read a single request from the buffer
+        request_type curr_request = get_from_buffer();
+
+        // finished reading from buffer, so wake other threads
+        Pthread_cond_signal(&empty);
+        Pthread_mutex_unlock(&mutex);
+
+        // do the work requested
+        int connfd = curr_request.conn_fd;
+        double time_picked = GetTime();
+        curr_request.Stat_req_dispatch = time_picked - curr_request.Stat_req_arrival;
+        requestHandle(curr_request,&threads_ptr[stat_tid]);
+        Close(connfd);
+    }
 
 }
 
-int main(int argc, char *argv[])
-{
-	int listenfd, connfd, clientlen;
-	struct sockaddr_in clientaddr;
+int main(int argc, char *argv[]) {
 
-	///// parse the arguments  /////
-	int port, threads, buffers;
-	char  policy[MAXSIZE];
-	char * p = policy;
-	char **policy_ptr = &p;
-	int N;
-	getargs(&port,&threads,&buffers,policy_ptr,&N,argc, argv);
+    int listenfd, connfd, clientlen;
+    struct sockaddr_in clientaddr;
 
-	buffer_size = buffers;
-	num_threads = threads;
+    ///// parse the arguments  /////
+    int port, threads, buffers;
+    char  policy[MAXSIZE];
+    char * p = policy;
+    char **policy_ptr = &p;
+    int N;
+    getargs(&port,&threads,&buffers,policy_ptr,&N,argc, argv);
 
-	buffer_ptr = (request_type *)malloc(sizeof(request_type) * buffers);
-	if(buffer_ptr == NULL){
-		unix_error("malloc error\n");
-	}
+    buffer_size = buffers;  // buffers is a bad name, we'll use buffer_size 
+    num_threads = threads;
 
-	threads_ptr = (thread_info_type *) malloc(sizeof(thread_info_type) * threads);
-	if(threads_ptr == NULL){
-		unix_error("mallock error\n");
-	}
+    // TODO -- replace with a linked list or some other data structure (need somethine else for SFF queuing)
+    buffer_ptr = (request_type *)malloc(sizeof(request_type) * buffers);
+    if(buffer_ptr == NULL){
+        unix_error("malloc error\n");
+    }
 
-	int i;
-	for( i = 0; i < threads; i++){
-		Pthread_create(&(threads_ptr[i].tid),NULL, worker,NULL);
-		threads_ptr[i].Stat_thread_count = 0;
-		threads_ptr[i].Stat_thread_static = 0;
-		threads_ptr[i].Stat_thread_dynamic = 0;
-	}
+    threads_ptr = (thread_info_type *) malloc(sizeof(thread_info_type) * threads);
+    if(threads_ptr == NULL){
+        unix_error("mallock error\n");
+    }
 
-	//   pthread_cond_t empty, full;
-	//   pthread_mutex_t mutex;
+    int i;
+    for( i = 0; i < threads; i++){
+        Pthread_create(&(threads_ptr[i].tid),NULL, worker,NULL);
+        threads_ptr[i].Stat_thread_count = 0;
+        threads_ptr[i].Stat_thread_static = 0;
+        threads_ptr[i].Stat_thread_dynamic = 0;
+    }
 
-	Pthread_cond_init(&empty, NULL);
-	Pthread_cond_init(&full,NULL);
-	Pthread_mutex_init(&mutex,NULL);
+    //   pthread_cond_t empty, full;
+    //   pthread_mutex_t mutex;
 
-	listenfd = Open_listenfd(port);
+    Pthread_cond_init(&empty, NULL);
+    Pthread_cond_init(&full,NULL);
+    Pthread_mutex_init(&mutex,NULL);
 
-	// 
-	// CS537: Create some threads...
-	//
+    listenfd = Open_listenfd(port);
 
-	while (1) 
-	{
+    // 
+    // CS537: Create some threads...
+    //
 
-		clientlen = sizeof(clientaddr);
-		connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *) &clientlen);
+    while (1) {
 
-		// 
-		// CS537: In general, don't handle the request in the main thread.
-		// Save the relevant info in a buffer and have one of the worker threads 
-		// do the work.
-		// 
+        clientlen = sizeof(clientaddr);
+        connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *) &clientlen);
 
-		request_type curr_request;
-		curr_request.conn_fd = connfd;
-		curr_request.Stat_req_arrival = GetTime();
+        // 
+        // CS537: In general, don't handle the request in the main thread.
+        // Save the relevant info in a buffer and have one of the worker threads 
+        // do the work.
+        // 
 
-		Pthread_mutex_lock(&mutex);
-		while(num_filled == buffer_size){
-			Pthread_cond_wait(&empty, &mutex);
-		}
-		put_in_buffer(curr_request);
-		Pthread_cond_signal(&full);
-		Pthread_mutex_unlock(&mutex);
-		/*
-		   worker should handle the request
-		   requestHandle(connfd);
+        request_type curr_request;
+        curr_request.conn_fd = connfd;
+        curr_request.Stat_req_arrival = GetTime();
 
-		   Close(connfd);
+        Pthread_mutex_lock(&mutex);
+        while(num_filled == buffer_size){
+            Pthread_cond_wait(&empty, &mutex);
+        }
+        put_in_buffer(curr_request);
+        Pthread_cond_signal(&full);
+        Pthread_mutex_unlock(&mutex);
+        /*
+           worker should handle the request
+           requestHandle(connfd);
 
-		 */
-	}
+           Close(connfd);
+
+         */
+    }
 
 }
 
 
 void put_in_buffer(request_type request){
-	buffer_ptr[fill] = request;
-	fill = (fill + 1)%buffer_size;
-	num_filled++;
+    buffer_ptr[fill] = request;     // TODO
+    fill = (fill + 1)%buffer_size;  // forced FIFO queue here
+    num_filled++;
 }
 
 request_type get_from_buffer(){
-	request_type tmp = buffer_ptr[use];
-	use = (use + 1) % buffer_size;
-	num_filled--;
-	return tmp;
+    request_type tmp = buffer_ptr[use];  //TODO
+    use = (use + 1) % buffer_size;       // forced FIFO queue here
+    num_filled--;
+    return tmp;
 }
 
 
 
 double GetTime(){
-	struct timeval t;
-	int rc = gettimeofday(&t,NULL);
-	assert(rc==0);
-	return t.tv_sec + t.tv_usec/1e6;
+    struct timeval t;
+    int rc = gettimeofday(&t,NULL);
+    assert(rc==0);
+    return t.tv_sec + t.tv_usec/1e6;
 }
