@@ -75,7 +75,19 @@ int main(int argc, char *argv[]){
 */
 
 void * worker(void *arg){
-	return NULL;
+	while(1){
+		Pthread_mutex_lock(&mutex);
+		while(num_filled == 0){
+			Pthread_cond_wait(&full,&mutex);
+		}
+			request_type curr_request = get_from_buffer();
+			Pthread_cond_signal(&empty);
+			Pthread_mutex_unlock(&mutex);
+			int connfd = curr_request.conn_fd;
+ 		        requestHandle(connfd);
+                        Close(connfd);
+		}
+
 }
 
 int main(int argc, char *argv[])
