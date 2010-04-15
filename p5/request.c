@@ -4,6 +4,7 @@
 
 #include "cs537.h"
 #include "request.h"
+#include "server.h"
 
 void requestError(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg) 
 {
@@ -97,8 +98,9 @@ void requestGetFiletype(char *filename, char *filetype)
 	strcpy(filetype, "test/plain");
 }
 
-void requestServeDynamic(int fd, char *filename, char *cgiargs)
+void requestServeDynamic(request_type request, char *filename, char *cgiargs, thread_info_type* thread_info)
 {
+	int fd = request.conn_fd;
     char buf[MAXLINE], *emptylist[] = {NULL};
     
     // The server does only a little bit of the header.  
@@ -107,14 +109,18 @@ void requestServeDynamic(int fd, char *filename, char *cgiargs)
     sprintf(buf, "%s Server: Tiny Web Server\r\n", buf);
     
     /* CS537: Your statistics go here -- fill in the 0's with something useful! */
-    sprintf(buf, "%s Stat-req-arrival: %d\r\n", buf, 0);
-    sprintf(buf, "%s Stat-req-dispatch: %d\r\n", buf, 0);
-    sprintf(buf, "%s Stat-thread-id: %d\r\n", buf, 0);
-    sleep(1);
+
+    sprintf(buf, "%s Stat-req-arrival: %f\r\n", buf, request.Stat_req_arrival);
+    sprintf(buf, "%s Stat-req-dispatch: %f\r\n", buf, request.Stat_req_dispatch);
+    sprintf(buf, "%s Stat-thread-id: %d\r\n", buf, thread_info -> Stat_thread_id);
+ //   sleep(1);
+    int i = 0;
+    for(i = 0; i < 1e7; i++){
+    }
     sprintf(buf,"%s yangsuli debug\n", buf);
-    sprintf(buf, "%s Stat-thread-count: %d\r\n", buf, 0);
-    sprintf(buf, "%s Stat-thread-static: %d\r\n", buf, 0);
-    sprintf(buf, "%s Stat-thread-dynamic: %d\r\n", buf, 0);
+    sprintf(buf, "%s Stat-thread-count: %d\r\n", buf, thread_info -> Stat_thread_count);
+    sprintf(buf, "%s Stat-thread-static: %d\r\n", buf, thread_info -> Stat_thread_static);
+    sprintf(buf, "%s Stat-thread-dynamic: %d\r\n", buf, thread_info -> Stat_thread_dynamic);
     
     Rio_writen(fd, buf, strlen(buf));
     
@@ -129,8 +135,9 @@ void requestServeDynamic(int fd, char *filename, char *cgiargs)
 }
 
 
-void requestServeStatic(int fd, char *filename, int filesize) 
+void requestServeStatic(request_type request, char *filename, int filesize, thread_info_type* thread_info) 
 {
+	int fd = request.conn_fd;
     int srcfd;
     char *srcp, filetype[MAXLINE], buf[MAXBUF];
     char tmp = 0;
@@ -140,6 +147,7 @@ void requestServeStatic(int fd, char *filename, int filesize)
     
     srcfd = Open(filename, O_RDONLY, 0);
     
+    double read_start_time = GetTime();
     // Rather than call read() to read the file into memory, 
     // which would require that we allocate a buffer, we memory-map the file
     srcp = Mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);
@@ -155,22 +163,28 @@ void requestServeStatic(int fd, char *filename, int filesize)
     for (i = 0; i < filesize; i++) {
 	tmp += *(srcp + i);
     }
-    
+    double read_end_time = GetTime();
+    request.Stat_req_read = read_end_time - read_start_time;
+
+    double write_start_time = GetTime();
+    request.Stat_req_complete = write_start_time - request.Stat_req_arrival;
     
     sprintf(buf, "HTTP/1.0 200 OK\r\n");
     sprintf(buf, "%s Server: CS537 Web Server\r\n", buf);
     
     // CS537: Your statistics go here -- fill in the 0's with something useful!
-    sprintf(buf, "%s Stat-req-arrival: %d\r\n", buf, 0);
-    sprintf(buf, "%s Stat-req-dispatch: %d\r\n", buf, 0);
-    sprintf(buf, "%s Stat-req-read: %d\r\n", buf, 0);
-    sprintf(buf, "%s Stat-req-complete: %d\r\n", buf, 0);
-    sprintf(buf, "%s Stat-thread-id: %d\r\n", buf, 0);
+    sprintf(buf, "%s Stat-req-arrival: %f\r\n", buf, request.Stat_req_arrival);
+    sprintf(buf, "%s Stat-req-dispatch: %f\r\n", buf, request.Stat_req_dispatch);
+    sprintf(buf, "%s Stat-req-read: %f\r\n", buf, request.Stat_req_read);
+    sprintf(buf, "%s Stat-req-complete: %f\r\n", buf, request.Stat_req_complete);
+    sprintf(buf, "%s Stat-thread-id: %d\r\n", buf, thread_info -> Stat_thread_id);
     sleep(1);
+    for(i = 0; i < 1e7; i++){
+    }
     sprintf(buf,"%s yangsuli debug", buf);
-    sprintf(buf, "%s Stat-thread-count: %d\r\n", buf, 0);
-    sprintf(buf, "%s Stat-thread-static: %d\r\n", buf, 0);
-    sprintf(buf, "%s Stat-thread-dynamic: %d\r\n", buf, 0);
+    sprintf(buf, "%s Stat-thread-count: %d\r\n", buf, thread_info -> Stat_thread_count);
+    sprintf(buf, "%s Stat-thread-static: %d\r\n", buf, thread_info -> Stat_thread_static);
+    sprintf(buf, "%s Stat-thread-dynamic: %d\r\n", buf, thread_info -> Stat_thread_dynamic);
     
     sprintf(buf, "%s Content-Length: %d\r\n", buf, filesize);
     sprintf(buf, "%s Content-Type: %s\r\n\r\n", buf, filetype);
@@ -184,9 +198,12 @@ void requestServeStatic(int fd, char *filename, int filesize)
 }
 
 // handle a request
-void requestHandle(int fd)
+void requestHandle(request_type request, thread_info_type* thread_info)
 {
-    
+
+	thread_info -> Stat_thread_count ++;
+
+    int fd = request.conn_fd;    
     int is_static;
     struct stat sbuf;
     char buf[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
@@ -213,17 +230,19 @@ void requestHandle(int fd)
     }
     
     if (is_static) {
+	    thread_info -> Stat_thread_static ++;
 	if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode)) {
 	    requestError(fd, filename, "403", "Forbidden", "CS537 Server could not read this file");
 	    return;
 	}
-	requestServeStatic(fd, filename, sbuf.st_size);
+	requestServeStatic(request, filename, sbuf.st_size, thread_info);
     } else {
+	    thread_info -> Stat_thread_dynamic ++;
 	if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
 	    requestError(fd, filename, "403", "Forbidden", "CS537 Server could not run this CGI program");
 	    return;
 	}
-	requestServeDynamic(fd, filename, cgiargs);
+	requestServeDynamic(request, filename, cgiargs, thread_info);
     }
 }
 
