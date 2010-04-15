@@ -110,6 +110,8 @@ void requestServeDynamic(int fd, char *filename, char *cgiargs)
     sprintf(buf, "%s Stat-req-arrival: %d\r\n", buf, 0);
     sprintf(buf, "%s Stat-req-dispatch: %d\r\n", buf, 0);
     sprintf(buf, "%s Stat-thread-id: %d\r\n", buf, 0);
+    sleep(1);
+    sprintf(buf,"%s yangsuli debug\n", buf);
     sprintf(buf, "%s Stat-thread-count: %d\r\n", buf, 0);
     sprintf(buf, "%s Stat-thread-static: %d\r\n", buf, 0);
     sprintf(buf, "%s Stat-thread-dynamic: %d\r\n", buf, 0);
@@ -164,6 +166,8 @@ void requestServeStatic(int fd, char *filename, int filesize)
     sprintf(buf, "%s Stat-req-read: %d\r\n", buf, 0);
     sprintf(buf, "%s Stat-req-complete: %d\r\n", buf, 0);
     sprintf(buf, "%s Stat-thread-id: %d\r\n", buf, 0);
+    sleep(1);
+    sprintf(buf,"%s yangsuli debug", buf);
     sprintf(buf, "%s Stat-thread-count: %d\r\n", buf, 0);
     sprintf(buf, "%s Stat-thread-static: %d\r\n", buf, 0);
     sprintf(buf, "%s Stat-thread-dynamic: %d\r\n", buf, 0);
