@@ -1,5 +1,6 @@
 #include "cs537.h"
 #include "request.h"
+#include "server.h"
 
 // 
 // server.c: A very, very simple web server
@@ -15,8 +16,6 @@
 // CS537: Parse the new arguments too
 //
 
-#define MAXSIZE 256
-
 int num_filled = 0;
 pthread_cond_t empty, full;
 pthread_mutex_t mutex;
@@ -25,11 +24,6 @@ pthread_t * threads_ptr;
 int fill = 0;
 int use = 0;
 int buffer_size;
-
-typedef __request_type{
-	int conn_fd;
-} request_type;
-
 
 void getargs(int *port, int *num_threads,int *buffer_size, char **policy_ptr, int *N , int argc, char *argv[])
 {
@@ -79,6 +73,10 @@ int main(int argc, char *argv[]){
     return 0;
 }
 */
+
+void * worker(void *arg){
+	return NULL;
+}
 
 int main(int argc, char *argv[])
 {
@@ -139,11 +137,11 @@ int main(int argc, char *argv[])
 	curr_request.conn_fd = connfd;
 
 	Pthread_mutex_lock(&mutex);
-	while(num_filled == buffers){
+	while(num_filled == buffer_size){
 		Pthread_cond_wait(&empty, &mutex);
 	}
 	put_in_buffer(curr_request);
-	Pthread_cond_signal(&fill);
+	Pthread_cond_signal(&full);
 	Pthread_mutex_unlock(&mutex);
 /*
     worker should handle the request
@@ -158,16 +156,17 @@ int main(int argc, char *argv[])
 
 
 void put_in_buffer(request_type request){
-	buffer[fill] = request;
+	buffer_ptr[fill] = request;
 	fill = (fill + 1)%buffer_size;
-	numfilled++;
+	num_filled++;
 }
 
 request_type get_from_buffer(){
-	request_type tmp = buffer[use];
-	use = (use + 1) % MAX;
-	numfilled--;
+	request_type tmp = buffer_ptr[use];
+	use = (use + 1) % buffer_size;
+	num_filled--;
 	return tmp;
+}
 
 
 
