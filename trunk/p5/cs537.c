@@ -571,7 +571,14 @@ void Pthread_mutex_unlock(pthread_mutex_t *m)
     int rc = pthread_mutex_unlock(m);
     if( rc != 0 ) { unix_error("pthread_mutex_unlock\n"); }
 }
-                                                                                
+
+void Pthread_mutex_init(pthread_mutex_t *mutex,
+              const pthread_mutexattr_t *attr)
+{
+    int rc = pthread_mutex_init(mutex, attr);
+    if( rc != 0 ) { unix_error("pthread_mutex_init\n"); }
+}
+
 void Pthread_create(pthread_t *thread, const pthread_attr_t *attr,   
            void *(*start_routine)(void*), void *arg)
 {
@@ -585,15 +592,20 @@ void Pthread_join(pthread_t thread, void **value_ptr)
     if( rc != 0 ) { unix_error("pthread_mutex_join\n"); }
 }
 
-int Pthread_cond_signal(pthread_cond_t *cond)
+void Pthread_cond_signal(pthread_cond_t *cond)
 {
-
     int rc = pthread_cond_signal(cond);
     if( rc != 0 ) { unix_error("pthread_cond_signal\n"); }
 }
 
-int Pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
+void Pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 {
     int rc = pthread_cond_wait(cond, mutex);
     if( rc != 0 ) { unix_error("pthread_cond_wait\n"); }
+}
+void Pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr)
+{
+
+    int rc = pthread_cond_init(cond, attr);
+    if( rc != 0 ) { unix_error("pthread_cond_init\n"); }
 }
