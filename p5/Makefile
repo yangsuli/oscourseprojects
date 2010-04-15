@@ -2,7 +2,7 @@
 # To compile, type "make" or make "all"
 # To remove files, type "make clean"
 #
-OBJS = server.o request.o cs537.o client.o
+OBJS = server.o request.o cs537.o
 TARGET = server
 
 CC = gcc
@@ -26,5 +26,11 @@ output.cgi: output.c
 .c.o:
 	$(CC) $(CFLAGS) -o $@ -c $<
 
+#clean:
+#	-rm -f $(OBJS) server client output.cgi
 clean:
-	-rm -f $(OBJS) server client output.cgi
+	-rm -f *.o server client output.cgi tags
+
+tags:
+	ctags *.c *.h
+
