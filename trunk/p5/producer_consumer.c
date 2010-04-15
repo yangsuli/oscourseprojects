@@ -17,6 +17,7 @@ int buffer[MAX_LOOPS];
 int fill = 0; 
 int use = 0; 
 int numfilled = 0; 
+
 void put(int value) { 
     buffer[fill] = value; // line F1 
     fill = (fill + 1) % MAX_LOOPS; // line F2 
@@ -75,4 +76,3 @@ int main(int argc, char *argv[]) {
         } 
         return 0; 
 } 
-
