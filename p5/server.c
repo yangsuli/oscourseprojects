@@ -19,79 +19,87 @@
 
 void getargs(int *port, int *num_threads,int *buffer_size, char **policy_ptr, int *N , int argc, char *argv[])
 {
-	if (argc != 5 && argc != 6) 
-	{
-		//      fprintf(stderr, "Usage: %s <port>\n", argv[0]);
-		fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
+    if (argc != 5 && argc != 6) 
+    {
+        //      fprintf(stderr, "Usage: %s <port>\n", argv[0]);
+        fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
 
-		exit(1);
-	}
-	*port = atoi(argv[1]);
-	*num_threads = atoi(argv[2]);
-	*buffer_size = atoi(argv[3]);
-	strcpy(*policy_ptr, argv[4]);
+        exit(1);
+    }
+    *port = atoi(argv[1]);
+    *num_threads = atoi(argv[2]);
+    *buffer_size = atoi(argv[3]);
+    strcpy(*policy_ptr, argv[4]);
 
-	if(strcasecmp(*policy_ptr,"SFF-BS") == 0){
-		if(argc != 6){
- 			fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
-			exit(1);
-		}
-		*N = atoi(argv[5]);
-	}else if(strcasecmp(*policy_ptr,"SFF") == 0 || strcasecmp(*policy_ptr, "FIFO") == 0){
-		if(argc != 5){
- 			 fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
-			 exit(1);
-		}
-		*N = 0;
-	}else{
-		fprintf(stderr, "policy has to be FIFO, SFF, or SFF-BS\n");
-		exit(1);
-	}
+    if(strcasecmp(*policy_ptr,"SFF-BS") == 0){
+        if(argc != 6){
+             fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
+            exit(1);
+        }
+        *N = atoi(argv[5]);
+    }else if(strcasecmp(*policy_ptr,"SFF") == 0 || strcasecmp(*policy_ptr, "FIFO") == 0){
+        if(argc != 5){
+              fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
+             exit(1);
+        }
+        *N = 0;
+    }else{
+        fprintf(stderr, "policy has to be FIFO, SFF, or SFF-BS\n");
+        exit(1);
+    }
 }
 
-
-int main(int argc, char *argv[]){
-	int port, threads, buffers;
-	char  policy[MAXSIZE];
-	char * p = policy;
-	char **policy_ptr = &p;
-	int N;
-
-	getargs(&port,&threads,&buffers,policy_ptr,&N,argc, argv);
-
-	fprintf(stdout,"%d, %d, %d, %s, %d\n",port, threads, buffers, policy, N);
-
-	return 0;
-}
-
-
+///////////  test argument stuff ////
 /*
-   int main(int argc, char *argv[])
-   {
-   int listenfd, connfd, port, clientlen;
-   struct sockaddr_in clientaddr;
+int main(int argc, char *argv[]){
+    int port, threads, buffers;
+    char  policy[MAXSIZE];
+    char * p = policy;
+    char **policy_ptr = &p;
+    int N;
 
-   getargs(&port, argc, argv);
+    getargs(&port,&threads,&buffers,policy_ptr,&N,argc, argv);
 
-// 
-// CS537: Create some threads...
-//
+    fprintf(stdout,"%d, %d, %d, %s, %d\n",port, threads, buffers, policy, N);
 
-listenfd = Open_listenfd(port);
-while (1) 
+    return 0;
+}
+*/
+
+int main(int argc, char *argv[])
 {
-clientlen = sizeof(clientaddr);
-connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *) &clientlen);
+    int listenfd, connfd, clientlen;
+    struct sockaddr_in clientaddr;
 
-// 
-// CS537: In general, don't handle the request in the main thread.
-// Save the relevant info in a buffer and have one of the worker threads 
-// do the work.
-// 
-requestHandle(connfd);
+    ///// parse the arguments  /////
+    int port, threads, buffers;
+    char  policy[MAXSIZE];
+    char * p = policy;
+    char **policy_ptr = &p;
+    int N;
+    getargs(&port,&threads,&buffers,policy_ptr,&N,argc, argv);
 
-Close(connfd);
+    listenfd = Open_listenfd(port);
+
+    // 
+    // CS537: Create some threads...
+    //
+
+    while (1) 
+    {
+
+        clientlen = sizeof(clientaddr);
+        connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *) &clientlen);
+
+        // 
+        // CS537: In general, don't handle the request in the main thread.
+        // Save the relevant info in a buffer and have one of the worker threads 
+        // do the work.
+        // 
+        requestHandle(connfd);
+
+        Close(connfd);
+    }
+
 }
 
-}
- */
