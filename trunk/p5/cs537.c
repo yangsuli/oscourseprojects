@@ -557,4 +557,43 @@ int Open_listenfd(int port)
     return rc;
 }
 
+/******************************************
+ * Wrappers for Posix Threads
+ ******************************************/
+void Pthread_mutex_lock(pthread_mutex_t *m)
+{
+    int rc = pthread_mutex_lock(m);
+    if( rc != 0 ) { unix_error("pthread_mutex_lock\n"); }
+}
+                                                                                
+void Pthread_mutex_unlock(pthread_mutex_t *m)
+{
+    int rc = pthread_mutex_unlock(m);
+    if( rc != 0 ) { unix_error("pthread_mutex_unlock\n"); }
+}
+                                                                                
+void Pthread_create(pthread_t *thread, const pthread_attr_t *attr,   
+           void *(*start_routine)(void*), void *arg)
+{
+    int rc = pthread_create(thread, attr, start_routine, arg);
+    if( rc != 0 ) { unix_error("pthread_mutex_create\n"); }
+}
 
+void Pthread_join(pthread_t thread, void **value_ptr)
+{
+    int rc = pthread_join(thread, value_ptr);
+    if( rc != 0 ) { unix_error("pthread_mutex_join\n"); }
+}
+
+int Pthread_cond_signal(pthread_cond_t *cond)
+{
+
+    int rc = pthread_cond_signal(cond);
+    if( rc != 0 ) { unix_error("pthread_cond_signal\n"); }
+}
+
+int Pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
+{
+    int rc = pthread_cond_wait(cond, mutex);
+    if( rc != 0 ) { unix_error("pthread_cond_wait\n"); }
+}
