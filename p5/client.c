@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     }
     char *host, *filename;
     int port;
-    int clientfd;
+//  int clientfd;
 
     host = argv[1];
     port = atoi(argv[2]);
@@ -118,10 +118,10 @@ int main(int argc, char *argv[])
     assert( num_threads <= 500 );
 
     /* Open a single connection to the specified host and port */
-    clientfd = Open_clientfd(host, port);
-    clientSend(clientfd, filename);
-    clientPrint(clientfd);
-    Close(clientfd);
+//  clientfd = Open_clientfd(host, port);
+//  clientSend(clientfd, filename);
+//  clientPrint(clientfd);
+//  Close(clientfd);
 
     pthread_t threads[500];
     int i = 0;
