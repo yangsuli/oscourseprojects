@@ -131,9 +131,7 @@ int main(int argc, char *argv[]) {
     // TODO -- replace with a linked list or some other data structure 
     // (need somethine else for SFF queuing)
     buffer_ptr = (request_type *)malloc(sizeof(request_type) * buffers);
-    if(buffer_ptr == NULL){
-        unix_error("malloc error\n");
-    }
+    if(buffer_ptr == NULL){ unix_error("malloc error\n"); }
 
     threads_ptr = 
             (thread_info_type *) malloc(sizeof(thread_info_type) * threads);
@@ -145,16 +143,15 @@ int main(int argc, char *argv[]) {
     // Create threads and initialize global condition variables and single
     // lock needed for solving producer/consumer problem
     int i;
+    Pthread_cond_init( &empty, NULL);
+    Pthread_cond_init( &full,  NULL);
+    Pthread_mutex_init(&mutex, NULL);
     for( i = 0; i < threads; i++){
         Pthread_create(&(threads_ptr[i].tid),NULL, worker,NULL);
         threads_ptr[i].Stat_thread_count = 0;
         threads_ptr[i].Stat_thread_static = 0;
         threads_ptr[i].Stat_thread_dynamic = 0;
     }
-    Pthread_cond_init( &empty, NULL);
-    Pthread_cond_init( &full,  NULL);
-    Pthread_mutex_init(&mutex, NULL);
-
     listenfd = Open_listenfd(port);  // open port
 
     while (1) {

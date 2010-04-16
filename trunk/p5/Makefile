@@ -9,7 +9,8 @@ CC = gcc
 CFLAGS = -g -Wall
 
 LIB_FLAG = -lpthread
-LIBS     = -lpthread  # i don't like this name...
+#LIBS     = -lpthread  # i don't like this name...
+LIBS     = -lpthread -ggdb
 
 .SUFFIXES: .c .o 
 
