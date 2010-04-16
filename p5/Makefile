@@ -8,17 +8,21 @@ TARGET = server
 CC = gcc
 CFLAGS = -g -Wall
 
-LIBS = -lpthread 
+LIB_FLAG = -lpthread
+LIBS     = -lpthread  # i don't like this name...
 
 .SUFFIXES: .c .o 
 
-all: server client output.cgi
+all: server client simple_client output.cgi
 
 server: server.o request.o cs537.o
 	$(CC) $(CFLAGS) -o server server.o request.o cs537.o $(LIBS)
 
 client: client.o cs537.o
 	$(CC) $(CFLAGS) -o client client.o cs537.o $(LIBS)
+
+simple_client: simple_client.o cs537.o
+	$(CC) $(CFLAGS) -o  simple_client simple_client.o cs537.o $(LIBS)
 
 output.cgi: output.c
 	$(CC) $(CFLAGS) -o output.cgi output.c $(LIBS)

@@ -26,6 +26,7 @@
  *
  */
 
+#include <assert.h>
 #include "cs537.h"
 
 /*
@@ -33,71 +34,106 @@
  */
 void clientSend(int fd, char *filename)
 {
-  char buf[MAXLINE];
-  char hostname[MAXLINE];
+    char buf[MAXLINE];
+    char hostname[MAXLINE];
 
-  Gethostname(hostname, MAXLINE);
+    Gethostname(hostname, MAXLINE);
 
-  /* Form and send the HTTP request */
-  sprintf(buf, "GET %s HTTP/1.1\n", filename);
-  sprintf(buf, "%shost: %s\n\r\n", buf, hostname);
-  Rio_writen(fd, buf, strlen(buf));
+    /* Form and send the HTTP request */
+    sprintf(buf, "GET %s HTTP/1.1\n", filename);
+    sprintf(buf, "%shost: %s\n\r\n", buf, hostname);
+    Rio_writen(fd, buf, strlen(buf));
 }
-  
+
 /*
  * Read the HTTP response and print it out
  */
 void clientPrint(int fd)
 {
-  rio_t rio;
-  char buf[MAXBUF];  
-  int length = 0;
-  int n;
-  
-  Rio_readinitb(&rio, fd);
+    rio_t rio;
+    char buf[MAXBUF];  
+    int length = 0;
+    int n;
 
-  /* Read and display the HTTP Header */
-  n = Rio_readlineb(&rio, buf, MAXBUF);
-  while (strcmp(buf, "\r\n") && (n > 0)) {
-    printf("Header: %s", buf);
+    Rio_readinitb(&rio, fd);
+
+    /* Read and display the HTTP Header */
     n = Rio_readlineb(&rio, buf, MAXBUF);
+    while (strcmp(buf, "\r\n") && (n > 0)) {
+        printf("Header: %s", buf);
+        n = Rio_readlineb(&rio, buf, MAXBUF);
 
-    /* If you want to look for certain HTTP tags... */
-    if (sscanf(buf, "Content-Length: %d ", &length) == 1) {
-      printf("Length = %d\n", length);
+        /* If you want to look for certain HTTP tags... */
+        if (sscanf(buf, "Content-Length: %d ", &length) == 1) {
+            printf("Length = %d\n", length);
+        }
     }
-  }
 
-  /* Read and display the HTTP Body */
-  n = Rio_readlineb(&rio, buf, MAXBUF);
-  while (n > 0) {
-    printf("%s", buf);
+    /* Read and display the HTTP Body */
     n = Rio_readlineb(&rio, buf, MAXBUF);
-  }
+    while (n > 0) {
+        printf("%s", buf);
+        n = Rio_readlineb(&rio, buf, MAXBUF);
+    }
+}
+
+// create a bunch of threads that all make the same identical request to the
+// server
+void * my_client( void * arg ) {
+
+    char ** argv = (char**) arg;
+
+    char *host, *filename;
+    int port;
+    int clientfd;
+
+    host = argv[1];
+    port = atoi(argv[2]);
+    filename = argv[3];
+
+    clientfd = Open_clientfd(host, port);
+    clientSend(clientfd, filename);  // this is bad?  race for filename??
+    clientPrint(clientfd);  // this is bad?
+    Close(clientfd);
+    return NULL;
 }
 
 int main(int argc, char *argv[])
 {
-  char *host, *filename;
-  int port;
-  int clientfd;
 
-  if (argc != 4) {
-    fprintf(stderr, "Usage: %s <host> <port> <filename>\n", argv[0]);
-    exit(1);
-  }
+    if (argc != 5) {
+        fprintf(stderr, "Usage: %s <host> <port> <filename> <num_threads>\n", argv[0]);
+        exit(1);
+    }
+    char *host, *filename;
+    int port;
+    int clientfd;
 
-  host = argv[1];
-  port = atoi(argv[2]);
-  filename = argv[3];
+    host = argv[1];
+    port = atoi(argv[2]);
+    filename = argv[3];
 
-  /* Open a single connection to the specified host and port */
-  clientfd = Open_clientfd(host, port);
-  
-  clientSend(clientfd, filename);
-  clientPrint(clientfd);
-    
-  Close(clientfd);
 
-  exit(0);
+    int num_threads = atoi(argv[4]);
+    assert( num_threads <= 500 );
+
+    /* Open a single connection to the specified host and port */
+    clientfd = Open_clientfd(host, port);
+    clientSend(clientfd, filename);
+    clientPrint(clientfd);
+    Close(clientfd);
+
+    pthread_t threads[500];
+    int i = 0;
+    for( i = 0; i < num_threads; i++ ) {
+        Pthread_create(&threads[i], NULL,&my_client, (void*)argv);
+    }
+
+    // join all the threads ...
+    for( i = 0; i < num_threads; i++) {
+        pthread_join( threads[i], NULL );
+    }
+
+    return 0;
+
 }
