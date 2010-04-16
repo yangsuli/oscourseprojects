@@ -1,6 +1,6 @@
 #ifndef __SERVER_H__
 #define __SERVER_H__
-#define MAXSIZE 256
+#define MAX_STR_SIZE 256
 
 typedef struct __request_type{
 	int conn_fd;
