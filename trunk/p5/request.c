@@ -113,11 +113,11 @@ void requestServeDynamic(request_type request, char *filename, char *cgiargs, th
     sprintf(buf, "%s Stat-req-arrival: %f\r\n", buf, request.Stat_req_arrival);
     sprintf(buf, "%s Stat-req-dispatch: %f\r\n", buf, request.Stat_req_dispatch);
     sprintf(buf, "%s Stat-thread-id: %d\r\n", buf, thread_info -> Stat_thread_id);
- //   sleep(1);
-    int i = 0;
-    for(i = 0; i < 1e7; i++){
-    }
-    sprintf(buf,"%s yangsuli debug\n", buf);
+    sleep(1);
+//  int i = 0;
+//  for(i = 0; i < 1e7; i++){
+//  }
+//  sprintf(buf,"%s yangsuli debug\n", buf);
     sprintf(buf, "%s Stat-thread-count: %d\r\n", buf, thread_info -> Stat_thread_count);
     sprintf(buf, "%s Stat-thread-static: %d\r\n", buf, thread_info -> Stat_thread_static);
     sprintf(buf, "%s Stat-thread-dynamic: %d\r\n", buf, thread_info -> Stat_thread_dynamic);
@@ -203,7 +203,7 @@ void requestServeStatic(request_type request, char *filename, int filesize, thre
 void requestHandle(request_type request, thread_info_type* thread_info)
 {
 
-        thread_info -> Stat_thread_count ++;
+    thread_info -> Stat_thread_count ++;
 
     int fd = request.conn_fd;    
     int is_static;

@@ -14,16 +14,17 @@
 // Most of the work is done within routines written in request.c
 //
 
-int num_filled = 0;
+int num_filled = 0;                // number of requests sitting in buffer
 pthread_cond_t empty, full;
-pthread_mutex_t mutex;
-request_type * buffer_ptr;
+pthread_mutex_t mutex;             // lock for modifiying buffer atomically
+request_type * buffer_ptr;         // pool of requests
+int * in_use;                      // indicates if location in buffer is inuse
 thread_info_type * threads_ptr;
+int policy_int;                    // policy chosen: 0 == FIFO
 
 ///////////////////////////////////////////////////////////////////////////////
 // TODO replace use and fill with something more useful...
 int fill = 0;
-int use = 0;
 ///////////////////////////////////////////////////////////////////////////////
 
 int buffer_size;// nmbr of request connections that can be accptd at one time. 
@@ -59,12 +60,22 @@ void getargs(int *port, int *num_threads,int *buffer_size, char **policy_ptr,
             exit(1);
         }
         *N = atoi(argv[5]);
-    }else if(strcasecmp(*policy_ptr,"SFF") == 0 || strcasecmp(*policy_ptr, "FIFO") == 0){
+        policy_int = 2;
+    }else if(strcasecmp(*policy_ptr,"SFF") == 0 ) {
         if(argc != 5){
             fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
             exit(1);
         }
         *N = 0;
+        policy_int = 1;
+    }else if(strcasecmp(*policy_ptr, "FIFO") == 0){
+        if(argc != 5){
+            fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
+            exit(1);
+        }
+        *N = 0;
+        policy_int = 0;
+
     }else{
         fprintf(stderr, "policy has to be FIFO, SFF, or SFF-BS\n");
         exit(1);
@@ -76,11 +87,13 @@ void * worker(void *arg){
 
     // find and save the stat_tid "thread id" of the current thread
     // this is executed one time only
-    int stat_tid;
-    for(stat_tid = 0; stat_tid < num_threads; stat_tid++){
+    int stat_tid = 0;
+    while(1)
+    {
         if(pthread_equal(pthread_self(),threads_ptr[stat_tid].tid) != 0){
             break;
         }
+        stat_tid = (stat_tid+1) % num_threads;
     }
     threads_ptr[stat_tid].Stat_thread_id = stat_tid;  
 
@@ -114,7 +127,7 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in clientaddr;
 
     ///// parse the arguments  /////
-    int port, threads, buffers;
+    int port, threads, buffers, i;
     char  policy[MAX_STR_SIZE];
     char * p = policy;
     char **policy_ptr = &p;
@@ -130,27 +143,31 @@ int main(int argc, char *argv[]) {
 
     // TODO -- replace with a linked list or some other data structure 
     // (need somethine else for SFF queuing)
-    buffer_ptr = (request_type *)malloc(sizeof(request_type) * buffers);
+    buffer_ptr = (request_type *)malloc(sizeof(request_type) * buffer_size);
     if(buffer_ptr == NULL){ unix_error("malloc error\n"); }
+
+    in_use     = (int *)malloc(sizeof(int) * buffer_size);
+    if(in_use == NULL){ unix_error("malloc error\n"); }
+    for(i = 0; i <= buffer_size; i++ ){
+        in_use[i] = 0;  // initially nothing is 'in use'
+    }
 
     threads_ptr = 
             (thread_info_type *) malloc(sizeof(thread_info_type) * threads);
-
-    if(threads_ptr == NULL){
-        unix_error("mallock error\n");
-    }
+    if(threads_ptr == NULL){ unix_error("malloc error\n"); }
 
     // Create threads and initialize global condition variables and single
     // lock needed for solving producer/consumer problem
-    int i;
     Pthread_cond_init( &empty, NULL);
     Pthread_cond_init( &full,  NULL);
     Pthread_mutex_init(&mutex, NULL);
     for( i = 0; i < threads; i++){
-        Pthread_create(&(threads_ptr[i].tid),NULL, worker,NULL);
-        threads_ptr[i].Stat_thread_count = 0;
-        threads_ptr[i].Stat_thread_static = 0;
+        threads_ptr[i].Stat_thread_count   = 0;
+        threads_ptr[i].Stat_thread_static  = 0;
         threads_ptr[i].Stat_thread_dynamic = 0;
+
+        // this should be performed last ...
+        Pthread_create(&(threads_ptr[i].tid),NULL, worker,NULL);
     }
     listenfd = Open_listenfd(port);  // open port
 
@@ -183,15 +200,81 @@ int main(int argc, char *argv[]) {
 
 }
 
-void put_in_buffer(request_type request){
-    buffer_ptr[fill] = request;     // TODO
+// returns index that should be filled for the fifo scheduling policy
+int get_fifo_fill_index(){
+
+    static int fill = 0;
+    int tmp = fill;
     fill = (fill + 1)%buffer_size;  // forced FIFO queue here
-    num_filled++;
+    return tmp;
 }
 
+//int get_sff_put_index(){
+    // find the next free spot
+//  while( in_use[fill] ){
+//      fill = (fill + 1)%buffer_size;  // forced FIFO queue here
+//  }
+
+//  buffer_ptr[fill] = request;     // TODO
+//  in_use[fill]     = 1;
+//  
+//  num_filled++;
+
+void put_in_buffer(request_type request){
+
+    int fill = -1;
+    switch( policy_int )
+    {
+        case 0:
+        fill = get_fifo_fill_index();
+        break;
+
+        default:
+        unix_error("this scheduling policy is not implemented\n");
+    }
+ 
+    buffer_ptr[fill] = request;     // TODO
+    in_use[fill] = 1;
+    num_filled++;
+
+}
+
+// selects index of array to read from the buffer.
+int get_fifo_use_index() {
+    static int use = 0;
+    int tmp = use;
+    use = (use+1) % num_threads;
+    return tmp;
+}
+
+//int get_sff_index() {
+//  static int use = 0;
+//  while( !in_use[use] ) {
+//      use = (use + 1) % buffer_size;       // forced FIFO queue here
+//  }
+//  in_use[use] = 0;
+
+//  request_type tmp = buffer_ptr[use];  //TODO
+//  num_filled--;
+//  return tmp;
+//}
+
 request_type get_from_buffer(){
+
+    int use = -1;
+
+    switch( policy_int )
+    {
+        case 0:
+        use = get_fifo_use_index();
+        break;
+
+        default:
+        unix_error("this scheduling policy is not implemented\n");
+    }
+        
     request_type tmp = buffer_ptr[use];  //TODO
-    use = (use + 1) % buffer_size;       // forced FIFO queue here
+    in_use[use] = 0;
     num_filled--;
     return tmp;
 }

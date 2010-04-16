@@ -4,11 +4,18 @@
 
 typedef struct __request_type{
 	int conn_fd;
+
+    // every field that starts with Stat has to do with collecting statistics
 	double Stat_req_arrival;
 	double Stat_req_dispatch;
 	double Stat_req_read;
 	double Stat_req_complete;
 	double Stat_req_age;
+
+    // scheduling policy fields
+    unsigned int file_size;
+    unsigned int epoch_num;
+
 } request_type;
 
 typedef struct __thread_info{
