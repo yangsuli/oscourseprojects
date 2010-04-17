@@ -309,8 +309,8 @@ request_type requestParse(request_type request)
     // save relevant information for handling the request later
     strcpy( request.filename, filename );
     strcpy( request.cgiargs,  cgiargs  );
-    request.sbuf      = sbuf;
-    request.is_static = is_static;
+    request.sbuf       = sbuf;
+    request.is_static  = is_static;
     request.file_size  = sbuf.st_size;
 
 //  printf("   filename = %s,   request.filename = %s\n", filename, request.filename);

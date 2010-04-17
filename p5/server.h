@@ -14,7 +14,7 @@ typedef struct __request_type{
 
     // scheduling policy fields
     int file_size;
-    int epoch_num;
+    int request_num;  // used for determining epoch num
 
     // everything used in parsing arguments
     int fd;
