@@ -22,11 +22,6 @@ int * in_use;                      // indicates if location in buffer is inuse
 thread_info_type * threads_ptr;
 int policy_int;                    // policy chosen: 0 == FIFO
 
-///////////////////////////////////////////////////////////////////////////////
-// TODO replace use and fill with something more useful...
-int fill = 0;
-///////////////////////////////////////////////////////////////////////////////
-
 int buffer_size;// nmbr of request connections that can be accptd at one time. 
 int num_threads;// number of worker threads
 
@@ -200,6 +195,15 @@ int main(int argc, char *argv[]) {
 
 }
 
+// selects index of array to read from the buffer.
+int get_fifo_use_index() {
+    static int use = 0;
+    int tmp = use;
+    use = (use+1) % num_threads;
+    return tmp;
+}
+
+
 // returns index that should be filled for the fifo scheduling policy
 int get_fifo_fill_index(){
 
@@ -209,16 +213,35 @@ int get_fifo_fill_index(){
     return tmp;
 }
 
-//int get_sff_put_index(){
-    // find the next free spot
-//  while( in_use[fill] ){
-//      fill = (fill + 1)%buffer_size;  // forced FIFO queue here
-//  }
+int get_sff_fill_index(){
 
-//  buffer_ptr[fill] = request;     // TODO
-//  in_use[fill]     = 1;
-//  
-//  num_filled++;
+    int i = 0;
+
+    // find first free spot and place it there
+    for( i = 0; in_use[i]; i++){;}
+    return i;
+}
+
+// selects index of array to read from the buffer.
+int get_sff_use_index() {
+
+    // find the first available index
+    int i = 0;
+    for( i = 0; !in_use[i]; i++){;}
+    int use = i;
+
+    // check all the other free locations
+    while( i < num_threads ) {
+        // if file size is smaller ...
+        if( 0 ) {
+            use = i;
+        }
+        i++;
+    }
+    
+    return use;
+
+}
 
 void put_in_buffer(request_type request){
 
@@ -229,35 +252,22 @@ void put_in_buffer(request_type request){
         fill = get_fifo_fill_index();
         break;
 
+        case 1:
+        fill = get_sff_fill_index();
+        break;
+
         default:
         unix_error("this scheduling policy is not implemented\n");
     }
- 
+
+    requestParse( request );
+
     buffer_ptr[fill] = request;     // TODO
     in_use[fill] = 1;
     num_filled++;
 
 }
 
-// selects index of array to read from the buffer.
-int get_fifo_use_index() {
-    static int use = 0;
-    int tmp = use;
-    use = (use+1) % num_threads;
-    return tmp;
-}
-
-//int get_sff_index() {
-//  static int use = 0;
-//  while( !in_use[use] ) {
-//      use = (use + 1) % buffer_size;       // forced FIFO queue here
-//  }
-//  in_use[use] = 0;
-
-//  request_type tmp = buffer_ptr[use];  //TODO
-//  num_filled--;
-//  return tmp;
-//}
 
 request_type get_from_buffer(){
 
@@ -267,6 +277,10 @@ request_type get_from_buffer(){
     {
         case 0:
         use = get_fifo_use_index();
+        break;
+
+        case 1:
+        use = get_sff_use_index();
         break;
 
         default:

@@ -2,5 +2,6 @@
 #include "server.h"
 
 void requestHandle(request_type request, thread_info_type* thread_info );
+int requestParse(request_type request);
 
 #endif
