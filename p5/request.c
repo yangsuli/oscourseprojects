@@ -137,7 +137,7 @@ void requestServeDynamic(request_type request, char *filename, char *cgiargs, th
 
 void requestServeStatic(request_type request, char *filename, int filesize, thread_info_type* thread_info) 
 {
-        int fd = request.conn_fd;
+    int fd = request.conn_fd;
     int srcfd;
     char *srcp, filetype[MAXLINE], buf[MAXBUF];
     char tmp = 0;
@@ -241,6 +241,7 @@ void requestHandle(request_type request, thread_info_type* thread_info)
 //          requestError(fd, filename, "403", "Forbidden", "CS537 Server could not read this file");
 //          return;
 //      }
+
         requestServeStatic(request, filename, sbuf.st_size, thread_info);
     } else {
             thread_info -> Stat_thread_dynamic ++;
@@ -248,6 +249,7 @@ void requestHandle(request_type request, thread_info_type* thread_info)
 //          requestError(fd, filename, "403", "Forbidden", "CS537 Server could not run this CGI program");
 //          return;
 //      }
+
         requestServeDynamic(request, filename, cgiargs, thread_info);
     }
 }
@@ -306,6 +308,8 @@ request_type requestParse(request_type request)
     strcpy( request.filename, filename );
     strcpy( request.cgiargs,  cgiargs  );
     request.sbuf     = sbuf;
+    request.is_static = is_static;
+
 //  printf("   filename = %s,   request.filename = %s\n", filename, request.filename);
 //  printf("   cgiargs  = %s,   request.cgiargs  = %s\n", cgiargs, request.cgiargs);
 

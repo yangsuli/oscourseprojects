@@ -248,8 +248,12 @@ void put_in_buffer(request_type request){
     int fill = -1;
 
     request = requestParse( request );
-    if( request.is_static == -1 ) // error occured!
+
+    if( request.is_static == -1 ) 
     {
+        // one of the standard errors occured while parsing arguments -- no
+        // need to put this in the shared buffer
+        printf("  found an error, is_static is set to -1\n");
         return;
     }
 
