@@ -16,6 +16,12 @@ typedef struct __request_type{
     unsigned int file_size;
     unsigned int epoch_num;
 
+    // everything used in parsing arguments
+    int fd;
+    int is_static;
+    struct stat sbuf;
+    char filename[MAXLINE], cgiargs[MAXLINE];
+
 } request_type;
 
 typedef struct __thread_info{

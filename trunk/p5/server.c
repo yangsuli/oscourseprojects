@@ -246,6 +246,13 @@ int get_sff_use_index() {
 void put_in_buffer(request_type request){
 
     int fill = -1;
+
+    request = requestParse( request );
+    if( request.is_static == -1 ) // error occured!
+    {
+        return;
+    }
+
     switch( policy_int )
     {
         case 0:
@@ -260,14 +267,11 @@ void put_in_buffer(request_type request){
         unix_error("this scheduling policy is not implemented\n");
     }
 
-    requestParse( request );
-
-    buffer_ptr[fill] = request;     // TODO
+    buffer_ptr[fill] = request;
     in_use[fill] = 1;
     num_filled++;
 
 }
-
 
 request_type get_from_buffer(){
 
