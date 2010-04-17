@@ -205,9 +205,9 @@ void requestHandle(request_type request, thread_info_type* thread_info)
 
     thread_info -> Stat_thread_count ++;
 
-    char *filename   = request.filename;
-    struct stat sbuf = request.sbuf;
-    char* cgiargs    = request.cgiargs;
+//  char *filename   = request.filename;
+//  struct stat sbuf = request.sbuf;
+//  char* cgiargs    = request.cgiargs;
 
 //  int fd = request.conn_fd;    
 //  int is_static;
@@ -242,7 +242,8 @@ void requestHandle(request_type request, thread_info_type* thread_info)
 //          return;
 //      }
 
-        requestServeStatic(request, filename, sbuf.st_size, thread_info);
+        //requestServeStatic(request, filename, sbuf.st_size, thread_info);
+        requestServeStatic(request, request.filename, request.sbuf.st_size, thread_info);
     } else {
             thread_info -> Stat_thread_dynamic ++;
 //      if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
@@ -250,7 +251,8 @@ void requestHandle(request_type request, thread_info_type* thread_info)
 //          return;
 //      }
 
-        requestServeDynamic(request, filename, cgiargs, thread_info);
+//      requestServeDynamic(request, filename, cgiargs, thread_info);
+        requestServeDynamic(request, request.filename, request.cgiargs, thread_info);
     }
 }
 
