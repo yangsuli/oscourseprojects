@@ -181,9 +181,9 @@ void requestServeStatic(request_type request, char *filename, int filesize, thre
     sleep(1);
     
     // TODO what is this line for?
-    for(i = 0; i < 1e7; i++){
-    }
-    sprintf(buf,"%s yangsuli debug", buf);
+//  for(i = 0; i < 1e7; i++){
+//  }
+//  sprintf(buf,"%s yangsuli debug", buf);
     sprintf(buf, "%s Stat-thread-count: %d\r\n", buf, thread_info -> Stat_thread_count);
     sprintf(buf, "%s Stat-thread-static: %d\r\n", buf, thread_info -> Stat_thread_static);
     sprintf(buf, "%s Stat-thread-dynamic: %d\r\n", buf, thread_info -> Stat_thread_dynamic);
@@ -246,6 +246,59 @@ void requestHandle(request_type request, thread_info_type* thread_info)
         }
         requestServeDynamic(request, filename, cgiargs, thread_info);
     }
+}
+
+// parse the request 
+int requestParse(request_type request)
+{
+
+    int fd = request.conn_fd;    
+    int is_static;
+    struct stat sbuf;  // see man 2 stat: off_t sbuf.st_size /* file size, in bytes */
+    char buf[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
+    char filename[MAXLINE], cgiargs[MAXLINE];
+    rio_t rio;
+
+printf("1\n");    
+
+    Rio_readinitb(&rio, fd);
+    Rio_readlineb(&rio, buf, MAXLINE);
+
+printf("2\n");    
+
+    sscanf(buf, "%s %s %s", method, uri, version);
+    
+    printf("%s %s %s\n", method, uri, version);
+    
+printf("3\n");    
+    if (strcasecmp(method, "GET")) {
+        requestError(fd, method, "501", "Not Implemented", 
+                     "CS537 Server does not implement this method");
+        return -1;
+    }
+//  requestReadhdrs(&rio);
+    
+    is_static = requestParseURI(uri, filename, cgiargs);
+printf("4\n");    
+    if (stat(filename, &sbuf) < 0) {
+        requestError(fd, filename, "404", "Not found", "CS537 Server could not find this file");
+        return -1;
+    }
+    
+    if (is_static) {
+        if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode)) {
+            requestError(fd, filename, "403", "Forbidden", "CS537 Server could not read this file");
+            return -1;
+        }
+    } else {
+        if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
+            requestError(fd, filename, "403", "Forbidden", "CS537 Server could not run this CGI program");
+            return -1;
+        }
+    }
+
+    return 0;
+
 }
 
 
