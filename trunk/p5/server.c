@@ -253,7 +253,7 @@ void put_in_buffer(request_type request){
     {
         // one of the standard errors occured while parsing arguments -- no
         // need to put this in the shared buffer
-        printf("  found an error, is_static is set to -1\n");
+//      printf("  found an error, is_static is set to -1\n");
         return;
     }
 
@@ -272,7 +272,7 @@ void put_in_buffer(request_type request){
     }
 
     buffer_ptr[fill] = request;
-    in_use[fill] = 1;
+    in_use[fill]     = 1;
     num_filled++;
 
 }
