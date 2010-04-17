@@ -14,13 +14,18 @@
 // Most of the work is done within routines written in request.c
 //
 
-int num_filled = 0;                // number of requests sitting in buffer
-pthread_cond_t empty, full;
-pthread_mutex_t mutex;             // lock for modifiying buffer atomically
-request_type * buffer_ptr;         // pool of requests
-int * in_use;                      // indicates if location in buffer is inuse
-thread_info_type * threads_ptr;
-int policy_int;                    // policy chosen: 0 == FIFO
+int num_filled = 0;             // number of requests sitting in buffer
+int total_num_filled = 0;       // total number of requests served
+int new_epoch  = 0;             // flag to indicate a new epoch
+int N;                          // epoch division
+pthread_cond_t empty, full;     // condition variables for producer/consumer
+pthread_mutex_t mutex;          // lock for modifiying buffer atomically
+request_type * buffer_ptr;      // pool of requests
+int * in_use;                   // size of request.  == 0 if not in use
+thread_info_type * threads_ptr; // array of all the threads
+
+// policy chosen: 0 == FIFO : 1 == SFF : 2 == SFF-BS
+int policy_int = -1; 
 
 int buffer_size;// nmbr of request connections that can be accptd at one time. 
 int num_threads;// number of worker threads
@@ -55,20 +60,19 @@ void getargs(int *port, int *num_threads,int *buffer_size, char **policy_ptr,
             exit(1);
         }
         *N = atoi(argv[5]);
+        assert( *N > 0 );
         policy_int = 2;
     }else if(strcasecmp(*policy_ptr,"SFF") == 0 ) {
         if(argc != 5){
             fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
             exit(1);
         }
-        *N = 0;
         policy_int = 1;
     }else if(strcasecmp(*policy_ptr, "FIFO") == 0){
         if(argc != 5){
             fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
             exit(1);
         }
-        *N = 0;
         policy_int = 0;
 
     }else{
@@ -103,6 +107,7 @@ void * worker(void *arg){
         request_type curr_request = get_from_buffer();
 
         // finished reading from buffer, so wake other threads
+        if( new_epoch && num_filled == 0 ){ new_epoch = 0; }
         Pthread_cond_signal(&empty);
         Pthread_mutex_unlock(&mutex);
 
@@ -126,7 +131,6 @@ int main(int argc, char *argv[]) {
     char  policy[MAX_STR_SIZE];
     char * p = policy;
     char **policy_ptr = &p;
-    int N;
     getargs(&port,&threads,&buffers,policy_ptr,&N,argc, argv);
 
     // buffers is a bad name, we'll use buffer_size
@@ -178,7 +182,7 @@ int main(int argc, char *argv[]) {
         // add work to the buffer for a worker to handle
         ///////////////////////////////////////////////////////////////////////
         Pthread_mutex_lock(&mutex);
-        while(num_filled == buffer_size){
+        while(num_filled == buffer_size || new_epoch ){
             Pthread_cond_wait(&empty, &mutex);
         }
         put_in_buffer(curr_request);   
@@ -267,6 +271,15 @@ void put_in_buffer(request_type request){
         fill = get_sff_fill_index();
         break;
 
+        case 2:
+        fill = get_sff_fill_index();
+
+        // check for new epoch
+        if( (++total_num_filled % N) == 0 )
+        { new_epoch = 1; }
+       
+        break;
+
         default:
         unix_error("this scheduling policy is not implemented\n");
     }
@@ -288,6 +301,10 @@ request_type get_from_buffer(){
         break;
 
         case 1:
+        use = get_sff_use_index();
+        break;
+
+        case 2:
         use = get_sff_use_index();
         break;
 
