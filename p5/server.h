@@ -13,8 +13,8 @@ typedef struct __request_type{
 	double Stat_req_age;
 
     // scheduling policy fields
-    unsigned int file_size;
-    unsigned int epoch_num;
+    int file_size;
+    int epoch_num;
 
     // everything used in parsing arguments
     int fd;

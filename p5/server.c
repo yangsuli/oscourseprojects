@@ -136,8 +136,6 @@ int main(int argc, char *argv[]) {
     // number of worker threads
     num_threads = threads;
 
-    // TODO -- replace with a linked list or some other data structure 
-    // (need somethine else for SFF queuing)
     buffer_ptr = (request_type *)malloc(sizeof(request_type) * buffer_size);
     if(buffer_ptr == NULL){ unix_error("malloc error\n"); }
 
@@ -229,12 +227,14 @@ int get_sff_use_index() {
     int i = 0;
     for( i = 0; !in_use[i]; i++){;}
     int use = i;
+    int curr_size = in_use[use];
 
     // check all the other free locations
     while( i < num_threads ) {
         // if file size is smaller ...
-        if( 0 ) {
+        if( in_use[i] > 0 && in_use[i] < curr_size ) {
             use = i;
+            curr_size = in_use[i];
         }
         i++;
     }
@@ -272,7 +272,7 @@ void put_in_buffer(request_type request){
     }
 
     buffer_ptr[fill] = request;
-    in_use[fill]     = 1;
+    in_use[fill]     = request.file_size;
     num_filled++;
 
 }
