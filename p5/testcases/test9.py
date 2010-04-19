@@ -36,11 +36,11 @@ def test(cmd):
     commands.getoutput("rm -rf " + file1)
     commands.getoutput("rm -rf " + file2)
     os.system("./testclient localhost 2010 /output.cgi >> /dev/null &");
-    time.sleep(0.1)
+#    time.sleep(0.1)
     os.system("./testclient localhost 2010 /testdata/file-sff-large.txt > /tmp/file1 &");
-    time.sleep(0.1)
+#   time.sleep(0.1)
     os.system("./testclient localhost 2010 /output.cgi >> /dev/null &");
-    time.sleep(0.1)
+#   time.sleep(0.1)
     os.system("./testclient localhost 2010 /testdata/file-sff-small.txt > /tmp/file2 &");
 
 
