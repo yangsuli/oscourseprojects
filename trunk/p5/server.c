@@ -238,27 +238,32 @@ int get_sff_use_index() {
     // find the first available index
     int i = 0;
     while( !in_use[i] ){
-printf("  in_use[i] = %d\n", in_use[i] );
         i++;
     }
 
     int use = i;
     int curr_size = in_use[i];
+
+
+//// everything that is not indented is intended for debugging purposes.
+printf("   finding a 'use' index.\n");
 int debug_count = 1;  // we will always fine one candidate here!
+for( i = 0; i < buffer_size; i++ ) {
+    printf("   in_use[%d] = %d\n", i, in_use[i] );
+}
+i = use;
 
     // check all the other free locations
-printf("   curr_size = %d\n", curr_size );
     for( i = i + 1; i < buffer_size; i++ ) {
-printf("  in_use[i] = %d\n", in_use[i] );
         // if file size is smaller ...
         if( in_use[i] > 0 && in_use[i] < curr_size ) {
             use = i;
             curr_size = in_use[i];
-printf("   curr_size = %d\n", curr_size );
         }
         if( in_use[i] > 0 ){ debug_count++; }
         i++;
     }
+printf("   smallest_size = %8d,  i = %d\n", curr_size, i );
 printf(" found %d files in use\n", debug_count ); 
     return use;
 
