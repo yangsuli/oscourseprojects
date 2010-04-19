@@ -4,6 +4,8 @@
 #include <sys/time.h>
 #include <assert.h>
 
+#define PRINT_DEBUG 
+
 // 
 // server.c: A very, very simple web server
 //
@@ -244,14 +246,14 @@ int get_sff_use_index() {
     int use = i;
     int curr_size = in_use[i];
 
-
-//// everything that is not indented is intended for debugging purposes.
-printf("   finding a 'use' index.\n");
-int debug_count = 1;  // we will always fine one candidate here!
-for( i = 0; i < buffer_size; i++ ) {
-    printf("   in_use[%d] = %d\n", i, in_use[i] );
-}
-i = use;
+#ifdef PRINT_DEBUG
+    printf("   finding a 'use' index.\n");
+    int debug_count = 1;  // we will always fine one candidate here!
+    for( i = 0; i < buffer_size; i++ ) {
+        printf("   in_use[%d] = %d\n", i, in_use[i] );
+    }
+    i = use;
+#endif
 
     // check all the other free locations
     for( i = i + 1; i < buffer_size; i++ ) {
@@ -263,8 +265,12 @@ i = use;
         if( in_use[i] > 0 ){ debug_count++; }
         i++;
     }
-printf("   smallest_size = %8d,  i = %d\n", curr_size, i );
-printf(" found %d files in use\n", debug_count ); 
+
+#ifdef PRINT_DEBUG
+    printf("   smallest_size = %8d,  i = %d\n", curr_size, i );
+    printf(" found %d files in use\n", debug_count ); 
+#endif
+
     return use;
 
 }
@@ -308,6 +314,9 @@ void put_in_buffer(request_type request){
 //printf("  fill = %d\n", fill);
     buffer_ptr[fill] = request;
     in_use[fill]     = request.file_size;
+#ifdef PRINT_DEBUG
+        printf("   added in_use[%d] = %8d to buffer\n", fill, in_use[fill] );
+#endif
     num_filled++;
 
 }
