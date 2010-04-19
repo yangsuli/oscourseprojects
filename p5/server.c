@@ -119,6 +119,14 @@ void * worker(void *arg){
 
         // finished reading from buffer, so wake other threads
         if( new_epoch && num_filled == 0 ){ new_epoch = 0; }
+
+	int i = 0;
+	for(i = 0; i < buffer_size; i++){
+		if(in_use[i] > 0 && buffer_ptr[i].Stat_req_arrival < curr_request.Stat_req_arrival){
+			buffer_ptr[i].Stat_req_age ++;
+		}
+	}
+			
         Pthread_cond_signal(&empty);
         Pthread_mutex_unlock(&mutex);
 
@@ -188,6 +196,7 @@ int main(int argc, char *argv[]) {
         request_type curr_request;
         curr_request.conn_fd = connfd;
         curr_request.Stat_req_arrival = GetTime();
+	curr_request.Stat_req_age = 0;
 
         ///////////////////////////////////////////////////////////////////////
         // add work to the buffer for a worker to handle
