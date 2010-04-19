@@ -263,11 +263,10 @@ int get_sff_use_index() {
             curr_size = in_use[i];
         }
         if( in_use[i] > 0 ){ debug_count++; }
-        i++;
     }
 
 #ifdef PRINT_DEBUG
-    printf("   smallest_size = %8d,  i = %d\n", curr_size, i );
+    printf("   smallest_size = %8d,  use = %d\n", curr_size, use );
     printf(" found %d files in use\n", debug_count ); 
 #endif
 
