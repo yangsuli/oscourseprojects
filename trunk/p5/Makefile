@@ -11,10 +11,10 @@ CFLAGS = -g -Wall
 LIB_FLAG = -lpthread
 #LIBS     = -lpthread  # i don't like this name...
 LIBS     = -lpthread -ggdb
-
+ALL_EXECS = server client simple_client output.cgi output10.cgi testclient
 .SUFFIXES: .c .o 
 
-all: server client simple_client output.cgi output10.cgi testclient
+all: $(ALL_EXECS)
 
 server: server.o request.o cs537.o
 	$(CC) $(CFLAGS) -o server server.o request.o cs537.o $(LIBS)
@@ -40,7 +40,7 @@ testclient: testclient.o cs537.o
 #clean:
 #	-rm -f $(OBJS) server client output.cgi
 clean:
-	-rm -f *.o server client output.cgi tags
+	-rm -f *.o $(ALL_EXECS) tags
 
 tags:
 	ctags *.c *.h
