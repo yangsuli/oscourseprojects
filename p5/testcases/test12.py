@@ -20,7 +20,7 @@ def test(cmd):
 
     print ""
     print "- Starting " + cmd
-    util.run(cmd)
+    util.run2(cmd)
     
     if util.is_server_alive(cmd) != -1:
         util.error("Ouch! Server is still alive!")
