@@ -106,6 +106,7 @@ void * worker(void *arg){
 
     // workers will never leave this while loop
     while(1){
+
         Pthread_mutex_lock(&mutex);
         while(num_filled == 0){
             Pthread_cond_wait(&full,&mutex);
@@ -225,10 +226,9 @@ int get_fifo_fill_index(){
 
 int get_sff_fill_index(){
 
+    // find first free spot
     int i = 0;
-
-    // find first free spot and place it there
-    for( i = 0; in_use[i]; i++){;}
+    while( in_use[i] ){ i++; }
     return i;
 }
 
@@ -236,20 +236,25 @@ int get_sff_fill_index(){
 int get_sff_use_index() {
 
     // find the first available index
-    int debug_count = 0;
     int i = 0;
-    for( i = 0; !in_use[i]; i++){
-        ;
+    while( !in_use[i] ){
+printf("  in_use[i] = %d\n", in_use[i] );
+        i++;
     }
+
     int use = i;
-    int curr_size = in_use[use];
+    int curr_size = in_use[i];
+int debug_count = 1;  // we will always fine one candidate here!
 
     // check all the other free locations
-    while( i < buffer_size ) {
+printf("   curr_size = %d\n", curr_size );
+    for( i = i + 1; i < buffer_size; i++ ) {
+printf("  in_use[i] = %d\n", in_use[i] );
         // if file size is smaller ...
         if( in_use[i] > 0 && in_use[i] < curr_size ) {
             use = i;
             curr_size = in_use[i];
+printf("   curr_size = %d\n", curr_size );
         }
         if( in_use[i] > 0 ){ debug_count++; }
         i++;
@@ -324,7 +329,7 @@ request_type get_from_buffer(){
         unix_error("this scheduling policy is not implemented\n");
     }
         
-    request_type tmp = buffer_ptr[use];  //TODO
+    request_type tmp = buffer_ptr[use];
     in_use[use] = 0;
     num_filled--;
     return tmp;
