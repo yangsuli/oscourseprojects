@@ -14,7 +14,7 @@ LIBS     = -lpthread -ggdb
 
 .SUFFIXES: .c .o 
 
-all: server client simple_client output.cgi
+all: server client simple_client output.cgi output10.cgi testclient
 
 server: server.o request.o cs537.o
 	$(CC) $(CFLAGS) -o server server.o request.o cs537.o $(LIBS)
@@ -27,6 +27,12 @@ simple_client: simple_client.o cs537.o
 
 output.cgi: output.c
 	$(CC) $(CFLAGS) -o output.cgi output.c $(LIBS)
+
+output10.cgi: output10.c
+	$(CC) $(CFLAGS) -o output10.cgi output10.c $(LIBS)
+
+testclient: testclient.o cs537.o
+	$(CC) $(CFLAGS) -o testclient testclient.o cs537.o $(LIBS)
 
 .c.o:
 	$(CC) $(CFLAGS) -o $@ -c $<
