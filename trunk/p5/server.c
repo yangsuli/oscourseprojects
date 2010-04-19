@@ -43,16 +43,18 @@ void getargs(int *port, int *num_threads,int *buffer_size, char **policy_ptr,
     *num_threads = atoi(argv[2]);
     *buffer_size = atoi(argv[3]);
 
-    // strncpy is safer than strcpy in case user supplies VERY large argument 
-    strncpy(*policy_ptr, argv[4], MAX_STR_SIZE);  
-
     // check for positivity
     if( *num_threads < 1 || *buffer_size < 1 )
     {
         fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
+        fprintf(stderr,"  num_threads = %d,  buffer_size = %d\n", *num_threads, *buffer_size );
         fprintf(stderr, "num_threads and buffer_size should be positive\n");
         exit(1);
     }
+
+
+    // strncpy is safer than strcpy in case user supplies VERY large argument 
+    strncpy(*policy_ptr, argv[4], MAX_STR_SIZE);  
 
     if(strcasecmp(*policy_ptr,"SFF-BS") == 0){
         if(argc != 6){
@@ -60,7 +62,12 @@ void getargs(int *port, int *num_threads,int *buffer_size, char **policy_ptr,
             exit(1);
         }
         *N = atoi(argv[5]);
-        assert( *N > 0 );
+        // check for positivity
+        if( !( *N > 0) ) {
+            fprintf(stderr, "Usage: %s [portnum] [threads] [buffers] [schedalg] [N  (for SFF-BS only)]\n", argv[0]);
+            fprintf(stderr, "N should be positive\n");
+            exit(1);
+        }
         policy_int = 2;
     }else if(strcasecmp(*policy_ptr,"SFF") == 0 ) {
         if(argc != 5){
@@ -79,6 +86,7 @@ void getargs(int *port, int *num_threads,int *buffer_size, char **policy_ptr,
         fprintf(stderr, "policy has to be FIFO, SFF, or SFF-BS\n");
         exit(1);
     }
+
 }
 
 // worker threads live here
@@ -228,21 +236,25 @@ int get_sff_fill_index(){
 int get_sff_use_index() {
 
     // find the first available index
+    int debug_count = 0;
     int i = 0;
-    for( i = 0; !in_use[i]; i++){;}
+    for( i = 0; !in_use[i]; i++){
+        ;
+    }
     int use = i;
     int curr_size = in_use[use];
 
     // check all the other free locations
-    while( i < num_threads ) {
+    while( i < buffer_size ) {
         // if file size is smaller ...
         if( in_use[i] > 0 && in_use[i] < curr_size ) {
             use = i;
             curr_size = in_use[i];
         }
+        if( in_use[i] > 0 ){ debug_count++; }
         i++;
     }
-    
+printf(" found %d files in use\n", debug_count ); 
     return use;
 
 }
