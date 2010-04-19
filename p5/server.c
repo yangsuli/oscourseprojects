@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
 int get_fifo_use_index() {
     static int use = 0;
     int tmp = use;
-    use = (use+1) % num_threads;
+    use = (use+1) % buffer_size;
     return tmp;
 }
 
@@ -283,7 +283,7 @@ void put_in_buffer(request_type request){
         default:
         unix_error("this scheduling policy is not implemented\n");
     }
-
+//printf("  fill = %d\n", fill);
     buffer_ptr[fill] = request;
     in_use[fill]     = request.file_size;
     num_filled++;
