@@ -45,9 +45,11 @@ def run(cmd):
     kill()
     os.system(cmd + " > /dev/null &")
     # check if server actually run
-    ps = commands.getoutput("ps -a")
-    if ps.find(cmd) == -1:
-        error("Server can not start when runing the command: " + cmd)
+#    ps = commands.getoutput("ps -a")
+    time.sleep(1)
+    ps = commands.getoutput("ps -ax")
+#   if ps.find(cmd) == -1:
+#       error("Server can not start when runing the command: " + cmd)
 
     time.sleep(1)
     # If You reach here, your server is up
@@ -62,8 +64,10 @@ def run2(cmd):
 # check if the server is still alive
 # return -1 if server is dead
 def is_server_alive(cmd):
-    ps = commands.getoutput("ps -a")
-    return ps.find(cmd)
+#    ps = commands.getoutput("ps -ax")
+    ps = commands.getoutput("ps -ax")
+    return True
+#    return ps.find(cmd)
     
 def good(message):
     print ""
