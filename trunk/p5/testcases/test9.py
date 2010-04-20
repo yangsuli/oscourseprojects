@@ -50,16 +50,15 @@ def test(cmd):
         util.error("Ouch! Server is dead!"
                    " Your bounded buffered may not be well protected");
 
-    time.sleep(4)
     time1 = os.path.getmtime(file1)
     time2 = os.path.getmtime(file2)
    
-    print "  time1 = ", time1
-    print "  time2 = ", time2
+    print time1
+    print time2
 
     passed = time1 > time2
 
-    if (passed>0):
+    if passed:
         print ""
         print "#####################################"
         print "GOOD! you implement SFF correctly"
