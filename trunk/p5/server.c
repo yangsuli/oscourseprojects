@@ -358,9 +358,9 @@ request_type get_from_buffer(){
 }
 
 // simple time function
-double GetTime(){
+int GetTime(){
     struct timeval t;
     int rc = gettimeofday(&t,NULL);
     assert(rc==0);
-    return t.tv_sec + t.tv_usec/1e6;
+    return 1000*t.tv_sec + t.tv_usec/1e3;
 }
