@@ -205,8 +205,8 @@ int main(int argc, char *argv[]) {
         curr_request.conn_fd = connfd;
         curr_request.Stat_req_arrival = GetTime();
 	curr_request.Stat_req_age = 0;
-	curr_req_num++;
 	curr_request.request_num = curr_req_num;
+	curr_req_num++;
 
         ///////////////////////////////////////////////////////////////////////
         // add work to the buffer for a worker to handle
