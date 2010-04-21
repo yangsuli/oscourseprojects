@@ -18,7 +18,7 @@
 
 int num_filled = 0;             // number of requests sitting in buffer
 int total_num_filled = 0;       // total number of requests served
-int new_epoch  = 0;             // flag to indicate a new epoch
+int curr_epoch  = 0;             // flag to indicate a new epoch
 int N;                          // epoch division
 pthread_cond_t empty, full;     // condition variables for producer/consumer
 pthread_mutex_t mutex;          // lock for modifiying buffer atomically
@@ -26,6 +26,7 @@ request_type * buffer_ptr;      // pool of requests
 int * in_use;                   // size of request.  == 0 if not in use
 thread_info_type * threads_ptr; // array of all the threads
 int time_offset;
+int served_request = 0;
 
 // policy chosen: 0 == FIFO : 1 == SFF : 2 == SFF-BS
 int policy_int = -1; 
@@ -119,7 +120,11 @@ void * worker(void *arg){
         request_type curr_request = get_from_buffer();
 
         // finished reading from buffer, so wake other threads
-        if( new_epoch && num_filled == 0 ){ new_epoch = 0; }
+      //  if( new_epoch && num_filled == 0 ){ new_epoch = 0; }
+	served_request ++;
+	if(served_request % N == 0){
+		curr_epoch++;
+	}
 
 	int i = 0;
 	for(i = 0; i < buffer_size; i++){
@@ -144,6 +149,7 @@ void * worker(void *arg){
 int main(int argc, char *argv[]) {
 
     int listenfd, connfd, clientlen;
+    int curr_req_num = 0;
     struct sockaddr_in clientaddr;
     time_offset = get_time_offset();
 
@@ -199,20 +205,20 @@ int main(int argc, char *argv[]) {
         curr_request.conn_fd = connfd;
         curr_request.Stat_req_arrival = GetTime();
 	curr_request.Stat_req_age = 0;
+	curr_req_num++;
+	curr_request.request_num = curr_req_num;
 
         ///////////////////////////////////////////////////////////////////////
         // add work to the buffer for a worker to handle
         ///////////////////////////////////////////////////////////////////////
         Pthread_mutex_lock(&mutex);
-        while(num_filled == buffer_size || new_epoch ){
+        while(num_filled == buffer_size ){
             Pthread_cond_wait(&empty, &mutex);
         }
         put_in_buffer(curr_request);   
         
         // finished working on the buffer, so free for other
         // producers/consumers to modify
-        // TODO -- do we need the condition variable "full" since there is only
-        // one producer?  probably....
         Pthread_cond_signal(&full);
         Pthread_mutex_unlock(&mutex);
     }
@@ -285,6 +291,47 @@ int get_sff_use_index() {
 
 }
 
+
+// selects index of array to read from the buffer.
+int get_sff_bs_use_index() {
+
+    // find the first available index
+    int i = 0;
+    while( !in_use[i] || buffer_ptr[i].request_num % N > curr_epoch ){
+        i++;
+    }
+
+    int use = i;
+    int curr_size = in_use[i];
+
+#ifdef PRINT_DEBUG
+    printf("   finding a 'use' index.\n");
+    int debug_count = 1;  // we will always fine one candidate here!
+    for( i = 0; i < buffer_size; i++ ) {
+        printf("   in_use[%d] = %d\n", i, in_use[i] );
+    }
+    i = use;
+#endif
+
+    // check all the other free locations
+    for( i = i + 1; i < buffer_size; i++ ) {
+        // if file size is smaller ...
+        if( in_use[i] > 0 && in_use[i] < curr_size && buffer_ptr[i].request_num % N <= curr_epoch ) {
+            use = i;
+            curr_size = in_use[i];
+        }
+        if( in_use[i] > 0 ){ debug_count++; }
+    }
+
+#ifdef PRINT_DEBUG
+    printf("   smallest_size = %8d,  use = %d\n", curr_size, use );
+    printf(" found %d files in use\n", debug_count ); 
+#endif
+
+    return use;
+
+}
+
 void put_in_buffer(request_type request){
 
     int fill = -1;
@@ -313,8 +360,8 @@ void put_in_buffer(request_type request){
         fill = get_sff_fill_index();
 
         // check for new epoch
-        if( (++total_num_filled % N) == 0 )
-        { new_epoch = 1; }
+      //  if( (++total_num_filled % N) == 0 )
+       // { new_epoch = 1; }
        
         break;
 
@@ -346,7 +393,7 @@ request_type get_from_buffer(){
         break;
 
         case 2:
-        use = get_sff_use_index();
+        use = get_sff_bs_use_index();
         break;
 
         default:
