@@ -23,11 +23,14 @@ NUM_LOOPS = 3
 
 count = 0 # number of time you passed
 
-file1 = "/tmp/file1"
-file2 = "/tmp/file2"
-file3 = "/tmp/file3"
-file4 = "/tmp/file4"
-
+#file1 = "/tmp/file1"
+#file2 = "/tmp/file2"
+#file3 = "/tmp/file3"
+#file4 = "/tmp/file4"
+file1 = commands.getoutput("mktemp /tmp/p5.XXXXX")
+file2 = commands.getoutput("mktemp /tmp/p5.XXXXX")
+file3 = commands.getoutput("mktemp /tmp/p5.XXXXX")
+file4 = commands.getoutput("mktemp /tmp/p5.XXXXX")
 
 def test(cmd):
     global count
@@ -43,19 +46,23 @@ def test(cmd):
 
     os.system("./testclient localhost 2010 /output.cgi >> /dev/null &");
     time.sleep(0.6)
-    os.system("./testclient localhost 2010 /testdata/file-sff-large.txt > /tmp/file1 &");
+#    os.system("./testclient localhost 2010 /testdata/file-sff-large.txt > /tmp/file1 &");
+    os.system("./testclient localhost 2010 /testdata/file-sff-large.txt > %s &" % file1);
     time.sleep(0.1)
-    os.system("./testclient localhost 2010 /testdata/file-sff-small.txt > /tmp/file2 &");
+#    os.system("./testclient localhost 2010 /testdata/file-sff-small.txt > /tmp/file2 &");
+    os.system("./testclient localhost 2010 /testdata/file-sff-small.txt > %s &" % file2);
     time.sleep(0.1)
     os.system("./testclient localhost 2010 /output.cgi >> /dev/null &");
     time.sleep(0.1)
-    os.system("./testclient localhost 2010 /testdata/file-sff-large.txt > /tmp/file3 &");
+#    os.system("./testclient localhost 2010 /testdata/file-sff-large.txt > /tmp/file3 &");
+    os.system("./testclient localhost 2010 /testdata/file-sff-large.txt > %s &" % file3);
     time.sleep(0.1)
-    os.system("./testclient localhost 2010 /testdata/file-sff-small.txt > /tmp/file4 &");
+#    os.system("./testclient localhost 2010 /testdata/file-sff-small.txt > /tmp/file4 &");
+    os.system("./testclient localhost 2010 /testdata/file-sff-small.txt > %s &" % file4);
     time.sleep(0.1)
     os.system("./testclient localhost 2010 /output.cgi >> /dev/null &");
 
-    time.sleep(4 * CGI_SPIN_TIME + 1)
+    time.sleep(4 * CGI_SPIN_TIME + 3)
 
     if util.is_server_alive(cmd) == -1:
         util.error("Ouch! Server is dead!"
@@ -72,8 +79,8 @@ def test(cmd):
     print "time4 = " + str(time4)
 
 
-    print "expected = " + "time1 > time2 and time3 >= time4 and time4 >= time1"
-    passed = time1 > time2 and time3 > time4 and time4 >= time1
+    print "expected = " + "time1 >= time2 and time3 > time4 and time4 >= time1"
+    passed = time1 >= time2 and time3 > time4 and time4 >= time1
 
     if passed:
         print ""
