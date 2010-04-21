@@ -13,13 +13,22 @@ import util
 ##########################################
 # check arrival time
 # IMPORTANT IMPORTANT: we expect the arrival time 
-# in microseconds
+# NOT in microseconds
+# but in miliseconds
 ##########################################
 
 
 file1 = commands.getoutput("mktemp /tmp/p5.XXXXX")
 
 def test(cmd):
+
+    print "##########################################"
+    print "# check arrival time"
+    print "# IMPORTANT IMPORTANT: we expect the arrival time "
+    print "# NOT NOT microseconds"
+    print "# but IN MILIseconds"
+    print "##########################################"
+    
     util.info("")
     util.info("- Starting " + cmd)
     util.info("")
@@ -27,13 +36,13 @@ def test(cmd):
     
     commands.getoutput("rm -rf " + file1)
 
-    res1 = commands.getoutput("./testclient localhost 2010 /testdata/file1.txt");
+    res1 = commands.getoutput("./testclient localhost 2783 /testdata/file1.txt");
     time.sleep(1)
-    res2 = commands.getoutput("./testclient localhost 2010 /testdata/file1.txt")
+    res2 = commands.getoutput("./testclient localhost 2783 /testdata/file1.txt")
     time.sleep(1)
-    res3 = commands.getoutput("./testclient localhost 2010 /testdata/file1.txt")
+    res3 = commands.getoutput("./testclient localhost 2783 /testdata/file1.txt")
     time.sleep(1)
-    res4 = commands.getoutput("./testclient localhost 2010 /testdata/file1.txt")
+    res4 = commands.getoutput("./testclient localhost 2783 /testdata/file1.txt")
 
     arr1 = util.get_stat2(res1, "Stat-req-arrival")
     arr2 = util.get_stat2(res2, "Stat-req-arrival")
@@ -45,7 +54,8 @@ def test(cmd):
     print "arrival 3 = " + str(arr3)
     print "arrival 4 = " + str(arr4)
 
-    s = 1000000 # 1 second
+#    s = 1000000 # 1 second
+    s = 1000 # IN MILIseconds, i.e 1 seconds
 
     passed = arr1 + s <= arr2
     passed = passed and arr2 + s <= arr3
@@ -54,7 +64,7 @@ def test(cmd):
     if passed:
         util.good("Congrats! You passed the final test")
     else:
-        util.error("Common! this is the final one... go go go !")
+        util.error("Come on! this is the final one... go go go !")
 
     util.kill()
 
@@ -63,9 +73,9 @@ util.make()
 
 
 # test SFF server
-test("./server 2010 1 4 FIFO")
-test("./server 2010 1 4 SFF")
-test("./server 2010 1 4 SFF-BS 2")
+test("./server 2783 1 4 FIFO")
+test("./server 2783 1 4 SFF")
+test("./server 2783 1 4 SFF-BS 2")
 
 sys.exit(0)
 
