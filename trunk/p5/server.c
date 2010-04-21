@@ -122,7 +122,7 @@ void * worker(void *arg){
         // finished reading from buffer, so wake other threads
       //  if( new_epoch && num_filled == 0 ){ new_epoch = 0; }
 	served_request ++;
-	if(served_request % N == 0){
+	if(policy_int == 2 && served_request % N == 0){
 		curr_epoch++;
 	}
 
