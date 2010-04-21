@@ -23,10 +23,15 @@ NUM_LOOPS = 1
 
 count = 0 # number of time you passed
 
-tmpfile = "/tmp/p5.result"
-file1 = "/tmp/file1"
-file2 = "/tmp/file2"
-file3 = "/tmp/file3"
+#tmpfile = "/tmp/p5.result"
+#file1 = "/tmp/file1"
+#file2 = "/tmp/file2"
+#file3 = "/tmp/file3"
+
+tmpfile = commands.getoutput("mktemp /tmp/p5.XXXXX")
+file1 = commands.getoutput("mktemp /tmp/p5.XXXXX")
+file2 = commands.getoutput("mktemp /tmp/p5.XXXXX")
+file3 = commands.getoutput("mktemp /tmp/p5.XXXXX")
 
 expected = []
 got = []
@@ -51,15 +56,19 @@ def test(cmd):
 
     os.system("./testclient localhost 2010 /output10.cgi >> /dev/null &");
     time.sleep(1)
-    os.system("./testclient localhost 2010 /testdata/file1.txt > /tmp/file1 &");
+#    os.system("./testclient localhost 2010 /testdata/file1.txt > /tmp/file1 &");
+    os.system("./testclient localhost 2010 /testdata/file1.txt > %s &" % file1);
     time.sleep(1)
     os.system("./testclient localhost 2010 /output.cgi >> /dev/null &");
     time.sleep(1)
-    os.system("./testclient localhost 2010 /testdata/file2.txt > /tmp/file2 &");
+#    os.system("./testclient localhost 2010 /testdata/file2.txt > /tmp/file2 &");
+    os.system("./testclient localhost 2010 /testdata/file2.txt > %s &" % file2);
     time.sleep(1)
     os.system("./testclient localhost 2010 /output.cgi >> /dev/null &");
     time.sleep(1)
-    os.system("./testclient localhost 2010 /testdata/file3.txt > /tmp/file3 &");
+#    os.system("./testclient localhost 2010 /testdata/file3.txt > /tmp/file3 &");
+    os.system("./testclient localhost 2010 /testdata/file3.txt > %s &" % file3);
+
 
 
     time.sleep(10 +  2 * CGI_SPIN_TIME + 2);

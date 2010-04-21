@@ -40,12 +40,12 @@ def test(cmd):
     os.system("./testclient localhost 2010 /output.cgi >> /dev/null &");
     time.sleep(0.3)
 #    os.system("./testclient localhost 2010 /testdata/file-sff-large.txt > /tmp/file1 &");
-    os.system("./testclient localhost 2010 /testdata/file-sff-large.txt > %s &" % file1);
+    os.system("./testclient localhost 2010 /testdata/file1.txt > %s &" % file1);
 #   time.sleep(0.1)
     os.system("./testclient localhost 2010 /output.cgi >> /dev/null &");
 #   time.sleep(0.1)
 #    os.system("./testclient localhost 2010 /testdata/file-sff-small.txt > /tmp/file2 &");
-    os.system("./testclient localhost 2010 /testdata/file-sff-small.txt > %s &" % file2);
+    os.system("./testclient localhost 2010 /testdata/file2.txt > %s &" % file2);
 
 
     time.sleep(3 *  CGI_SPIN_TIME)
