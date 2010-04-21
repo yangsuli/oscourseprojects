@@ -110,9 +110,9 @@ void requestServeDynamic(request_type request, char *filename, char *cgiargs, th
     
     /* CS537: Your statistics go here -- fill in the 0's with something useful! */
 
-    sprintf(buf, "%s Stat-req-arrival: %f\r\n", buf, request.Stat_req_arrival);
-    sprintf(buf, "%s Stat-req-dispatch: %f\r\n", buf, request.Stat_req_dispatch);
-    sprintf(buf, "%s Stat-req-age: %d\f\n", buf, (int)request.Stat_req_age);
+    sprintf(buf, "%s Stat-req-arrival: %d\r\n", buf, request.Stat_req_arrival);
+    sprintf(buf, "%s Stat-req-dispatch: %d\r\n", buf, request.Stat_req_dispatch);
+    sprintf(buf, "%s Stat-req-age: %d\r\n", buf, request.Stat_req_age);
     sprintf(buf, "%s Stat-thread-id: %d\r\n", buf, thread_info -> Stat_thread_id);
     sprintf(buf, "%s Stat-thread-count: %d\r\n", buf, thread_info -> Stat_thread_count);
     sprintf(buf, "%s Stat-thread-static: %d\r\n", buf, thread_info -> Stat_thread_static);
@@ -169,11 +169,11 @@ void requestServeStatic(request_type request, char *filename, int filesize, thre
     sprintf(buf, "%s Server: CS537 Web Server\r\n", buf);
     
     // CS537: Your statistics go here -- fill in the 0's with something useful!
-    sprintf(buf, "%s Stat-req-arrival: %f\r\n", buf, request.Stat_req_arrival);
-    sprintf(buf, "%s Stat-req-dispatch: %f\r\n", buf, request.Stat_req_dispatch);
-    sprintf(buf, "%s Stat-req-read: %f\r\n", buf, request.Stat_req_read);
-    sprintf(buf, "%s Stat-req-complete: %f\r\n", buf, request.Stat_req_complete);
-    sprintf(buf, "%s Stat-req-age: %d\f\n", buf, (int)request.Stat_req_age);
+    sprintf(buf, "%s Stat-req-arrival: %d\r\n", buf, request.Stat_req_arrival);
+    sprintf(buf, "%s Stat-req-dispatch: %d\r\n", buf, request.Stat_req_dispatch);
+    sprintf(buf, "%s Stat-req-read: %d\r\n", buf, request.Stat_req_read);
+    sprintf(buf, "%s Stat-req-complete: %d\r\n", buf, request.Stat_req_complete);
+    sprintf(buf, "%s Stat-req-age: %d\r\n", buf, request.Stat_req_age);
     sprintf(buf, "%s Stat-thread-id: %d\r\n", buf, thread_info -> Stat_thread_id);
     sprintf(buf, "%s Stat-thread-count: %d\r\n", buf, thread_info -> Stat_thread_count);
     sprintf(buf, "%s Stat-thread-static: %d\r\n", buf, thread_info -> Stat_thread_static);
