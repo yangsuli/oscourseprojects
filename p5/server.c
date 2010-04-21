@@ -297,7 +297,7 @@ int get_sff_bs_use_index() {
 
     // find the first available index
     int i = 0;
-    while( !in_use[i] || buffer_ptr[i].request_num % N > curr_epoch ){
+    while( !in_use[i] || buffer_ptr[i].request_num / N > curr_epoch ){
         i++;
     }
 
@@ -316,7 +316,7 @@ int get_sff_bs_use_index() {
     // check all the other free locations
     for( i = i + 1; i < buffer_size; i++ ) {
         // if file size is smaller ...
-        if( in_use[i] > 0 && in_use[i] < curr_size && buffer_ptr[i].request_num % N <= curr_epoch ) {
+        if( in_use[i] > 0 && in_use[i] < curr_size && buffer_ptr[i].request_num / N <= curr_epoch ) {
             use = i;
             curr_size = in_use[i];
         }
