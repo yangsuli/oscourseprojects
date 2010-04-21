@@ -1,5 +1,11 @@
 ** Important **
 =============
+
+***REMEMBER*** when you run this test on a machine,
+make sure you are the only person who run ./server
+because otherwise, more than one person are trying to run 
+the server binding to the same port...
+
 Note that it is currently not automated and not completed yet.
 (look for automated version and some new test cases in the future).
 
@@ -21,7 +27,7 @@ this is similar to the output.cgi target.
 4. copy testclient.c to YWD, add a target to your makefile
 so that when do make, testclient (executatle file) will appear.
 
-5. change output.c so that output.cgi will server for 2.0 seconds.
+5. change output.c so that output.cgi will spin the server for 2.0 seconds.
 specifically, change *spinfor* to *2.0* instead of 5.0.
 
 
@@ -77,7 +83,11 @@ Statistics
 ----------
 11. thread statistics
 ! Note that there will be more tests for this part.
-
+16. Check Stat-thread-count
+17. Check Stat-thread-static and Stat-thread-dynamic
+18. Check Stat-req-read/dispatch/complete
+19. Check Stat-req-age
+20. Check Stat-req-arrival - the time should be print in MILISECONDS
 
 Parammeters
 -----------
