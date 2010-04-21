@@ -123,7 +123,7 @@ void * worker(void *arg){
 
 	int i = 0;
 	for(i = 0; i < buffer_size; i++){
-		if(in_use[i] > 0 && buffer_ptr[i].Stat_req_arrival < curr_request.Stat_req_arrival){
+		if(in_use[i] > 0 /*&& buffer_ptr[i].Stat_req_arrival < curr_request.Stat_req_arrival */){
 			buffer_ptr[i].Stat_req_age ++;
 		}
 	}
