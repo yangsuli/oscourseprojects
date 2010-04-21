@@ -25,6 +25,7 @@ pthread_mutex_t mutex;          // lock for modifiying buffer atomically
 request_type * buffer_ptr;      // pool of requests
 int * in_use;                   // size of request.  == 0 if not in use
 thread_info_type * threads_ptr; // array of all the threads
+int time_offset;
 
 // policy chosen: 0 == FIFO : 1 == SFF : 2 == SFF-BS
 int policy_int = -1; 
@@ -144,6 +145,7 @@ int main(int argc, char *argv[]) {
 
     int listenfd, connfd, clientlen;
     struct sockaddr_in clientaddr;
+    time_offset = get_time_offset();
 
     ///// parse the arguments  /////
     int port, threads, buffers, i;
@@ -357,10 +359,17 @@ request_type get_from_buffer(){
     return tmp;
 }
 
+int get_time_offset(){
+	struct timeval t;
+        int rc = gettimeofday(&t, NULL);
+	assert(rc==0);
+	return t.tv_sec;
+}
+
 // simple time function
 int GetTime(){
     struct timeval t;
     int rc = gettimeofday(&t,NULL);
     assert(rc==0);
-    return 1000*t.tv_sec + t.tv_usec/1e3;
+    return 1e6*(t.tv_sec -time_offset)+ t.tv_usec;
 }
