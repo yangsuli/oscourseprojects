@@ -8,9 +8,8 @@ TARGET = server
 CC = gcc
 CFLAGS = -g -Wall
 
-LIB_FLAG = -lpthread
-#LIBS     = -lpthread  # i don't like this name...
-LIBS     = -lpthread -ggdb
+LIBS     = -lpthread
+#LIBS     = -lpthread -ggdb
 ALL_EXECS = server client client1 simple_client output.cgi output10.cgi testclient
 .SUFFIXES: .c .o 
 
