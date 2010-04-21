@@ -6,11 +6,11 @@ typedef struct __request_type{
 	int conn_fd;
 
     // every field that starts with Stat has to do with collecting statistics
-	double Stat_req_arrival;
-	double Stat_req_dispatch;
-	double Stat_req_read;
-	double Stat_req_complete;
-	double Stat_req_age;
+	int Stat_req_arrival;
+	int Stat_req_dispatch;
+	int Stat_req_read;
+	int Stat_req_complete;
+	int Stat_req_age;
 
     // scheduling policy fields
     int file_size;
@@ -36,6 +36,6 @@ typedef struct __thread_info{
 void put_in_buffer(request_type request);
 
 request_type get_from_buffer();
-double GetTime();
+int GetTime();
 
 #endif
