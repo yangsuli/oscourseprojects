@@ -195,55 +195,12 @@ void requestHandle(request_type request, thread_info_type* thread_info)
 {
 
     thread_info -> Stat_thread_count ++;
-
-//  char *filename   = request.filename;
-//  struct stat sbuf = request.sbuf;
-//  char* cgiargs    = request.cgiargs;
-
-//  int fd = request.conn_fd;    
-//  int is_static;
-//  struct stat sbuf;  // see man 2 stat: off_t sbuf.st_size /* file size, in bytes */
-//  char buf[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
-//  char filename[MAXLINE], cgiargs[MAXLINE];
-//  rio_t rio;
-//  
-//  Rio_readinitb(&rio, fd);
-//  Rio_readlineb(&rio, buf, MAXLINE);
-//  sscanf(buf, "%s %s %s", method, uri, version);
-//  
-//  printf("%s %s %s\n", method, uri, version);
-//  
-//  if (strcasecmp(method, "GET")) {
-//      requestError(fd, method, "501", "Not Implemented", 
-//                   "CS537 Server does not implement this method");
-//      return;
-//  }
-//  requestReadhdrs(&rio);
-
-//  is_static = requestParseURI(uri, filename, cgiargs);
-//  if (stat(filename, &sbuf) < 0) {
-//      requestError(fd, filename, "404", "Not found", "CS537 Server could not find this file");
-//      return;
-//  }
-    
     if ( request.is_static) {
-            thread_info -> Stat_thread_static ++;
-//      if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode)) {
-//          requestError(fd, filename, "403", "Forbidden", "CS537 Server could not read this file");
-//          return;
-//      }
-
-        //requestServeStatic(request, filename, sbuf.st_size, thread_info);
+        thread_info -> Stat_thread_static ++;
         requestServeStatic(request, request.filename, request.sbuf.st_size, thread_info);
     } else {
-            thread_info -> Stat_thread_dynamic ++;
-//      if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
-//          requestError(fd, filename, "403", "Forbidden", "CS537 Server could not run this CGI program");
-//          return;
-//      }
-
-//      requestServeDynamic(request, filename, cgiargs, thread_info);
-        requestServeDynamic(request, request.filename, request.cgiargs, thread_info);
+        thread_info -> Stat_thread_dynamic ++;
+            requestServeDynamic(request, request.filename, request.cgiargs, thread_info);
     }
 }
 
