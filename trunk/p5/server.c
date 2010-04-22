@@ -4,7 +4,7 @@
 #include <sys/time.h>
 #include <assert.h>
 
-#define PRINT_DEBUG 
+//#define PRINT_DEBUG 
 
 // 
 // server.c: A very, very simple web server
@@ -144,6 +144,13 @@ void * worker(void *arg){
         Close(connfd);
     }
 
+}
+
+int get_time_offset(){
+	struct timeval t;
+    int rc = gettimeofday(&t, NULL);
+	assert(rc==0);
+	return t.tv_sec;
 }
 
 int main(int argc, char *argv[]) {
@@ -359,16 +366,12 @@ void put_in_buffer(request_type request){
         case 2:
         fill = get_sff_fill_index();
 
-        // check for new epoch
-      //  if( (++total_num_filled % N) == 0 )
-       // { new_epoch = 1; }
-       
         break;
 
         default:
         unix_error("this scheduling policy is not implemented\n");
     }
-//printf("  fill = %d\n", fill);
+
     buffer_ptr[fill] = request;
     in_use[fill]     = request.file_size;
 #ifdef PRINT_DEBUG
@@ -406,17 +409,10 @@ request_type get_from_buffer(){
     return tmp;
 }
 
-int get_time_offset(){
-	struct timeval t;
-        int rc = gettimeofday(&t, NULL);
-	assert(rc==0);
-	return t.tv_sec;
-}
-
 // simple time function
 int GetTime(){
     struct timeval t;
     int rc = gettimeofday(&t,NULL);
     assert(rc==0);
-    return 1e6*(t.tv_sec -time_offset)+ t.tv_usec;
+    return 1e6*(t.tv_sec - time_offset)+ t.tv_usec;
 }
