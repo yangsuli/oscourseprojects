@@ -7,7 +7,6 @@ because otherwise, more than one person are trying to run
 the server binding to the same port...
 
 Note that it is currently not automated and not completed yet.
-(look for automated version and some new test cases in the future).
 
 If you have any question regarding this test, please send email to
 537-help@cs.wisc.edu or thanhdo@cs.wisc.edu
@@ -82,7 +81,6 @@ Scheduling policy
 Statistics
 ----------
 11. thread statistics
-! Note that there will be more tests for this part.
 16. Check Stat-thread-count
 17. Check Stat-thread-static and Stat-thread-dynamic
 18. Check Stat-req-read/dispatch/complete

@@ -211,9 +211,9 @@ int main(int argc, char *argv[]) {
         request_type curr_request;
         curr_request.conn_fd = connfd;
         curr_request.Stat_req_arrival = GetTime();
-	curr_request.Stat_req_age = 0;
-	curr_request.request_num = curr_req_num;
-	curr_req_num++;
+        curr_request.Stat_req_age = 0;
+        curr_request.request_num = curr_req_num;
+        curr_req_num++;
 
         ///////////////////////////////////////////////////////////////////////
         // add work to the buffer for a worker to handle
@@ -271,8 +271,8 @@ int get_sff_use_index() {
     int curr_size = in_use[i];
 
 #ifdef PRINT_DEBUG
-    printf("   finding a 'use' index.\n");
     int debug_count = 1;  // we will always fine one candidate here!
+    printf("   finding a 'use' index.\n");
     for( i = 0; i < buffer_size; i++ ) {
         printf("   in_use[%d] = %d\n", i, in_use[i] );
     }
@@ -286,7 +286,9 @@ int get_sff_use_index() {
             use = i;
             curr_size = in_use[i];
         }
+#ifdef PRINT_DEBUG
         if( in_use[i] > 0 ){ debug_count++; }
+#endif
     }
 
 #ifdef PRINT_DEBUG
@@ -327,7 +329,9 @@ int get_sff_bs_use_index() {
             use = i;
             curr_size = in_use[i];
         }
+#ifdef PRINT_DEBUG
         if( in_use[i] > 0 ){ debug_count++; }
+#endif
     }
 
 #ifdef PRINT_DEBUG
@@ -414,5 +418,5 @@ int GetTime(){
     struct timeval t;
     int rc = gettimeofday(&t,NULL);
     assert(rc==0);
-    return 1e6*(t.tv_sec - time_offset)+ t.tv_usec;
+    return 1e3*(t.tv_sec - time_offset)+ (int) (t.tv_usec / 1e3);
 }
