@@ -48,7 +48,8 @@ int main(int argc, char *argv[]){
 }
 
 
-int image_init(char * filename){
+int Image_Init(char * filename){
+	int fd;
 	if((fd = open(filename,O_WRONLY|O_CREAT|O_TRUNC)) == -1){
 		fprintf(stderr,"open failed!\n");
 		exit(-1);
