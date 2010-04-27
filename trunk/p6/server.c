@@ -1,8 +1,13 @@
 #include <stdio.h>
 #include "udp.h"
+#include "mfs.h"
+#include <fcntl.h>
 
 #define BUFFER_SIZE (4096)
 
+/*
+ * demo code to show how to use udp
+ *
 int
 main(int argc, char *argv[])
 {
@@ -25,6 +30,33 @@ main(int argc, char *argv[])
     }
 
     return 0;
+}
+*/
+
+
+int main(int argc, char *argv[]){
+	if(argc != 2){
+		printf("usage: server [portnm] [file-system-image]");
+		exit(-1);
+	}
+
+	//TODO
+	//listen to port and other stuff
+
+	return 0;
+
+}
+
+
+int image_init(char * filename){
+	if((fd = open(filename,O_WRONLY|O_CREAT|O_TRUNC)) == -1){
+		fprintf(stderr,"open failed!\n");
+		exit(-1);
+	}
+	//TODO initilize file image and stuff
+
+	return 0;
+
 }
 
 
