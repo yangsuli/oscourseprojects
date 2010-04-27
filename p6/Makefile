@@ -1,4 +1,5 @@
 CC   = gcc
+# Useful opts are -Wall, -ggdb, ...
 OPTS = -Wall
 
 ALL_SERVER_SOURCES = server.c udp.c
