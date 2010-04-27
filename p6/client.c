@@ -4,8 +4,7 @@
 #define BUFFER_SIZE (4096)
 char buffer[BUFFER_SIZE];
 
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     int sd = UDP_Open(20000);
     assert(sd > -1);
@@ -20,8 +19,8 @@ main(int argc, char *argv[])
     rc = UDP_Write(sd, &addr, message, BUFFER_SIZE);
     printf("CLIENT:: sent message (%d)\n", rc);
     if (rc > 0) {
-	int rc = UDP_Read(sd, &addr2, buffer, BUFFER_SIZE);
-	printf("CLIENT:: read %d bytes (message: '%s')\n", rc, buffer);
+        int rc = UDP_Read(sd, &addr2, buffer, BUFFER_SIZE);
+        printf("CLIENT:: read %d bytes (message: '%s')\n", rc, buffer);
     }
 
     return 0;

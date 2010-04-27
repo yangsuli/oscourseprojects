@@ -19,5 +19,24 @@ MFS_Creat: client send '5' 'type' name (3 strings in total)
            server send '0' on success, '-2' pinum doesn't
 
 MFS_Unlink: client send '6' 'pinum' name (3 strings in total)
-            
+            server send '0' on success or '-1' for pinum does not exist
+            or '-2' if the directory is not empty.
 
+Every communication from client to server or server to client will look like the
+following:
+
+    ---------------------------------------
+    |  Header  |   Message                 |
+    ----------------------------------------
+
+Where the Header has the following format:
+
+    ---------------------------------------------------------------
+    |  Num_args  | arg1_size  | arg2_size | arg3_size | arg4_size |
+    ---------------------------------------------------------------
+
+and Message has the following format
+
+    ---------------------------------------------------------------
+    |  arg1  | arg2 | ...                                         |
+    ---------------------------------------------------------------
