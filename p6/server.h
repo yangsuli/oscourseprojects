@@ -2,6 +2,26 @@
 #define __SERVER_H__
 
 #include "mfs.h"
+#include <stdbool.h>
+
+#define MFS_BLOCK_NUMS (4096)
+#define MFS_PTR_NUMS 10
+
+typedef struct __Inode_t{
+	int type; //MFS_DIRECTORY or MFS_REGULAR
+	int size; //bytes;
+	int blocks;
+	int ptr[MFS_PTR_NUMS]; //direct pointers, -1 means not allocated
+} Inode_t;
+
+
+typedef struct __Bit_Map_t{
+	bool bits[MFS_BLOCK_NUMS];
+} Bit_Map_t;
+
+typedef struct __Block_t{
+	char data[MFS_BLOCK_SIZE];
+} Block_t;
 
 //initialize, should just be an empty function
 //Note that this function just corresponds to MFS_Init
@@ -14,7 +34,7 @@ int Server_LookUp(int pinum, char *name);
 
 //returns some infomation obout the file specified by inum
 //Return value: 0 on success, -2 if inum doesn't exit
-int Server_Stat(int inum, MFS_Stat *m);
+int Server_Stat(int inum, MFS_Stat_t *m);
 
 //writes a block of size 4096 bytes at the block offset specified by block
 //Return Value: 0 on sucess, -2 if invalid inum, -3 if invalid block, -4 if not a regular file 
@@ -33,7 +53,7 @@ int Server_Creat(int pinum, int type, char *name);
 //Return value: 0 on success, -2 if pinum does not exist, -3 if directoy is not empty
 int Server_Unlink(int pinum, char *name);
 
-#endif __SERVER_H__
+#endif 
 
 
 
