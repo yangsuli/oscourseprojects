@@ -173,6 +173,7 @@ int Image_Init(char * filename){
 
 //empty function for Server_Init
 int Server_Init(){
+	return 0;
 }
 
 int Server_LookUp(int pinum, char *name){
@@ -200,17 +201,17 @@ int Server_LookUp(int pinum, char *name){
 	}
 
 	if(read(image_fd,inode_table, MFS_BLOCK_NUMS*sizeof(Inode_t)) != MFS_BLOCK_NUMS*sizeof(Inode_t)){
-		printf(stderr,"read error!\n");
+		fprintf(stderr,"read error!\n");
 		exit(-1);
 	}
 
 	if(read(image_fd,data_region, MFS_BLOCK_NUMS*sizeof(Block_t)) != MFS_BLOCK_NUMS*sizeof(Block_t)){
-		printf(stderr,"read error!\n");
+		fprintf(stderr,"read error!\n");
 		exit(-1);
 	}
 
 	//return -2 if invalid pinum
-	if(Inode_BitMap[pinum] == false){
+	if(Inode_BitMap.bits[pinum] == false){
 		return -2;
 	}else if(inode_table[pinum].type != MFS_DIRECTORY){
 		return -2;
@@ -218,7 +219,7 @@ int Server_LookUp(int pinum, char *name){
 
 	int loops = 0;
 	int curr_blk_num;
-	for(idx = 0; idx < MFS_PTR_NUMS; i++){
+	for(idx = 0; idx < MFS_PTR_NUMS; idx++){
 		if((curr_blk_num = inode_table[pinum].ptr[idx]) == -1){
 			break;
 		}
