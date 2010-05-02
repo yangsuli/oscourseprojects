@@ -140,6 +140,11 @@ int Image_Init(char * filename){
 	root_dotdot -> inum = 0;
 	strcpy(root_dotdot -> name, "..");
 
+	int j;
+	for(j = 2; j < MFS_BLOCK_SIZE / sizeof(MFS_DirEnt_t); j ++){
+		(root_dot + j) -> inum = -1;
+	}
+
 	Set_Bit(&Inode_BitMap, 0);
 	Set_Bit(&Data_BitMap,0);
 
@@ -217,25 +222,27 @@ int Server_LookUp(int pinum, char *name){
 		return -2;
 	}
 
-	int loops = 0;
 	int curr_blk_num;
 	for(idx = 0; idx < MFS_PTR_NUMS; idx++){
 		if((curr_blk_num = inode_table[pinum].ptr[idx]) == -1){
-			break;
+			continue;
 		}
 
-		int entries_in_curr_blk = (inode_table[pinum].size / MFS_BLOCK_SIZE > loops) ? MFS_BLOCK_SIZE / sizeof(MFS_DirEnt_t) : (inode_table[pinum].size % MFS_BLOCK_SIZE) / sizeof(MFS_DirEnt_t);
+	//	int entries_in_curr_blk = (inode_table[pinum].size / MFS_BLOCK_SIZE > idx) ? MFS_BLOCK_SIZE / sizeof(MFS_DirEnt_t) : (inode_table[pinum].size % MFS_BLOCK_SIZE) / sizeof(MFS_DirEnt_t);
 		
+		int entries_in_curr_blk = MFS_BLOCK_SIZE / sizeof(MFS_DirEnt_t);
+
 		MFS_DirEnt_t *entries = (MFS_DirEnt_t *)data_region[curr_blk_num].data;
 		int j; 
 		for (j = 0; j < entries_in_curr_blk; j++){
+			if(entries[j].inum == -1){
+				continue;
+			}
 			if(strcmp(entries[j].name, name) == 0){
 				return entries[j].inum;
 			}
 		}
 
-		loops ++;
-			
 	}
 
 	//return -3 if name doesn't exist in pinum
