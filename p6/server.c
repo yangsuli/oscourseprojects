@@ -38,6 +38,104 @@ main(int argc, char *argv[])
 
 int image_fd;
 
+// read message (read from udp)
+// parse message
+// choose which function to run
+// run the function
+// create return message (parse response)
+// write to udp
+
+
+/*
+ * Main program for running the file server.
+ *
+ */
+int main(int argc, char *argv[])
+{
+
+    ///////////////////////// parse the arguments //////////////////////////////
+    if(argc != 2){
+        printf("usage: server [portnm] [file-system-image]");
+        exit(-1);
+    }
+    int portnum = atoi( argv[1] );
+    if( ! (portnum > 0 ) ) {
+        fprintf(stderr, "  portnum = %d;  this should be a pos number",portnum);
+    }
+    char* filename = malloc( sizeof(char) * (1 + strlen(argv[2])) );
+    strcpy( filename, argv[2] );
+
+    const int sd = UDP_Open(portnum);
+    assert(sd > -1);
+    ///////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////// main loop ///////////////////////////////////////
+    char buffer_read [BUFFER_SIZE];
+    char buffer_reply[BUFFER_SIZE];
+    int rc = -1;
+    struct sockaddr_in s;
+    while (1) {
+
+        // read a message //
+        rc = UDP_Read(sd, &s, buffer_read, BUFFER_SIZE);
+        if (rc > 0) {
+
+            // parse the message into arguments //
+            printf("SERVER:: read %d bytes (message: '%s')\n", rc, buffer_read);
+            sleep(10);
+        } else {  // bad read -- continue waiting for another message ...
+            rc = -1;
+            continue;
+        }
+
+        // call the appropriate function //
+        int func_num = 20;
+        switch( func_num )
+        {   
+            // TODO -- fill this in!
+            case 0:
+
+            break;
+            case 1:
+
+            break;
+            case 2:
+
+            break;
+            case 3:
+
+            break;
+            case 4:
+
+            break;
+            case 5:
+
+            break;
+            case 6:
+
+            break;
+            case 7:
+
+            break;
+            default:
+            fprintf(stderr, "bad function number %d called \n", func_num );
+        }
+        
+
+        // parse a response //
+        sprintf(buffer_reply, "reply");
+
+        // write the response //
+        rc = UDP_Write(sd, &s, buffer_reply, BUFFER_SIZE);
+
+    }
+    ///////////////////////////////////////////////////////////////////////////
+
+    return 0;
+}
+
+
+/*
 int main(int argc, char *argv[]){
 	if(argc != 2){
 		printf("usage: server [portnm] [file-system-image]");
@@ -50,6 +148,7 @@ int main(int argc, char *argv[]){
 	return 0;
 
 }
+*/
 
 void Set_Bit(Bit_Map_t *map, int index){
 	if(index < 0 || index >= MFS_BLOCK_NUMS){

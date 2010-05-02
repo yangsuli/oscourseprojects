@@ -2,11 +2,11 @@ CC   = gcc
 # Useful opts are -Wall, -ggdb, ...
 OPTS = -Wall
 
-ALL_SERVER_SOURCES = server.c udp.c
-ALL_CLIENT_SOURCES = client.c udp.c
+ALL_SERVER_SOURCES = server.c udp.c mssg.c
+ALL_CLIENT_SOURCES = client.c udp.c mssg.c
 
-SERVER_OBJS = server.o udp.o
-CLIENT_OBJS = client.o udp.o
+SERVER_OBJS = server.o udp.o mssg.o
+CLIENT_OBJS = client.o udp.o mssg.o
 
 ALL_LIB_SOURCES = $(ALL_SERVER_SOURCES) $(ALL_CLIENT_SOURCES)
 
