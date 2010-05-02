@@ -23,6 +23,8 @@ typedef struct __Block_t{
 	char data[MFS_BLOCK_SIZE];
 } Block_t;
 
+int Image_Init(char * filename);
+
 //initialize, should just be an empty function
 //Note that this function just corresponds to MFS_Init
 //the initialization of file system image is done in function Image_Init()

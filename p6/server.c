@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include "udp.h"
 #include "mfs.h"
@@ -35,6 +36,7 @@ main(int argc, char *argv[])
 }
 */
 
+int image_fd;
 
 int main(int argc, char *argv[]){
 	if(argc != 2){
@@ -168,5 +170,80 @@ int Image_Init(char * filename){
 	return fd;
 
 }
+
+//empty function for Server_Init
+int Server_Init(){
+}
+
+int Server_LookUp(int pinum, char *name){
+
+	int idx;
+
+	if(lseek(image_fd,0,SEEK_SET) != 0){
+		fprintf(stderr,"lseek error\n");
+		exit(-1);
+	}
+
+	Bit_Map_t Inode_BitMap;
+	Bit_Map_t Data_BitMap;
+	Inode_t inode_table[MFS_BLOCK_NUMS];
+	Block_t data_region[MFS_BLOCK_NUMS];
+
+	if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
+		fprintf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+	if(read(image_fd, &Data_BitMap,sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
+		fprintf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+	if(read(image_fd,inode_table, MFS_BLOCK_NUMS*sizeof(Inode_t)) != MFS_BLOCK_NUMS*sizeof(Inode_t)){
+		printf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+	if(read(image_fd,data_region, MFS_BLOCK_NUMS*sizeof(Block_t)) != MFS_BLOCK_NUMS*sizeof(Block_t)){
+		printf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+	//return -2 if invalid pinum
+	if(Inode_BitMap[pinum] == false){
+		return -2;
+	}else if(inode_table[pinum].type != MFS_DIRECTORY){
+		return -2;
+	}
+
+	int loops = 0;
+	int curr_blk_num;
+	for(idx = 0; idx < MFS_PTR_NUMS; i++){
+		if((curr_blk_num = inode_table[pinum].ptr[idx]) == -1){
+			break;
+		}
+
+		int entries_in_curr_blk = (inode_table[pinum].size / MFS_BLOCK_SIZE > loops) ? MFS_BLOCK_SIZE / sizeof(MFS_DirEnt_t) : (inode_table[pinum].size % MFS_BLOCK_SIZE) / sizeof(MFS_DirEnt_t);
+		
+		MFS_DirEnt_t *entries = (MFS_DirEnt_t *)data_region[curr_blk_num].data;
+		int j; 
+		for (j = 0; j < entries_in_curr_blk; j++){
+			if(strcmp(entries[j].name, name) == 0){
+				return entries[j].inum;
+			}
+		}
+
+		loops ++;
+			
+	}
+
+	//return -3 if name doesn't exist in pinum
+	return -3;
+}
+	
+
+
+
+
 
 
