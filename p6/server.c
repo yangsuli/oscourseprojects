@@ -247,4 +247,50 @@ int Server_LookUp(int pinum, char *name){
 
 
 
+int Server_Stat(int inum, MFS_Stat_t *m){
 
+	if(lseek(image_fd,0,SEEK_SET) != 0){
+		fprintf(stderr,"lseek error\n");
+		exit(-1);
+	}
+
+	Bit_Map_t Inode_BitMap;
+	Bit_Map_t Data_BitMap;
+	Inode_t inode_table[MFS_BLOCK_NUMS];
+	Block_t data_region[MFS_BLOCK_NUMS];
+
+	if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
+		fprintf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+	if(read(image_fd, &Data_BitMap,sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
+		fprintf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+	if(read(image_fd,inode_table, MFS_BLOCK_NUMS*sizeof(Inode_t)) != MFS_BLOCK_NUMS*sizeof(Inode_t)){
+		fprintf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+	if(read(image_fd,data_region, MFS_BLOCK_NUMS*sizeof(Block_t)) != MFS_BLOCK_NUMS*sizeof(Block_t)){
+		fprintf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+
+	//return -2 if inum doesn't exit
+	if(Inode_BitMap.bits[inum] == false){
+		return -2;
+	}
+
+	m -> type = inode_table[inum].type;
+	m -> size = inode_table[inum].size;
+	m -> blocks = inode_table[inum].blocks;
+
+	return 0;
+}
+
+
+	
