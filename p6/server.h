@@ -57,6 +57,7 @@ int Server_Unlink(int pinum, char *name);
 
 int Add_Entry(int pinum, int inum, char *name, Inode_t *inode_table, Block_t *data_region);
 
+int Remove_Entry(int pinum, int inum, char *name, Inode_t *inode_table, Block_t *data_region);
 #endif 
 
 

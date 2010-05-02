@@ -539,10 +539,38 @@ int Server_Creat(int pinum, int type, char *name){
 		}
 	}
 
+
+	if(lseek(image_fd,0,SEEK_SET) != 0){
+		fprintf(stderr,"lseek error\n");
+		exit(-1);
+	}
+
+	if(write(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
+		fprintf(stderr, "write error!\n");
+		exit(-1);
+	}
+
+	if(write(image_fd,&Data_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
+		fprintf(stderr,"write error!\n");
+		exit(-1);
+	}
+
+	if(write(image_fd,inode_table, MFS_BLOCK_NUMS*sizeof(Inode_t)) != MFS_BLOCK_NUMS*sizeof(Inode_t)){
+		fprintf(stderr,"write error!\n");
+		exit(-1);
+	}
+
+
+	if(write(image_fd,data_region, MFS_BLOCK_NUMS*sizeof(Block_t)) != MFS_BLOCK_NUMS*sizeof(Block_t)){
+		fprintf(stderr,"write error\n");
+		exit(-1);
+	}
+
+	fsync(image_fd);
+
 	return 0;
-
-
 }
+
 
 int Add_Entry(int pinum, int inum, char *name, Inode_t *inode_table, Block_t *data_region){
 	int idx1, idx2;
@@ -580,10 +608,124 @@ int Add_Entry(int pinum, int inum, char *name, Inode_t *inode_table, Block_t *da
 
 			
 
-		
+int Server_Unlink(int pinum, char *name){
+	
+	if(lseek(image_fd,0,SEEK_SET) != 0){
+		fprintf(stderr,"lseek error\n");
+		exit(-1);
+	}
+
+	Bit_Map_t Inode_BitMap;
+	Bit_Map_t Data_BitMap;
+	Inode_t inode_table[MFS_BLOCK_NUMS];
+	Block_t data_region[MFS_BLOCK_NUMS];
+
+	if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
+		fprintf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+	if(read(image_fd, &Data_BitMap,sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
+		fprintf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+	if(read(image_fd,inode_table, MFS_BLOCK_NUMS*sizeof(Inode_t)) != MFS_BLOCK_NUMS*sizeof(Inode_t)){
+		fprintf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+	if(read(image_fd,data_region, MFS_BLOCK_NUMS*sizeof(Block_t)) != MFS_BLOCK_NUMS*sizeof(Block_t)){
+		fprintf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+	//return -2 if pinum doesn't exist
+	if(Inode_BitMap.bits[pinum] == false){
+		return -2;
+	}
+
+	int inum = Server_LookUp(pinum, name);
+	if(inum < 0){//name does not exist
+		return 0;
+	}
+
+	int i;
+	for(i = 0; i < MFS_PTR_NUMS; i++){
+		if(inode_table[inum].ptr[i] != -1){
+			Unset_Bit(&Data_BitMap, inode_table[inum].ptr[i]);
+		}
+	}
+	Unset_Bit(&Inode_BitMap, inum);
+
+	Remove_Entry(pinum, inum, name, inode_table, data_region);
+	
+
+	if(lseek(image_fd,0,SEEK_SET) != 0){
+		fprintf(stderr,"lseek error\n");
+		exit(-1);
+	}
+
+	if(write(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
+		fprintf(stderr, "write error!\n");
+		exit(-1);
+	}
+
+	if(write(image_fd,&Data_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
+		fprintf(stderr,"write error!\n");
+		exit(-1);
+	}
+
+	if(write(image_fd,inode_table, MFS_BLOCK_NUMS*sizeof(Inode_t)) != MFS_BLOCK_NUMS*sizeof(Inode_t)){
+		fprintf(stderr,"write error!\n");
+		exit(-1);
+	}
+
+
+	if(write(image_fd,data_region, MFS_BLOCK_NUMS*sizeof(Block_t)) != MFS_BLOCK_NUMS*sizeof(Block_t)){
+		fprintf(stderr,"write error\n");
+		exit(-1);
+	}
+
+	fsync(image_fd);
+
+	return 0;
+}
 	
 
 
+int Remove_Entry(int pinum, int inum, char *name, Inode_t *inode_table, Block_t *data_region){
 
+	int idx1, idx2;
+	int curr_blk_num;
+	bool found = false;
+	for(idx1 = 0; idx1 < MFS_PTR_NUMS; idx1 ++){
+		if(inode_table[pinum].ptr[idx1] == -1){
+			continue;
+		}
+		curr_blk_num = inode_table[pinum].ptr[idx1];
+
+		MFS_DirEnt_t *entries = (MFS_DirEnt_t *)data_region[curr_blk_num].data;
+		for(idx2 = 0; idx2 < MFS_BLOCK_SIZE / sizeof(MFS_DirEnt_t); idx2 ++){
+			if(entries[idx2].inum == inum && strcmp(entries[idx2].name, name) == 0){
+				entries[idx2].inum = -1;
+				found = true;
+				break;
+			}
+		}
+
+		if(found == true){
+			break;
+		}
+	}
+
+	if(found == false){//error here
+		//TODO
+	}
+
+	inode_table[pinum].size -= sizeof(MFS_DirEnt_t);
+
+	return 0;
+}
 
 
