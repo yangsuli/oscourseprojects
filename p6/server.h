@@ -8,7 +8,7 @@
 #define MFS_PTR_NUMS 10
 
 typedef struct __Inode_t{
-	int type; //MFS_DIRECTORY or MFS_REGULAR
+	int type; //MFS_DIRECTORY or MFS_REGULAR_File
 	int size; //bytes;
 	int blocks;
 	int ptr[MFS_PTR_NUMS]; //direct pointers, -1 means not allocated
