@@ -1,14 +1,11 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>  // needed for memcpy
+#include "mssg.h"
 
-#define HEADER_SIZE (1024)
-#define BUFFER_SIZE (4096)
-#define NUM_MESSAGES (5)
-
-// Create a message of type "type" and write out to buffer //
-void CreateMessage( int type, const int msg_len[], 
-    const void * data[], char * buffer)
+// Create a message of type "type" and write out to buffer
+void CreateMessage( int type, int msg_len[], 
+    void * data[], char * buffer)
 {
 
     // write out all the header information
@@ -24,13 +21,15 @@ void CreateMessage( int type, const int msg_len[],
     // write out all the data
     void * data_ptr = (void*) header;
     for( i = 0; i < NUM_MESSAGES; i++ ) {
-        memcpy( data_ptr, data[i], msg_len[i] );
-        data_ptr += msg_len[i];
+        if( msg_len[i] > 0 ) {
+            memcpy( data_ptr, data[i], msg_len[i] );
+            data_ptr += msg_len[i];
+        }
     }
 
 }
 
-// Read a message of type type, and write to type, msg_len and data.
+// Read a message from buffer, and write to type, msg_len and data.
 void ReadMessage( int * type, int msg_len[], 
     void * data[], const char * buffer)
 {
@@ -48,8 +47,10 @@ void ReadMessage( int * type, int msg_len[],
     // read all the data -- save into buffers pointed to by (void*) data[]
     void * data_ptr = (void*) header;
     for( i = 0; i < NUM_MESSAGES; i++ ) {
-        memcpy( data[i], data_ptr, msg_len[i] );
-        data_ptr += msg_len[i];
+        if( msg_len[i] > 0 ) {
+            memcpy( data[i], data_ptr, msg_len[i] );
+            data_ptr += msg_len[i];
+        }
     }
 
 }
