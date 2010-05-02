@@ -456,6 +456,134 @@ int Server_Read(int inum, char *buffer, int block){
 }
 
 
+int Server_Creat(int pinum, int type, char *name){
+
+	if(lseek(image_fd,0,SEEK_SET) != 0){
+		fprintf(stderr,"lseek error\n");
+		exit(-1);
+	}
+
+	Bit_Map_t Inode_BitMap;
+	Bit_Map_t Data_BitMap;
+	Inode_t inode_table[MFS_BLOCK_NUMS];
+	Block_t data_region[MFS_BLOCK_NUMS];
+
+	if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
+		fprintf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+	if(read(image_fd, &Data_BitMap,sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
+		fprintf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+	if(read(image_fd,inode_table, MFS_BLOCK_NUMS*sizeof(Inode_t)) != MFS_BLOCK_NUMS*sizeof(Inode_t)){
+		fprintf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+	if(read(image_fd,data_region, MFS_BLOCK_NUMS*sizeof(Block_t)) != MFS_BLOCK_NUMS*sizeof(Block_t)){
+		fprintf(stderr,"read error!\n");
+		exit(-1);
+	}
+
+	//return -2 if pinum doesn't exit or not a directory
+	if(Inode_BitMap.bits[pinum] == false || inode_table[pinum].type == MFS_DIRECTORY){
+		return -2;
+	}
+
+	if(Server_LookUp(pinum,name) >= 0){//name already exists
+	//how about name exists but types doesn't agree? yangsuli
+		return 0;
+	}
+
+	int inum = First_Empty(&Inode_BitMap);
+	Set_Bit(&Inode_BitMap, inum);
+
+	if(Add_Entry(pinum, inum, name, inode_table, data_region) != 0){
+		fprintf(stderr,"add entry error!\n");
+	}
+
+	if(type == MFS_REGULAR_FILE){
+		inode_table[inum].type = type;
+		inode_table[inum].size = 0;
+		inode_table[inum].blocks = 0;
+		int i;
+		for(i = 0; i < MFS_PTR_NUMS; i++){
+			inode_table[inum].ptr[i] = -1;
+		}
+	}
+
+	if(type == MFS_DIRECTORY){
+		int to_write_block = First_Empty(&Data_BitMap);
+		Set_Bit(&Data_BitMap,to_write_block);
+		inode_table[inum].type = type;
+		inode_table[inum].size = 2 * sizeof(MFS_DirEnt_t);
+		inode_table[inum].blocks = 1;
+		inode_table[inum].ptr[0] = to_write_block;
+		int i;
+		for(i = 1; i < MFS_PTR_NUMS; i++){
+			inode_table[inum].ptr[i] = -1;
+		}
+
+		MFS_DirEnt_t * entries = (MFS_DirEnt_t *) data_region[to_write_block].data;
+
+		entries[0].inum = inum;
+		strcpy(entries[0].name, ".");
+		entries[1].inum = pinum;
+		strcpy(entries[1].name, "..");
+		
+		for(i = 2; i < MFS_BLOCK_SIZE / sizeof(MFS_DirEnt_t); i++){
+			entries[i].inum = -1;
+		}
+	}
+
+	return 0;
+
+
+}
+
+int Add_Entry(int pinum, int inum, char *name, Inode_t *inode_table, Block_t *data_region){
+	int idx1, idx2;
+	int curr_blk_num;
+	bool insert = false;
+	for(idx1 = 0; idx1 < MFS_PTR_NUMS; idx1 ++){
+		if(inode_table[pinum].ptr[idx1] == -1){
+			continue;
+		}
+		curr_blk_num = inode_table[pinum].ptr[idx1];
+
+		MFS_DirEnt_t *entries = (MFS_DirEnt_t *)data_region[curr_blk_num].data;
+		for(idx2 = 0; idx2 < MFS_BLOCK_SIZE / sizeof(MFS_DirEnt_t); idx2 ++){
+			if(entries[idx2].inum == -1){
+				entries[idx2].inum = inum;
+				strcpy(entries[idx2].name, name);
+				insert = true;
+				break;
+			}
+		}
+
+		if(insert == true){
+			break;
+		}
+	}
+
+	if(insert == false){//one has to allocate a new block and such things
+		//TODO
+	}
+
+	inode_table[pinum].size += sizeof(MFS_DirEnt_t);
+
+	return 0;
+}
+
+			
+
+		
+	
+
+
 
 
 

@@ -55,6 +55,8 @@ int Server_Creat(int pinum, int type, char *name);
 //Return value: 0 on success, -2 if pinum does not exist, -3 if directoy is not empty
 int Server_Unlink(int pinum, char *name);
 
+int Add_Entry(int pinum, int inum, char *name, Inode_t *inode_table, Block_t *data_region);
+
 #endif 
 
 
