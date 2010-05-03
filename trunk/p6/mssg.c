@@ -79,6 +79,7 @@ void ResetParams( Params *p ) {
     p->inum  = -1;
     p->size  = -1;
     p->block = -1;
+    p->blocks = -1;
     p->status = -1;
     p->type  = -1;
 }
@@ -95,11 +96,6 @@ int InitData( int msg_len[], void * data[], Params *p) {
             fprintf(stderr, "malloc failed\n");
             return -1;
         }
-    }
-    p->blocks = malloc( BUFFER_SIZE );
-    if( p->blocks == NULL ){
-        fprintf(stderr, "malloc failed\n");
-        return -1;
     }
 
     // put garbage values in every paramater field
@@ -152,8 +148,10 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
             msg_len[2] = sizeof(int);
             data[2] = (void *) p;
 
-            msg_len[3] = BUFFER_SIZE;
-            memcpy( data[3], params->blocks, BUFFER_SIZE );
+            msg_len[3] = sizeof(int);
+            int blocks = params->blocks;
+            p = &blocks;
+            data[3] = (void*) p;
 
             SetLenZero(4, msg_len );
 
@@ -254,7 +252,9 @@ int ClientReadMessage(Params *params, int msg_len[], void * data[],
             p = (int *) data[2];
             params->size = *p;
 
-            memcpy( params->blocks, data[3], BUFFER_SIZE);
+            p = (int*) data[3];
+            params->blocks = *p;
+
             break;
 
         case 3:
