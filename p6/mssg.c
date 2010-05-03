@@ -67,6 +67,13 @@ void ReadMessage( int * type, int * fun_number, int msg_len[],
 
 }
 
+void SetLenZero( int istart, int msg_len[] ) {
+    int i = istart;
+    while( i < NUM_MESSAGES ) {
+        msg_len[i++] = 0; 
+    }
+}
+
 // put garbage values in every entry in Params p
 void ResetParams( Params *p ) {
     p->func_num = -1;
@@ -113,11 +120,7 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
             status = params->status;
             p = &status;
             data[0] = (void *) p;
-            i = 1;
-            while( i < NUM_MESSAGES ) {
-                msg_len[i++] = 0;
-            }
-
+            SetLenZero(1, msg_len);
             break;
 
         case 1:
@@ -126,12 +129,9 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
             inum = params->inum;
             p = &inum;
             data[0] = (void *) p;
-            i = 1;
-            while( i < NUM_MESSAGES ) {
-                msg_len[i++] = 0;
-            }
-
+            SetLenZero(1, msg_len);
             break;
+
         case 2:
 
             inum = params->inum;
@@ -150,10 +150,7 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
             msg_len[3] = sizeof(int);
             data[3] = (void *) params->block;
 
-            i = 4;
-            while( i < NUM_MESSAGES ) {
-                msg_len[i++] = 0;
-            }
+            SetLenZero(4, msg_len );
 
             break;
 
@@ -165,13 +162,10 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
             data[0] = (void *) p;
 
             buff = params->buffer;
-            msg_len[1] = BUFFER_SIZE;
+            msg_len[1] = strlen(buff) + 1;
             data[1]    = (void *) buff;
 
-            i = 2;
-            while( i < NUM_MESSAGES ) {
-                msg_len[i++] = 0;
-            }
+            SetLenZero(2, msg_len);
             break;
 
         case 4:
@@ -183,12 +177,9 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
 
             buff   = params->buffer;
             data[1] = (void *) buff;
-            msg_len[1] = BUFFER_SIZE;
+            msg_len[1] = strlen(buff) + 1;
 
-            i = 2;
-            while( i < NUM_MESSAGES ) {
-                msg_len[i++] = 0;
-            }
+            SetLenZero(2, msg_len );
             
             break;
 
@@ -198,10 +189,7 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
             p = &status;
             msg_len[0] = sizeof(int);
             data[0] = (void *) p;
-            i = 1;
-            while( i < NUM_MESSAGES ) {
-                msg_len[i++] = 0;
-            }
+            SetLenZero(1, msg_len);
 
             break;
 
@@ -212,10 +200,7 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
             msg_len[0] = sizeof(int);
             data[0] = (void *) p;
 
-            i = 1;
-            while( i < NUM_MESSAGES ) {
-                msg_len[i++] = 0;
-            }
+            SetLenZero(1, msg_len);
 
             break;
 
@@ -228,6 +213,200 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
 
 }
 
-int ClientCreatMessage(Params *p,int msg_len[],void * data[],char * buffer) {
-    return -1;
+// main routine for reading a message from the client side
+int ClientReadMessage(Params *params, int msg_len[], void * data[], 
+                            char * buffer ) {
+
+    int * p = NULL;       // generic data pointer here
+    char * buf = NULL;
+
+    ResetParams( params );
+
+    int msg_type = -1;
+    int func_num = -1;
+    ReadMessage( &msg_type, &func_num, msg_len, 
+        data, buffer);
+
+    params->func_num = func_num;
+    switch( func_num ) {
+        case 0:
+            p = (int *) data[0];
+            params->status = *p;
+            break;
+
+        case 1:
+
+            p = (int *) data[0];
+            params->inum = *p;
+            break;
+
+        case 2:
+
+            fprintf(stderr, "  this function is not implemented yet\n");
+            exit(1);
+
+            p = (int *) data[0];
+            params->inum = *p;
+
+            p = (int *) data[1];
+            params->size = *p;
+
+            // TODO WHAT IS TYPE?
+
+            //params->block = data[3];
+            //data[3] = (void *) params->block;
+
+            break;
+
+        case 3:
+            
+            p = (int *) data[0];
+            params->inum = *p;
+
+            buf = (char *) data[1];
+            strncpy( params->buffer, buf, BUFFER_SIZE);
+            break;
+
+        case 4:
+
+            p = (int *) data[0];
+            params->status = *p;
+
+            buf = (char *) data[1];
+            strncpy( params->buffer, buf, BUFFER_SIZE);
+
+            break;
+
+        case 5:
+
+            p = (int *) data[0];
+            params->status = *p;
+
+            break;
+
+        case 6:
+
+            p = (int *) data[0];
+            params->status = *p;
+
+            break;
+
+    }
+
+    return 0;
+
+}
+
+
+// main routine for creating a client side message to be passed to the server
+int ClientCreatMessage(Params *params, int msg_len[], void * data[], 
+                            char * buffer ) {
+
+    int * p = NULL;       // generic data pointer here
+    int i, pinum, inum, block, type;
+
+    char * buff;
+    char * name;
+
+    int func_num = params->func_num;
+    switch( func_num ) {
+        case 0:
+
+            break;
+
+        case 1:
+
+            msg_len[0] = sizeof(int);
+            pinum = params->pinum;
+            p = &pinum;
+            data[0] = (void *) p;
+
+            msg_len[1] = strlen(name) + 1;
+            name = params->name;
+            data[1] = (void *) name;
+
+            SetLenZero(2,msg_len);
+
+            break;
+        case 2:
+
+            inum = params->inum;
+            p = &inum;
+            msg_len[0] = sizeof(int);
+            data[0] = (void *) p;
+
+            SetLenZero(1,msg_len);
+
+            break;
+
+        case 3:
+            
+            inum = params->inum;
+            p = &inum;
+            msg_len[0] = sizeof(int);
+            data[0] = (void *) p;
+
+            buff = params->buffer;
+            msg_len[1] = strlen(buff)+1;
+            data[1]    = (void *) buff;
+
+            block = params->block;
+            p = &block;
+            msg_len[2] = sizeof(int);
+            data[2] = (void *) p;
+
+            SetLenZero(3,msg_len);
+            break;
+
+        case 4:
+
+            inum = params->inum;
+            p = &inum;
+            msg_len[0] = sizeof(int);
+            data[0] = (void *) p;
+
+            block = params->block;
+            p = &block;
+            data[1] = (void *) p;
+            msg_len[1] = sizeof(int);
+
+            SetLenZero(2,msg_len);
+            
+            break;
+
+        case 5:
+
+            type = params->type;
+            p = &type;
+            msg_len[0] = sizeof(int);
+            data[0] = (void *) p;
+
+            data[1] = (void *) params->name;
+            msg_len[1] = strlen( params->name ) + 1;
+
+            SetLenZero(2,msg_len);
+ 
+            break;
+
+        case 6:
+
+            pinum = params->pinum;
+            p = &pinum;
+            msg_len[0] = sizeof(int);
+            data[0] = (void *) p;
+
+            data[1] = (void *) params->name;
+            msg_len[1] = strlen( params->name ) + 1;
+
+            SetLenZero(2,msg_len);
+
+            break;
+
+    }
+
+    // create the message
+    i = CreateMessage( 0, func_num, msg_len, data, buffer);
+    ResetParams( params );
+    return i;
+
 }

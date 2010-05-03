@@ -17,6 +17,7 @@ typedef struct __params {
     int block;
     int message_type;
     int status;
+    int type;
 } Params;
 
 // TODO -- why can't these have const in front of them?
