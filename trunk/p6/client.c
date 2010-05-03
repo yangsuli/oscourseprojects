@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "udp.h"
+#include "mssg.h"
 
-#define BUFFER_SIZE (4096)
 char buffer[BUFFER_SIZE];
 
 int main(int argc, char *argv[])
@@ -10,12 +10,14 @@ int main(int argc, char *argv[])
     assert(sd > -1);
 
     struct sockaddr_in addr, addr2;
-    int rc = UDP_FillSockAddr(&addr, "claudio.cs.wisc.edu", 10000);
+    char machine_name[] = "mumble-06.cs.wisc.edu";
+    int rc = UDP_FillSockAddr(&addr, machine_name, 10020);
     assert(rc == 0);
     printf("filled sock addr\n");
 
     char message[BUFFER_SIZE];
-    sprintf(message, "hello world");
+//  sprintf(message, "hello world");
+
     rc = UDP_Write(sd, &addr, message, BUFFER_SIZE);
     printf("CLIENT:: sent message (%d)\n", rc);
     if (rc > 0) {

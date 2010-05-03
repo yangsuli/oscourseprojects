@@ -1,23 +1,32 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>  // needed for memcpy
 #include "mssg.h"
 
 // Create a message of type "type" and write out to buffer
-void CreateMessage( int type, int msg_len[], 
-    void * data[], char * buffer)
-{
+// Returns 0 on success, -1 on failure.
+int CreateMessage( int type, int fun_number, int msg_len[], 
+    void * data[], char * buffer) {
 
     // write out all the header information
     int * header = (int *) buffer;
     *header = type;
     header++;
+    *header = fun_number;
+    header++;
     int i = 0;
+    int mssglen = 0;
     for( i = 0; i < NUM_MESSAGES; i++ ) {
         *header = msg_len[i];
+        mssglen += msg_len[i];
         header++;
     }
-    
+
+    if(  mssglen > UDP_BUFFER_SIZE ) {
+        fprintf(stderr, "mssglen is too big\n");
+    }
+
     // write out all the data
     void * data_ptr = (void*) header;
     for( i = 0; i < NUM_MESSAGES; i++ ) {
@@ -27,16 +36,19 @@ void CreateMessage( int type, int msg_len[],
         }
     }
 
+    return 0;
+
 }
 
 // Read a message from buffer, and write to type, msg_len and data.
-void ReadMessage( int * type, int msg_len[], 
-    void * data[], const char * buffer)
-{
+void ReadMessage( int * type, int * fun_number, int msg_len[], 
+    void * data[], const char * buffer) {
 
     // read all the header information (sizes and message type)
     int * header = (int *) buffer;
     *type = *header;
+    header++;
+    *fun_number = *header;
     header++;
     int i = 0;
     for( i = 0; i < NUM_MESSAGES; i++ ) {
@@ -55,47 +67,167 @@ void ReadMessage( int * type, int msg_len[],
 
 }
 
-/*
-MFS_INIT: client send string '0', return 0 if hearing response, and -1 otherwise. 
-          server send back 'alive'
+// put garbage values in every entry in Params p
+void ResetParams( Params *p ) {
+    p->func_num = -1;
+    strncpy( p->name, "", BUFFER_SIZE);
+    strncpy( p->buffer, "", BUFFER_SIZE);
+    p->pinum = -1;
+    p->inum  = -1;
+    p->size  = -1;
+    p->block = -1;
+    p->message_type = -1;
+    p->status = -1;
+}
 
-MFS_Lookup: client send '1', 'pinum', name (3 strings in total) 
-            server: 'inode_num' on success, '-2' if invalid pinum, '-3' if name does exist.  
+int InitData( int msg_len[], void * data[], Params *p) {
 
-MFS_Stat: client send '2' 'inum' (2 strings in total)
-          server send '0'  'type' 'size' 'blocks' on sucess (4 strings in total, and ordering is important)
-                 or send '-1' on failure (inum doesn't exist)
+    int i;
+    for(i = 0; i < NUM_MESSAGES; i++ ) {
+        msg_len[i] = 0;
+        data[i] = malloc( BUFFER_SIZE );
+        if( data[i] == NULL ) {
+            fprintf(stderr, "malloc failed\n");
+            return -1;
+        }
+    }
 
-MFS_Write: client send '3' 'inum' buffer 'block' (4 strings in total)
-           server send '0' on sucess,  '-2' if invalid inum, '-3' if invalid block, and '-4' if not a regular file
+    // put garbage values in every paramater field
+    ResetParams( p );
+    return 0;
+}
 
-MFS_Read: client send '4' 'inum', 'block' (3 strings in total)
-          server send '-1' on failure
-                      '0' 'file/directory' in case of file, data as a string; in case of directory, unspecified yet.
+// main routine for creating a server side message to be passed to the client
+int ServerCreatMessage(Params *params, int msg_len[], void * data[], 
+                            char * buffer ) {
 
-MFS_Creat: client send '5' 'type' name (3 strings in total)
-           server send '0' on success, '-2' pinum doesn't
+    int * p = NULL;       // generic data pointer here
+    int i, inum, status;
 
-MFS_Unlink: client send '6' 'pinum' name (3 strings in total)
-            server send '0' on success or '-1' for pinum does not exist
-            or '-2' if the directory is not empty.
+    char * buff;
 
-Every communication from client to server or server to client will look like the
-following:
+    int func_num = params->func_num;
+    switch( func_num ) {
+        case 0:
+            msg_len[0] = sizeof(int);
+            status = params->status;
+            p = &status;
+            data[0] = (void *) p;
+            i = 1;
+            while( i < NUM_MESSAGES ) {
+                msg_len[i++] = 0;
+            }
 
-    ---------------------------------------
-    |  Header  |   Data                    |
-    ----------------------------------------
+            break;
 
-Where the Header has the following format:
+        case 1:
 
-    ---------------------------------------------------------------
-    |  Num_args  | arg1_size  | arg2_size | arg3_size | arg4_size |
-    ---------------------------------------------------------------
+            msg_len[0] = sizeof(int);
+            inum = params->inum;
+            p = &inum;
+            data[0] = (void *) p;
+            i = 1;
+            while( i < NUM_MESSAGES ) {
+                msg_len[i++] = 0;
+            }
 
-and Data has the following format
+            break;
+        case 2:
 
-    ---------------------------------------------------------------
-    |  arg1  | arg2 | ...                                         |
-    ---------------------------------------------------------------
-*/
+            inum = params->inum;
+            p = &inum;
+            msg_len[0] = sizeof(int);
+            data[0] = (void *) p;
+
+            int size = params->size;
+            p = &size;
+            msg_len[1] = sizeof(int);
+            data[1] = (void *) p;
+
+            // TODO WHAT PARAMETER IS TYPE HERE?
+            msg_len[2] = 0;
+            
+            msg_len[3] = sizeof(int);
+            data[3] = (void *) params->block;
+
+            i = 4;
+            while( i < NUM_MESSAGES ) {
+                msg_len[i++] = 0;
+            }
+
+            break;
+
+        case 3:
+            
+            inum = params->inum;
+            p = &inum;
+            msg_len[0] = sizeof(int);
+            data[0] = (void *) p;
+
+            buff = params->buffer;
+            msg_len[1] = BUFFER_SIZE;
+            data[1]    = (void *) buff;
+
+            i = 2;
+            while( i < NUM_MESSAGES ) {
+                msg_len[i++] = 0;
+            }
+            break;
+
+        case 4:
+
+            status = params->status;
+            p = &status;
+            msg_len[0] = sizeof(int);
+            data[0] = (void *) p;
+
+            buff   = params->buffer;
+            data[1] = (void *) buff;
+            msg_len[1] = BUFFER_SIZE;
+
+            i = 2;
+            while( i < NUM_MESSAGES ) {
+                msg_len[i++] = 0;
+            }
+            
+            break;
+
+        case 5:
+
+            status = params->status;
+            p = &status;
+            msg_len[0] = sizeof(int);
+            data[0] = (void *) p;
+            i = 1;
+            while( i < NUM_MESSAGES ) {
+                msg_len[i++] = 0;
+            }
+
+            break;
+
+        case 6:
+
+            status = params->status;
+            p = &status;
+            msg_len[0] = sizeof(int);
+            data[0] = (void *) p;
+
+            i = 1;
+            while( i < NUM_MESSAGES ) {
+                msg_len[i++] = 0;
+            }
+
+            break;
+
+    }
+
+    // create the message
+    i = CreateMessage( 0, func_num, msg_len, data, buffer);
+    ResetParams( params );
+    return i;
+
+}
+
+int ClientCreatMessage(Params *p,int msg_len[],void * data[],char * buffer) {
+    return -1;
+}
