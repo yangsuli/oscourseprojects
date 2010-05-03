@@ -86,7 +86,7 @@ void ResetParams( Params *p ) {
 
 // call this routine once to allocate room for each entry in data and to reset
 // all the parameters in Params p.
-int InitData( int msg_len[], void * data[], Params *p) {
+int InitData( int msg_len[], void * data[] ) {
 
     int i;
     for(i = 0; i < NUM_MESSAGES; i++ ) {
@@ -97,9 +97,6 @@ int InitData( int msg_len[], void * data[], Params *p) {
             return -1;
         }
     }
-
-    // put garbage values in every paramater field
-    ResetParams( p );
     return 0;
 }
 
