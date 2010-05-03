@@ -3,11 +3,8 @@
 #include "udp.h"
 #include "mssg.h"
 
-char buffer_read[UDP_BUFFER_SIZE];   // buffer used for reading messages
-char buffer_write[UDP_BUFFER_SIZE];   // buffer used for writing messages
 int msg_len[NUM_MESSAGES];
 void * data[NUM_MESSAGES];
-Params params;
 
 int port = -1;                  // port number
 int sd = -1;                    // socket descriptor
@@ -59,7 +56,8 @@ int MFS_Init(char *hostname, int port) {
         printf("CLIENT:: read %d bytes (message: '%s')\n", rc, buffer);
     }
 */
-    return InitData( msg_len, data, &params );
+
+    InitData( msg_len, data);
 
     return 0;
 }
@@ -69,7 +67,11 @@ int MFS_Init(char *hostname, int port) {
 // is returned. Success: return inode number of name; failure: return -1.
 // Failure modes: invalid pinum, name does not exist in pinum.
 int MFS_Lookup(int pinum, char *name) {
-    
+
+    char buffer_read[UDP_BUFFER_SIZE];   // buffer used for reading messages
+    char buffer_write[UDP_BUFFER_SIZE];   // buffer used for writing messages
+    Params params;
+
     // save all the necessary parameters
     Params *p = &params;
     ResetParams( p );
@@ -99,6 +101,10 @@ int MFS_Lookup(int pinum, char *name) {
 // success, return 0, otherwise -1. The exact info returned is defined by
 // MFS_Stat_t. Failure modes: inum does not exist.
 int MFS_Stat(int inum, MFS_Stat_t *m) {
+
+    char buffer_read[UDP_BUFFER_SIZE];   // buffer used for reading messages
+    char buffer_write[UDP_BUFFER_SIZE];   // buffer used for writing messages
+    Params params;
 
     Params *p = &params;
     ResetParams( p );
@@ -131,6 +137,10 @@ int MFS_Stat(int inum, MFS_Stat_t *m) {
 // invalid block, not a regular file (you can't write to directories).
 int MFS_Write(int inum, char *buffer, int block) {
 
+    char buffer_read[UDP_BUFFER_SIZE];   // buffer used for reading messages
+    char buffer_write[UDP_BUFFER_SIZE];   // buffer used for writing messages
+    Params params;
+
     Params *p = &params;
     ResetParams( p );
     p->func_num = 3;
@@ -158,6 +168,10 @@ int MFS_Write(int inum, char *buffer, int block) {
 // directories should return data in the format specified by MFS_DirEnt_t.
 // Success: 0, failure: -1. Failure modes: invalid inum, invalid block.
 int MFS_Read(int inum, char *buffer, int block) {
+
+    char buffer_read[UDP_BUFFER_SIZE];   // buffer used for reading messages
+    char buffer_write[UDP_BUFFER_SIZE];   // buffer used for writing messages
+    Params params;
 
     Params *p = &params;
     ResetParams( p );
@@ -189,6 +203,10 @@ int MFS_Read(int inum, char *buffer, int block) {
 // name already exists, return success (think about why).
 int MFS_Creat(int pinum, int type, char *name) {
 
+    char buffer_read[UDP_BUFFER_SIZE];   // buffer used for reading messages
+    char buffer_write[UDP_BUFFER_SIZE];   // buffer used for writing messages
+    Params params;
+
     Params *p = &params;
     ResetParams( p );
     p->func_num = 5;
@@ -216,6 +234,10 @@ int MFS_Creat(int pinum, int type, char *name) {
 // directory is NOT empty. Note that the name not existing is NOT a failure by
 // our definition (think about why this might be).
 int MFS_Unlink(int pinum, char *name) {
+
+    char buffer_read[UDP_BUFFER_SIZE];   // buffer used for reading messages
+    char buffer_write[UDP_BUFFER_SIZE];   // buffer used for writing messages
+    Params params;
 
     Params *p = &params;
     ResetParams( p );

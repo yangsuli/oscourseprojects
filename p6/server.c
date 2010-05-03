@@ -54,9 +54,10 @@ int main(int argc, char *argv[])
 {
 
     ///////////////////////// parse the arguments //////////////////////////////
-    if(argc != 2){
-        printf("usage: server [portnm] [file-system-image]");
-        exit(-1);
+    if(argc != 3){
+        fprintf(stderr,"usage: server [portnm] [file-system-image]\n");
+        fprintf(stderr,"you supplied %d args\n", argc);
+        exit(1);
     }
     int portnum = atoi( argv[1] );
     if( ! (portnum > 0 ) ) {

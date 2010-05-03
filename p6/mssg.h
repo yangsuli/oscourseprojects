@@ -31,7 +31,7 @@ void ReadMessage( int * fun_number, int msg_len[],
 
 // initializes each entry in msg_len to zero and allocates memory for each
 // entry in data[]
-int InitData( int msg_len[], void * data[], Params *p);
+int InitData( int msg_len[], void * data[] );
 void ResetParams( Params *p );
 
 int ServerCreatMessage(Params *p,int msg_len[],void * data[],char * buffer);
