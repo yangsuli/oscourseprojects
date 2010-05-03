@@ -32,6 +32,6 @@ test_mssg: $(TEST_MSSG_OBJS)
 clean:
 	rm -f server.o udp.o client.o server client *.o
 
-tags:
+tags: $(ALL_LIB_SOURCES) $(ALL_TEST_MSSG_SOURCES)
 	ctags $(ALL_LIB_SOURCES)
 
