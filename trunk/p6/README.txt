@@ -1,3 +1,5 @@
+TODO -- write me!
+
 MFS_INIT: client send string '0', return 0 if hearing response, and -1 otherwise. 
           server send back 'alive'
 

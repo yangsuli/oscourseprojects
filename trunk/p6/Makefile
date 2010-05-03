@@ -13,24 +13,26 @@ TEST_MSSG_OBJS = mssg.o testmssg.o
 ALL_LIB_SOURCES = $(ALL_SERVER_SOURCES) $(ALL_CLIENT_SOURCES)
 
 #all: server client
-all: server client test_mssg
+all: server client
 
-# this generates the target executables
 server: $(SERVER_OBJS)
 	$(CC) -o server $(SERVER_OBJS)
 
-client: $(CLIENT_OBJS)
-	$(CC) -o client $(CLIENT_OBJS)
+client: $(ALL_CLIENT_SOURCES)
+	$(CC) -c -fpic $(ALL_CLIENT_SOURCES)
+	$(CC) -shared -o -libmfs.so $(CLIENT_OBJS)
 
+#	gcc -c -g -fpic $(ALL_LIB_SOURCES);
+#	gcc -shared -g -o liblist.so $(ALL_LIB_OBJECTS);
 test_mssg: $(TEST_MSSG_OBJS)
 	$(CC) -o test_mssg $(TEST_MSSG_OBJS)
 
 # this is a generic rule for .o files 
-%.o: %.c 
-	$(CC) $(OPTS) -c $< -o $@
+#%.o: %.c 
+#	$(CC) $(OPTS) -c $< -o $@
 
 clean:
-	rm -f server.o udp.o client.o server client *.o
+	rm -f *.o *.so 
 
 tags: $(ALL_LIB_SOURCES) $(ALL_TEST_MSSG_SOURCES)
 	ctags $(ALL_LIB_SOURCES)
