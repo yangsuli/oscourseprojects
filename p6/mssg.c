@@ -98,6 +98,11 @@ int InitData( int msg_len[], void * data[], Params *p) {
             return -1;
         }
     }
+    p->blocks = malloc( BUFFER_SIZE );
+    if( p->blocks == NULL ){
+        fprintf(stderr, "malloc failed\n");
+        return -1;
+    }
 
     // put garbage values in every paramater field
     ResetParams( p );
@@ -134,8 +139,8 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
 
         case 2:
 
-            inum = params->inum;
-            p = &inum;
+            status = params->status;
+            p = &status;
             msg_len[0] = sizeof(int);
             data[0] = (void *) p;
 
@@ -149,9 +154,8 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
             msg_len[2] = sizeof(int);
             data[2] = (void *) p;
 
-/// TODO i don't think this is correct ....
-            msg_len[3] = sizeof(int);
-            data[3] = (void *) params->block;
+            msg_len[3] = BUFFER_SIZE;
+            memcpy( data[3], params->blocks, BUFFER_SIZE );
 
             SetLenZero(4, msg_len );
 
@@ -244,20 +248,16 @@ int ClientReadMessage(Params *params, int msg_len[], void * data[],
 
         case 2:
 
-            fprintf(stderr, "  this function is not implemented yet\n");
-            exit(1);
-
             p = (int *) data[0];
-            params->inum = *p;
+            params->status = *p;
 
-            p = (int *) data[1];
+            p = (int*) data[1];
+            params->type = *p;
+
+            p = (int *) data[2];
             params->size = *p;
 
-            // TODO WHAT IS TYPE?
-
-            //params->block = data[3];
-            //data[3] = (void *) params->block;
-
+            memcpy( params->blocks, data[3], BUFFER_SIZE);
             break;
 
         case 3:
@@ -335,7 +335,7 @@ int ClientCreatMessage(Params *params, int msg_len[], void * data[],
             inum = params->inum;
             p = &inum;
             msg_len[0] = sizeof(int);
-            data[0] = (void *) p;
+            data[0]    = (void *) p;
 
             SetLenZero(1,msg_len);
 

@@ -11,6 +11,7 @@ typedef struct __params {
     int func_num;          // function number being called 0 <= func_num <= 6
     char name[BUFFER_SIZE];
     char buffer[BUFFER_SIZE];
+    void * blocks;
     int pinum;              // parent inode number
     int inum;               // inode number
     int size;
