@@ -8,16 +8,16 @@
 // singleton struct used for passing parameters around -- Note: the number of
 // these parameters that get used depends of message_type -- see table below
 typedef struct __params {
-    int func_num;
+    int func_num;          // function number being called 0 <= func_num <= 6
     char name[BUFFER_SIZE];
     char buffer[BUFFER_SIZE];
-    int pinum;
-    int inum;
+    int pinum;              // parent inode number
+    int inum;               // inode number
     int size;
-    int block;
-    int message_type;
-    int status;
-    int type;
+    int block;              // block number
+    int message_type;       // this parameter is not used ...
+    int status;             // return status for server
+    int type;               // either MFS_DIRECTORY or MFS_REGULAR_FILE
 } Params;
 
 // TODO -- why can't these have const in front of them?
@@ -36,6 +36,8 @@ void ResetParams( Params *p );
 
 int ServerCreatMessage(Params *p,int msg_len[],void * data[],char * buffer);
 int ClientCreatMessage(Params *p,int msg_len[],void * data[],char * buffer);
+int ServerReadMessage( Params *p,int msg_len[],void * data[],char * buffer);
+int ClientReadMessage( Params *p,int msg_len[],void * data[],char * buffer);
 
 // the format of these routines follows (int func_num, Params ) where Params
 // can be anything of any length
@@ -54,7 +56,7 @@ MFS_Lookup (func_num == 1):
 
 MFS_Stat (func_num == 2): 
     client send (int inum)
-    server send (int status, TODO type, int size, void * blocks)
+    server send (int status, int type, int size, void * blocks)
         '0'  'type' 'size' 'blocks' on sucess (4 strings in total, and ordering is important)
         status == -1 on failure or inum doesn't exist
 
