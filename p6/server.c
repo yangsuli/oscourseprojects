@@ -3,6 +3,7 @@
 #include <string.h>
 #include "udp.h"
 #include "mfs.h"
+#include "mssg.h"
 #include <fcntl.h>
 #include "server.h"
 
@@ -71,27 +72,34 @@ int main(int argc, char *argv[])
     ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////// main loop ///////////////////////////////////////
-    char buffer_read [BUFFER_SIZE];
-    char buffer_reply[BUFFER_SIZE];
+    char buffer_read [UDP_BUFFER_SIZE];
+    char buffer_reply[UDP_BUFFER_SIZE];
+    int msg_len[NUM_MESSAGES];
+    void * data[NUM_MESSAGES];
+    InitData( msg_len, data );  // create room for each data[i] pointer
+    Params params;
+    Params * p = &params;
+    Params params_write;
+    Params * r = &params_write;
     int rc = -1;
     struct sockaddr_in s;
     while (1) {
 
-        // read a message //
-        rc = UDP_Read(sd, &s, buffer_read, BUFFER_SIZE);
-        if (rc > 0) {
+        ResetParams( p );
 
+        // read a message //
+        rc = UDP_Read(sd, &s, buffer_read, UDP_BUFFER_SIZE);
+        if (rc > 0) {
             // parse the message into arguments //
-            printf("SERVER:: read %d bytes (message: '%s')\n", rc, buffer_read);
-            sleep(10);
+            ServerReadMessage( p, msg_len, data, buffer_read );
+
         } else {  // bad read -- continue waiting for another message ...
             rc = -1;
             continue;
         }
 
         // call the appropriate function //
-        int func_num = 20;
-        switch( func_num )
+        switch( p->func_num )
         {   
             // TODO -- fill this in!
             case 0:
@@ -119,37 +127,22 @@ int main(int argc, char *argv[])
 
             break;
             default:
-            fprintf(stderr, "bad function number %d called \n", func_num );
+            fprintf(stderr, "bad function number %d called \n", p->func_num );
         }
-        
 
         // parse a response //
+        ServerCreatMessage(r, msg_len, data, buffer_reply );
         sprintf(buffer_reply, "reply");
 
         // write the response //
-        rc = UDP_Write(sd, &s, buffer_reply, BUFFER_SIZE);
+        // TODO -- IS IT OK TO USE SAME SOCKET DESCRIPTOR?
+        rc = UDP_Write(sd, &s, buffer_reply, UDP_BUFFER_SIZE);
 
     }
     ///////////////////////////////////////////////////////////////////////////
 
     return 0;
 }
-
-
-/*
-int main(int argc, char *argv[]){
-	if(argc != 2){
-		printf("usage: server [portnm] [file-system-image]");
-		exit(-1);
-	}
-
-	//TODO
-	//listen to port and other stuff
-
-	return 0;
-
-}
-*/
 
 void Set_Bit(Bit_Map_t *map, int index){
 	if(index < 0 || index >= MFS_BLOCK_NUMS){
