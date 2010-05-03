@@ -80,8 +80,11 @@ void ResetParams( Params *p ) {
     p->size  = -1;
     p->block = -1;
     p->status = -1;
+    p->type  = -1;
 }
 
+// call this routine once to allocate room for each entry in data and to reset
+// all the parameters in Params p.
 int InitData( int msg_len[], void * data[], Params *p) {
 
     int i;
@@ -479,11 +482,8 @@ int ServerReadMessage(Params *params, int msg_len[], void * data[],
 
             buff = (char *) data[1];
             strncpy( params->name, buff, BUFFER_SIZE );
-
             break;
-
     }
-
 
     return 0;
 
