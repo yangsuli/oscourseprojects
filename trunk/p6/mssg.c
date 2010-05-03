@@ -139,14 +139,17 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
             msg_len[0] = sizeof(int);
             data[0] = (void *) p;
 
-            int size = params->size;
-            p = &size;
+            int type = params->type;
+            p = &type;
             msg_len[1] = sizeof(int);
             data[1] = (void *) p;
 
-            // TODO WHAT PARAMETER IS TYPE HERE?
-            msg_len[2] = 0;
-            
+            int size = params->size;
+            p = &size;
+            msg_len[2] = sizeof(int);
+            data[2] = (void *) p;
+
+/// TODO i don't think this is correct ....
             msg_len[3] = sizeof(int);
             data[3] = (void *) params->block;
 
@@ -414,10 +417,7 @@ int ServerReadMessage(Params *params, int msg_len[], void * data[],
                             char * buffer ) {
 
     int * p = NULL;       // generic data pointer here
-    int pinum, inum, block, type;
-
     char * buff;
-    char * name;
 
     /////////// read an entire message /////
     int msg_type = -1;
@@ -439,86 +439,59 @@ int ServerReadMessage(Params *params, int msg_len[], void * data[],
             strncpy( params->name, (char*)data[1], BUFFER_SIZE);
 
             break;
-            /*
+
         case 2:
 
-            inum = params->inum;
-            p = &inum;
-            msg_len[0] = sizeof(int);
-            data[0] = (void *) p;
-
-            SetLenZero(1,msg_len);
+            p = (int*) data[0];
+            params->inum = *p;
 
             break;
 
         case 3:
             
-            inum = params->inum;
-            p = &inum;
-            msg_len[0] = sizeof(int);
-            data[0] = (void *) p;
+            p = (int*) data[0];
+            params->inum = *p;
 
-            buff = params->buffer;
-            msg_len[1] = strlen(buff)+1;
-            data[1]    = (void *) buff;
+            buff = (char *) data[1];
+            strncpy( params->buffer, buff, BUFFER_SIZE);
 
-            block = params->block;
-            p = &block;
-            msg_len[2] = sizeof(int);
-            data[2] = (void *) p;
+            p = (int*) data[2];
+            params->block = *p;
 
-            SetLenZero(3,msg_len);
             break;
 
         case 4:
 
-            inum = params->inum;
-            p = &inum;
-            msg_len[0] = sizeof(int);
-            data[0] = (void *) p;
+            p = (int*) data[0];
+            params->inum = *p;
 
-            block = params->block;
-            p = &block;
-            data[1] = (void *) p;
-            msg_len[1] = sizeof(int);
+            p = (int*) data[1];
+            params->block = *p;
 
-            SetLenZero(2,msg_len);
-            
             break;
 
         case 5:
 
-            type = params->type;
-            p = &type;
-            msg_len[0] = sizeof(int);
-            data[0] = (void *) p;
+            p = (int*) data[0];
+            params->type = *p;
 
-            data[1] = (void *) params->name;
-            msg_len[1] = strlen( params->name ) + 1;
-
-            SetLenZero(2,msg_len);
- 
+            buff = (char *) data[1];
+            strncpy( params->name, buff, BUFFER_SIZE );
             break;
 
         case 6:
 
-            pinum = params->pinum;
-            p = &pinum;
-            msg_len[0] = sizeof(int);
-            data[0] = (void *) p;
+            p = (int*) data[0];
+            params->pinum = *p;
 
-            data[1] = (void *) params->name;
-            msg_len[1] = strlen( params->name ) + 1;
-
-            SetLenZero(2,msg_len);
+            buff = (char *) data[1];
+            strncpy( params->name, buff, BUFFER_SIZE );
 
             break;
-*/
+
     }
 
 
     return 0;
 
 }
-
-
