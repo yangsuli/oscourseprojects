@@ -30,6 +30,4 @@ int MFS_Unlink(int pinum, char *name);
 //open("/dir1/dir2/file.txt") {
 //    inodeNumOfDir1 = Lookup(rootDirInumber, "dir1");
     
-
-
 #endif // __MFS_h__

@@ -4,7 +4,6 @@
 #include "mssg.h"
 
 char buffer[BUFFER_SIZE];
-
 /*
 int main(int argc, char *argv[])
 {
