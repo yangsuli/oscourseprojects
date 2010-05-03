@@ -16,7 +16,6 @@ typedef struct __params {
     int inum;               // inode number
     int size;
     int block;              // block number
-    int message_type;       // this parameter is not used ...
     int status;             // return status for server
     int type;               // either MFS_DIRECTORY or MFS_REGULAR_FILE
 } Params;
@@ -24,10 +23,10 @@ typedef struct __params {
 // TODO -- why can't these have const in front of them?
 //void CreateMessage( int type, const int msg_len[], 
 //    const void * data[], char * buffer);
-int CreateMessage( int type, int fun_number, int msg_len[], 
+int CreateMessage( int fun_number, int msg_len[], 
     void * data[], char * buffer);
 
-void ReadMessage( int * type, int * fun_number, int msg_len[], 
+void ReadMessage( int * fun_number, int msg_len[], 
     void * data[], const char * buffer); 
 
 // initializes each entry in msg_len to zero and allocates memory for each

@@ -6,13 +6,11 @@
 
 // Create a message of type "type" and write out to buffer
 // Returns 0 on success, -1 on failure.
-int CreateMessage( int type, int fun_number, int msg_len[], 
+int CreateMessage( int fun_number, int msg_len[], 
     void * data[], char * buffer) {
 
     // write out all the header information
     int * header = (int *) buffer;
-    *header = type;
-    header++;
     *header = fun_number;
     header++;
     int i = 0;
@@ -40,14 +38,12 @@ int CreateMessage( int type, int fun_number, int msg_len[],
 
 }
 
-// Read a message from buffer, and write to type, msg_len and data.
-void ReadMessage( int * type, int * fun_number, int msg_len[], 
+// Read a message from buffer, and write to msg_len and data.
+void ReadMessage( int * fun_number, int msg_len[], 
     void * data[], const char * buffer) {
 
     // read all the header information (sizes and message type)
     int * header = (int *) buffer;
-    *type = *header;
-    header++;
     *fun_number = *header;
     header++;
     int i = 0;
@@ -83,7 +79,6 @@ void ResetParams( Params *p ) {
     p->inum  = -1;
     p->size  = -1;
     p->block = -1;
-    p->message_type = -1;
     p->status = -1;
 }
 
@@ -214,7 +209,7 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
     }
 
     // create the message
-    i = CreateMessage( 0, func_num, msg_len, data, buffer);
+    i = CreateMessage( func_num, msg_len, data, buffer);
     ResetParams( params );
     return i;
 
@@ -228,10 +223,9 @@ int ClientReadMessage(Params *params, int msg_len[], void * data[],
     char * buf = NULL;
 
     ///////// read an entire message /////
-    int msg_type = -1;
     int func_num = -1;
     ResetParams( params );
-    ReadMessage( &msg_type, &func_num, msg_len, data, buffer);
+    ReadMessage( &func_num, msg_len, data, buffer);
     params->func_num = func_num;
     switch( func_num ) {
         case 0:
@@ -407,7 +401,7 @@ int ClientCreatMessage(Params *params, int msg_len[], void * data[],
     }
 
     // create the message
-    i = CreateMessage( 0, func_num, msg_len, data, buffer);
+    i = CreateMessage( func_num, msg_len, data, buffer);
     ResetParams( params );
     return i;
 
@@ -420,10 +414,9 @@ int ServerReadMessage(Params *params, int msg_len[], void * data[],
     char * buff;
 
     /////////// read an entire message /////
-    int msg_type = -1;
     int func_num = -1;
     ResetParams( params );
-    ReadMessage( &msg_type, &func_num, msg_len, data, buffer);
+    ReadMessage( &func_num, msg_len, data, buffer);
     params->func_num = func_num;
 
     switch( func_num ) {
