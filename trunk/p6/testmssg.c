@@ -19,14 +19,11 @@ int test0() {
     Params params;
     InitData( msg_len1, data1, &params );
     InitData( msg_len2, data2, &params );
-    int type1 = -1;
-    int type2 = -1;
 
     int fun_num1 = -1;
     int fun_num2 = -1;
 
     // create a message
-    type1 = 0;
     int x = 10;
     int * p = &x;
     data1[0] = (void *) p;
@@ -37,10 +34,10 @@ int test0() {
     msg_len1[1] = (int) (strlen( (char*) data1[1] ) + 1);
 
     fun_num1 = 3;
-    CreateMessage( type1, fun_num1, msg_len1, data1, buffer1);
+    CreateMessage( fun_num1, msg_len1, data1, buffer1);
 
     // read the message
-    ReadMessage( &type2, &fun_num2, msg_len2, data2, buffer1);
+    ReadMessage( &fun_num2, msg_len2, data2, buffer1);
 
     // check if everything is the same
     int i;
@@ -87,11 +84,7 @@ int test1() {
         assert( data2[i] != NULL );
     }
 
-    int type1 = -1;
-    int type2 = -1;
-
     // create a message
-    type1 = 0;
     int x = 10;
     int * p = &x;
     char word1[] = "hi mom!";
@@ -103,11 +96,11 @@ int test1() {
     msg_len1[1] = (int) (strlen( (char*) data1[1] ) + 1);
     msg_len1[2] = (int) (strlen( (char*) data1[2] ) + 1);
 
-    CreateMessage( type1, 3, msg_len1, data1, buffer1);
+    CreateMessage( 3, msg_len1, data1, buffer1);
 
     // read the message
     int fun_num2 = -1;
-    ReadMessage( &type2, &fun_num2, msg_len2, data2, buffer1);
+    ReadMessage( &fun_num2, msg_len2, data2, buffer1);
 
     // check if everything is the same
     for( i = 0; i < NUM_MESSAGES; i++) {
