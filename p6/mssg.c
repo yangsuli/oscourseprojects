@@ -220,16 +220,15 @@ int ClientReadMessage(Params *params, int msg_len[], void * data[],
     int * p = NULL;       // generic data pointer here
     char * buf = NULL;
 
-    ResetParams( params );
-
+    ///////// read an entire message /////
     int msg_type = -1;
     int func_num = -1;
-    ReadMessage( &msg_type, &func_num, msg_len, 
-        data, buffer);
-
+    ResetParams( params );
+    ReadMessage( &msg_type, &func_num, msg_len, data, buffer);
     params->func_num = func_num;
     switch( func_num ) {
         case 0:
+
             p = (int *) data[0];
             params->status = *p;
             break;
@@ -410,3 +409,116 @@ int ClientCreatMessage(Params *params, int msg_len[], void * data[],
     return i;
 
 }
+
+int ServerReadMessage(Params *params, int msg_len[], void * data[], 
+                            char * buffer ) {
+
+    int * p = NULL;       // generic data pointer here
+    int pinum, inum, block, type;
+
+    char * buff;
+    char * name;
+
+    /////////// read an entire message /////
+    int msg_type = -1;
+    int func_num = -1;
+    ResetParams( params );
+    ReadMessage( &msg_type, &func_num, msg_len, data, buffer);
+    params->func_num = func_num;
+
+    switch( func_num ) {
+        case 0:
+
+            break;
+
+        case 1:
+
+            p = (int*) data[0];
+            params->pinum = *p;
+
+            strncpy( params->name, (char*)data[1], BUFFER_SIZE);
+
+            break;
+            /*
+        case 2:
+
+            inum = params->inum;
+            p = &inum;
+            msg_len[0] = sizeof(int);
+            data[0] = (void *) p;
+
+            SetLenZero(1,msg_len);
+
+            break;
+
+        case 3:
+            
+            inum = params->inum;
+            p = &inum;
+            msg_len[0] = sizeof(int);
+            data[0] = (void *) p;
+
+            buff = params->buffer;
+            msg_len[1] = strlen(buff)+1;
+            data[1]    = (void *) buff;
+
+            block = params->block;
+            p = &block;
+            msg_len[2] = sizeof(int);
+            data[2] = (void *) p;
+
+            SetLenZero(3,msg_len);
+            break;
+
+        case 4:
+
+            inum = params->inum;
+            p = &inum;
+            msg_len[0] = sizeof(int);
+            data[0] = (void *) p;
+
+            block = params->block;
+            p = &block;
+            data[1] = (void *) p;
+            msg_len[1] = sizeof(int);
+
+            SetLenZero(2,msg_len);
+            
+            break;
+
+        case 5:
+
+            type = params->type;
+            p = &type;
+            msg_len[0] = sizeof(int);
+            data[0] = (void *) p;
+
+            data[1] = (void *) params->name;
+            msg_len[1] = strlen( params->name ) + 1;
+
+            SetLenZero(2,msg_len);
+ 
+            break;
+
+        case 6:
+
+            pinum = params->pinum;
+            p = &pinum;
+            msg_len[0] = sizeof(int);
+            data[0] = (void *) p;
+
+            data[1] = (void *) params->name;
+            msg_len[1] = strlen( params->name ) + 1;
+
+            SetLenZero(2,msg_len);
+
+            break;
+*/
+    }
+
+
+    return 0;
+
+}
+
+
