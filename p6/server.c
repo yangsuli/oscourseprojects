@@ -12,8 +12,7 @@
 /*
  * demo code to show how to use udp
  *
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     int sd = UDP_Open(10000);
     assert(sd > -1);

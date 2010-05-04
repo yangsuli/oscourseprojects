@@ -35,6 +35,18 @@ int main(int argc, char *argv[])
 }
 */
 
+int ClientSendBuffer( char * buffer ) { 
+    int rc = UDP_Write(sd, &addr, buffer, UDP_BUFFER_SIZE);
+    return rc;
+}
+
+int ClientReadBuffer( char * buffer ) {
+    int rc = UDP_Read(sd, &addr2, buffer, UDP_BUFFER_SIZE);
+    return rc;
+}
+
+
+/*
 int SendMessage( char * buffer ) { 
 
     int rc = UDP_Write(sd, &addr, buffer, UDP_BUFFER_SIZE);
@@ -46,8 +58,10 @@ int SendMessage( char * buffer ) {
     return 0;
 
 }
+*/
+
 // Takes a host name and port number and uses those to find the server 
-// exporting the file system.
+// exporting the file system.  (Return status?)
 int MFS_Init(char *hostname, int port) {
 
     sd = UDP_Open(22107);
@@ -60,7 +74,25 @@ int MFS_Init(char *hostname, int port) {
 
     InitData( msg_len, data);
 
-    return 0;
+    char buffer_read[UDP_BUFFER_SIZE];   // buffer used for reading messages
+    char buffer_write[UDP_BUFFER_SIZE];   // buffer used for writing messages
+    Params params;
+
+    // save all the necessary parameters
+    Params *p = &params;
+    ResetParams( p );
+    p->func_num = 0;
+
+    // create and send the message
+    ClientCreatMessage( p, msg_len, data, buffer_write );
+    ClientSendBuffer( buffer_write );
+
+    // read the response
+    Params read_params;
+    Params * r = &read_params;
+    ClientReadBuffer( buffer_read ) {
+    ClientReadMessage( r, msg_len, data, buffer_read );
+    return r->status;
 }
 
 // MFS_Lookup() takes the parent inode number (which should be the inode number
@@ -80,15 +112,14 @@ int MFS_Lookup(int pinum, char *name) {
     p->pinum    = pinum;
     strncpy( p->name, name, BUFFER_SIZE );
 
-    // create the message
+    // create and send the message
     ClientCreatMessage( p, msg_len, data, buffer_write );
-
-    // send the message
-// TODO
+    ClientSendBuffer( buffer_write );
 
     // read the response
     Params read_params;
     Params * r = &read_params;
+    ClientReadBuffer( buffer_read ) {
     ClientReadMessage( r, msg_len, data, buffer_read );
     int inum = r->inum;
     if( inum < 0 ) {
@@ -111,14 +142,14 @@ int MFS_Stat(int inum, MFS_Stat_t *m) {
     ResetParams( p );
     p->func_num = 2;
     p->inum     = inum;
+    // create and send the message
     ClientCreatMessage( p, msg_len, data, buffer_write );
-
-    // send the message
-// TODO
+    ClientSendBuffer( buffer_write );
 
     // read the response
     Params read_params;
     Params * r = &read_params;
+    ClientReadBuffer( buffer_read ) {
     ClientReadMessage( r, msg_len, data, buffer_read );
     if( r->status != 0 ) {
         return -1;
@@ -148,14 +179,14 @@ int MFS_Write(int inum, char *buffer, int block) {
     p->inum     = inum;
     p->block    = block;
     memcpy( p->buffer, buffer, BUFFER_SIZE);
+    // create and send the message
     ClientCreatMessage( p, msg_len, data, buffer_write );
-
-    // send the message
-// TODO
+    ClientSendBuffer( buffer_write );
 
     // read the response
     Params read_params;
     Params * r = &read_params;
+    ClientReadBuffer( buffer_read ) {
     ClientReadMessage( r, msg_len, data, buffer_read );
     if( r->status != 0 ) {
         return -1;
@@ -179,14 +210,14 @@ int MFS_Read(int inum, char *buffer, int block) {
     p->func_num = 4;
     p->inum     = inum;
     p->block    = block;
+    // create and send the message
     ClientCreatMessage( p, msg_len, data, buffer_write );
-
-    // send the message
-// TODO
+    ClientSendBuffer( buffer_write );
 
     // read the response
     Params read_params;
     Params * r = &read_params;
+    ClientReadBuffer( buffer_read ) {
     ClientReadMessage( r, msg_len, data, buffer_read );
     if( r->status != 0 ) {
         return -1;
@@ -213,14 +244,14 @@ int MFS_Creat(int pinum, int type, char *name) {
     p->func_num = 5;
     p->type     = type;
     strncpy( p->name, name, BUFFER_SIZE);
+    // create and send the message
     ClientCreatMessage( p, msg_len, data, buffer_write );
-
-    // send the message
-// TODO
+    ClientSendBuffer( buffer_write );
 
     // read the response
     Params read_params;
     Params * r = &read_params;
+    ClientReadBuffer( buffer_read ) {
     ClientReadMessage( r, msg_len, data, buffer_read );
     if( r->status != 0 ) {
         return -1;
@@ -245,14 +276,14 @@ int MFS_Unlink(int pinum, char *name) {
     p->func_num = 6;
     p->pinum     = pinum;
     strncpy( p->name, name, BUFFER_SIZE);
+    // create and send the message
     ClientCreatMessage( p, msg_len, data, buffer_write );
-
-    // send the message
-// TODO
+    ClientSendBuffer( buffer_write );
 
     // read the response
     Params read_params;
     Params * r = &read_params;
+    ClientReadBuffer( buffer_read ) {
     ClientReadMessage( r, msg_len, data, buffer_read );
     if( r->status != 0 ) {
         if( r->status == -1) {
