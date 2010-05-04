@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 
     ///////////////////////// parse the arguments //////////////////////////////
     if(argc != 3){
-        fprintf(stderr,"usage: server [portnm] [file-system-image]\n");
+        fprintf(stderr,"usage: server [portnum] [file-system-image]\n");
         fprintf(stderr,"you supplied %d args\n", argc);
         exit(1);
     }
@@ -74,7 +74,8 @@ int main(int argc, char *argv[])
     if( ! (portnum > 0 ) ) {
         fprintf(stderr, "  portnum = %d;  this should be a pos number",portnum);
     }
-    char* filename = malloc( sizeof(char) * (1 + strlen(argv[2])) );
+//  printf("   argv[2] = %s\n", argv[2] );
+    char* filename = (char*) malloc( sizeof(char) * (1 + strlen(argv[2])) );
     strcpy( filename, argv[2] );
 
     const int sd = UDP_Open(portnum);
@@ -97,7 +98,6 @@ int main(int argc, char *argv[])
         ResetParams( p );
 
         // read a message //
-//      rc = ServerReadBuffer(sd,  buffer_read ) {
 	    rc = UDP_Read(sd, &s, buffer_read, UDP_BUFFER_SIZE);
         if (rc > 0) {
             // parse the message into arguments //
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
             rc = -1;
             continue;
         }
-
+//printf("  p->func_num = %d\n", p->func_num );
         // call the appropriate function //
         switch( p->func_num )
         {   
@@ -290,6 +290,7 @@ int Image_Init(char * filename){
 
 //empty function for Server_Init
 int Server_Init(){
+//  printf("  server_init called -- this function does nothing!\n");
 	return 0;
 }
 
