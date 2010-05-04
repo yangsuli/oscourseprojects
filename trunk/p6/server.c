@@ -45,6 +45,17 @@ int image_fd;
 // create return message (parse response)
 // write to udp
 
+/*
+int ServerSendBuffer( int sd, struct sockaddr_in s, char * buffer ) { 
+	int rc = UDP_Write(sd, &s, buffer, UDP_BUFFER_SIZE);
+    return rc;
+}
+
+int ServerReadBuffer( int sd, struct sockaddr_in s, char * buffer ) {
+	int rc = UDP_Read(sd, &s, buffer, UDP_BUFFER_SIZE);
+    return rc;
+}
+*/
 
 /*
  * Main program for running the file server.
@@ -78,16 +89,16 @@ int main(int argc, char *argv[])
     InitData( msg_len, data );  // create room for each data[i] pointer
     Params params;
     Params * p = &params;
-    Params params_write;
-    Params * r = &params_write;
     int rc = -1;
     struct sockaddr_in s;
+    MFS_Stat_t m;
     while (1) {
 
         ResetParams( p );
 
         // read a message //
-        rc = UDP_Read(sd, &s, buffer_read, UDP_BUFFER_SIZE);
+//      rc = ServerReadBuffer(sd,  buffer_read ) {
+	    rc = UDP_Read(sd, &s, buffer_read, UDP_BUFFER_SIZE);
         if (rc > 0) {
             // parse the message into arguments //
             ServerReadMessage( p, msg_len, data, buffer_read );
@@ -102,24 +113,36 @@ int main(int argc, char *argv[])
         {   
             // TODO -- fill this in!
             case 0:
-
+                Server_Init();
             break;
             case 1:
+                p->inum = Server_LookUp(p->pinum, p->name );
 
             break;
             case 2:
+                m.type = p -> type;
+                m.size = p -> size;
+                m.blocks = p -> blocks;
+                p->status = Server_Stat( p->inum,  &m );
+                p -> type = m.type;
+                p -> size = m.size;
+                p -> blocks = m.blocks;
 
             break;
             case 3:
+//              Server_Write( p );
 
             break;
             case 4:
+//              Server_Read( p );
 
             break;
             case 5:
+//              Server_Creat( p->pinum, p->type, p->name );
 
             break;
             case 6:
+//              Server_Unlink( p->pinum, p->name );
 
             break;
             case 7:
@@ -130,12 +153,12 @@ int main(int argc, char *argv[])
         }
 
         // parse a response //
-        ServerCreatMessage(r, msg_len, data, buffer_reply );
-        sprintf(buffer_reply, "reply");
+        ServerCreatMessage(p, msg_len, data, buffer_reply );
+//      sprintf(buffer_reply, "reply");
 
         // write the response //
-        // TODO -- IS IT OK TO USE SAME SOCKET DESCRIPTOR?
-        rc = UDP_Write(sd, &s, buffer_reply, UDP_BUFFER_SIZE);
+//      rc = ServerSendBuffer(sd, buffer_reply );
+	    rc = UDP_Write(sd, &s, buffer_reply, UDP_BUFFER_SIZE);
 
     }
     ///////////////////////////////////////////////////////////////////////////
