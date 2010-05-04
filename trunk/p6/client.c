@@ -90,7 +90,7 @@ int MFS_Init(char *hostname, int port) {
     // read the response
     Params read_params;
     Params * r = &read_params;
-    ClientReadBuffer( buffer_read ) {
+    ClientReadBuffer( buffer_read );
     ClientReadMessage( r, msg_len, data, buffer_read );
     return r->status;
 }
@@ -119,7 +119,7 @@ int MFS_Lookup(int pinum, char *name) {
     // read the response
     Params read_params;
     Params * r = &read_params;
-    ClientReadBuffer( buffer_read ) {
+    ClientReadBuffer( buffer_read );
     ClientReadMessage( r, msg_len, data, buffer_read );
     int inum = r->inum;
     if( inum < 0 ) {
@@ -149,7 +149,7 @@ int MFS_Stat(int inum, MFS_Stat_t *m) {
     // read the response
     Params read_params;
     Params * r = &read_params;
-    ClientReadBuffer( buffer_read ) {
+    ClientReadBuffer( buffer_read );
     ClientReadMessage( r, msg_len, data, buffer_read );
     if( r->status != 0 ) {
         return -1;
@@ -186,7 +186,7 @@ int MFS_Write(int inum, char *buffer, int block) {
     // read the response
     Params read_params;
     Params * r = &read_params;
-    ClientReadBuffer( buffer_read ) {
+    ClientReadBuffer( buffer_read );
     ClientReadMessage( r, msg_len, data, buffer_read );
     if( r->status != 0 ) {
         return -1;
@@ -217,7 +217,7 @@ int MFS_Read(int inum, char *buffer, int block) {
     // read the response
     Params read_params;
     Params * r = &read_params;
-    ClientReadBuffer( buffer_read ) {
+    ClientReadBuffer( buffer_read );
     ClientReadMessage( r, msg_len, data, buffer_read );
     if( r->status != 0 ) {
         return -1;
@@ -251,7 +251,7 @@ int MFS_Creat(int pinum, int type, char *name) {
     // read the response
     Params read_params;
     Params * r = &read_params;
-    ClientReadBuffer( buffer_read ) {
+    ClientReadBuffer( buffer_read );
     ClientReadMessage( r, msg_len, data, buffer_read );
     if( r->status != 0 ) {
         return -1;
@@ -283,7 +283,7 @@ int MFS_Unlink(int pinum, char *name) {
     // read the response
     Params read_params;
     Params * r = &read_params;
-    ClientReadBuffer( buffer_read ) {
+    ClientReadBuffer( buffer_read );
     ClientReadMessage( r, msg_len, data, buffer_read );
     if( r->status != 0 ) {
         if( r->status == -1) {
