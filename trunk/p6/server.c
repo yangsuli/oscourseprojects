@@ -130,24 +130,21 @@ int main(int argc, char *argv[])
 
             break;
             case 3:
-//              Server_Write( p );
+            p->status = Server_Write( p->inum, p->buffer, p->block );
 
             break;
             case 4:
-//              Server_Read( p );
-
+            p->status = Server_Read( p->inum, p->buffer, p->block );
             break;
+
             case 5:
-//              Server_Creat( p->pinum, p->type, p->name );
-
+            p->status = Server_Creat( p->pinum, p->type, p->name );
             break;
+
             case 6:
-//              Server_Unlink( p->pinum, p->name );
-
+            p->status = Server_Unlink( p->pinum, p->name );
             break;
-            case 7:
 
-            break;
             default:
             fprintf(stderr, "bad function number %d called \n", p->func_num );
         }
