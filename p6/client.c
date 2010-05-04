@@ -35,27 +35,28 @@ int main(int argc, char *argv[])
 }
 */
 
-// Takes a host name and port number and uses those to find the server 
-// exporting the file system.
-int MFS_Init(char *hostname, int port) {
+int SendMessage( char * buffer ) { 
 
-    sd = UDP_Open(20000);
-    if( sd < 0 ) { return -1; }
-//  assert(sd > -1);
-
-    int rc = UDP_FillSockAddr(&addr, hostname, port);
-    if( rc != 0 ) { return -1; }
-//    assert(rc == 0);
-
-/*
-    char message[BUFFER_SIZE];
-    rc = UDP_Write(sd, &addr, message, BUFFER_SIZE);
+    int rc = UDP_Write(sd, &addr, buffer, UDP_BUFFER_SIZE);
     printf("CLIENT:: sent message (%d)\n", rc);
     if (rc > 0) {
         int rc = UDP_Read(sd, &addr2, buffer, BUFFER_SIZE);
         printf("CLIENT:: read %d bytes (message: '%s')\n", rc, buffer);
     }
-*/
+    return 0;
+
+}
+// Takes a host name and port number and uses those to find the server 
+// exporting the file system.
+int MFS_Init(char *hostname, int port) {
+
+    sd = UDP_Open(22107);
+    if( sd < 0 ) { return -1; }
+//  assert(sd > -1);
+
+    int rc = UDP_FillSockAddr(&addr, hostname, port);
+//  if( rc != 0 ) { return -1; }
+    assert(rc == 0);
 
     InitData( msg_len, data);
 
