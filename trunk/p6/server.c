@@ -80,6 +80,12 @@ int main(int argc, char *argv[])
 
     const int sd = UDP_Open(portnum);
     assert(sd > -1);
+
+    //open file image
+    if( (image_fd = open(filename,O_RDWR)) == -1){
+    	image_fd = Image_Init(filename);
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     ///////////////////////// main loop ///////////////////////////////////////
@@ -217,7 +223,7 @@ void Inode_Init(Inode_t *inode){
 //return the file descriptor of the image file
 int Image_Init(char * filename){
 	int fd, i;
-	if((fd = open(filename,O_WRONLY|O_CREAT|O_TRUNC)) == -1){
+	if((fd = open(filename,O_RDWR|O_CREAT|O_TRUNC)) == -1){
 		fprintf(stderr,"open failed!\n");
 		exit(-1);
 	}
@@ -761,6 +767,13 @@ int Server_Unlink(int pinum, char *name){
 	int inum = Server_LookUp(pinum, name);
 	if(inum < 0){//name does not exist
 		return 0;
+	}
+
+	//return -3 if directory not empty
+	if(inode_table[inum].type == MFS_DIRECTORY){
+		if(inode_table[inum].size > 2 * sizeof(MFS_DirEnt_t)){
+			return -3;
+		}
 	}
 
 	int i;
