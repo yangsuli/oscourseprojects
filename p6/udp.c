@@ -2,7 +2,6 @@
 #include <sys/select.h>
 #include <sys/time.h>
 
-struct timeval timeout;
 
 // create a socket and bind it to a port on the current machine
 // used to listen for incoming packets
@@ -10,9 +9,6 @@ int
 UDP_Open(int port)
 {
 
-    //initialize timeout
-	timeout.tv_sec = 5;
-	timeout.tv_usec = 0;
     int fd;
     if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 	perror("socket");
@@ -77,6 +73,12 @@ UDP_Read(int fd, struct sockaddr_in *addr, char *buffer, int n)
 	fd_set rset;
 	FD_ZERO(&rset);
 	FD_SET(fd,&rset);
+
+struct timeval timeout;
+    //initialize timeout
+	timeout.tv_sec = 5;
+	timeout.tv_usec = 0;
+
 
 	rv = select(FD_SETSIZE,&rset,NULL,NULL,&timeout);
 
