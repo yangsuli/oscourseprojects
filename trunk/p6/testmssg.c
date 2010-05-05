@@ -17,8 +17,8 @@ int main(int argc, char* argv[]) {
     int inum  = 3;
     MFS_Stat_t m;
 
-    MFS_Lookup(-1, "usr");
     MFS_Init(hostname, port);
+    MFS_Lookup(-1, "usr");
     MFS_Lookup(pinum, name);
 //  MFS_Stat(int inum, MFS_Stat_t *m);
 //  MFS_Write(int inum, char *buffer, int block);
