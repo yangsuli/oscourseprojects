@@ -317,8 +317,8 @@ int ClientCreatMessage(Params *params, int msg_len[], void * data[],
             p = &pinum;
             data[0] = (void *) p;
 
-            msg_len[1] = strlen(name) + 1;
             name = params->name;
+            msg_len[1] = strlen(name) + 1;
             data[1] = (void *) name;
 
             SetLenZero(2,msg_len);
