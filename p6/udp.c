@@ -1,10 +1,18 @@
 #include "udp.h"
+#include <sys/select.h>
+#include <sys/time.h>
+
+struct timeval timeout;
 
 // create a socket and bind it to a port on the current machine
 // used to listen for incoming packets
 int
 UDP_Open(int port)
 {
+
+    //initialize timeout
+	timeout.tv_sec = 5;
+	timeout.tv_usec = 0;
     int fd;
     if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 	perror("socket");
@@ -65,6 +73,20 @@ UDP_Write(int fd, struct sockaddr_in *addr, char *buffer, int n)
 int
 UDP_Read(int fd, struct sockaddr_in *addr, char *buffer, int n)
 {
+	int rv;
+	fd_set rset;
+	FD_ZERO(&rset);
+	FD_SET(fd,&rset);
+
+	rv = select(FD_SETSIZE,&rset,NULL,NULL,&timeout);
+
+	if(rv == -1){//select error
+		fprintf(stderr, "select error!");
+		exit(-1);
+	}else if(rv == 0){//time out
+		return TIME_OUT; // read return failure if time out
+	}
+
     int len = sizeof(struct sockaddr_in); 
     int rc = recvfrom(fd, buffer, n, 0, (struct sockaddr *) addr, (socklen_t *) &len);
     // assert(len == sizeof(struct sockaddr_in)); 
