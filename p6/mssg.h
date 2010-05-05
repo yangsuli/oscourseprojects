@@ -1,9 +1,17 @@
 #ifndef __MSSG_H
 #define __MSSG_H
 
+#ifndef UDP_BUFFER_SIZE
 #define UDP_BUFFER_SIZE (16384)
+#endif
+
+#ifndef BUFFER_SIZE
 #define BUFFER_SIZE (4096)
+#endif
+
+#ifndef NUM_MESSAGES
 #define NUM_MESSAGES (5)
+#endif
 
 // singleton struct used for passing parameters around -- Note: the number of
 // these parameters that get used depends of message_type -- see table below
