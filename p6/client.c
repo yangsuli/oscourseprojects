@@ -4,18 +4,13 @@
 #include "udp.h"
 #include "mssg.h"
 
-int msg_len[NUM_MESSAGES];
-void * data[NUM_MESSAGES];
-char buffer_read[UDP_BUFFER_SIZE];   // buffer used for reading messages
-char buffer_write[UDP_BUFFER_SIZE];   // buffer used for writing messages
-Params params;
-
 int port = -1;                  // port number
 int sd   = -1;                    // socket descriptor
 struct sockaddr_in addr, addr2;
 
 int MFS_Init_flag = 0;         // 0 means the function has not been called
 
+/*
 int ClientSendBuffer( char * buffer ) { 
 
     int rc = UDP_Write(sd, &addr, buffer, UDP_BUFFER_SIZE);
@@ -23,46 +18,63 @@ int ClientSendBuffer( char * buffer ) {
 }
 
 int ClientReadBuffer( char * buffer ) {
-
     int rc = UDP_Read(sd, &addr2, buffer, UDP_BUFFER_SIZE);
     return rc;
 }
+*/
 
 // Takes a host name and port number and uses those to find the server 
 // exporting the file system.  (Return status?)
 int MFS_Init(char *hostname, int port) {
 
-    assert( MFS_Init_flag == 0 );
+    if( MFS_Init_flag != 0 ) {
+        fprintf(stderr, " You called MFS_Init multiple times!\n");
+        exit(1);
+    }
     MFS_Init_flag = 1;
 
-    sd = UDP_Open(23107);
+    int rc = -1;
+
+    // use some random port number here
+    sd = UDP_Open(port + 17);
     assert( sd >= 0 );
 
-    int rc = UDP_FillSockAddr(&addr, hostname, port);
-    assert(rc == 0);
+    rc = UDP_FillSockAddr(&addr, hostname, port);
+    if( rc != 0 ) {
+        fprintf(stderr, "unable to call UDP_FillSockAddr() correctly\n");
+        exit(1);
+    }
 
-    InitData( msg_len, data);
-    Params params;
+/////////////// there is no need to send anything ot the server because it does
+//NOTHING when func_num 0 is passed to it ///////////////////////////////
+/*
+    // create the message
+    char * buffer_write = malloc( UDP_BUFFER_SIZE ); 
+    assert( buffer_write != NULL );
+    *( (int*) buffer_write ) = 0;
 
-    // save all the necessary parameters
-    Params *p = &params;
-    ResetParams( p );
-    p->func_num = 0;
-
-    // create and send the message
-#ifdef MSSG_DEBUG
-printf("  sending a message with parameters\n");
-printparams(p, 1);
-#endif
-    ClientCreatMessage( p, msg_len, data, buffer_write );
-    ClientSendBuffer( buffer_write );
+    // write the message
+    rc = TIME_OUT;
+    while( rc == TIME_OUT ) {
+        rc = UDP_Write(sd, &addr, buffer_write, UDP_BUFFER_SIZE);
+    }
 
     // read the response
-    Params read_params;
-    Params * r = &read_params;
-    ClientReadBuffer( buffer_read );
-    ClientReadMessage( r, msg_len, data, buffer_read );
-    return r->status;
+    char * buffer_read = malloc( UDP_BUFFER_SIZE );
+    assert( buffer_read != NULL );
+    rc = TIME_OUT;
+    while( rc == TIME_OUT ) {
+        rc = Safe_UDP_Read(sd, &addr2, buffer_read, UDP_BUFFER_SIZE);
+    }
+    int status = *((int*)buffer_read);
+
+    // free buffers
+    free( buffer_read );
+    free( buffer_write );
+
+    return status;
+*/
+
 }
 
 // MFS_Lookup() takes the parent inode number (which should be the inode number
@@ -71,6 +83,7 @@ printparams(p, 1);
 // Failure modes: invalid pinum, name does not exist in pinum.
 int MFS_Lookup(int pinum, char *name) {
 
+/*
     assert( MFS_Init_flag == 1 );
 
     // save all the necessary parameters
@@ -82,6 +95,7 @@ int MFS_Lookup(int pinum, char *name) {
 
     // create and send the message
     ClientCreatMessage( p, msg_len, data, buffer_write );
+int n = 0;
 retry_lookup:
     ClientSendBuffer( buffer_write );
 
@@ -89,7 +103,8 @@ retry_lookup:
     Params read_params;
     Params * r = &read_params;
     if( ClientReadBuffer( buffer_read ) == TIME_OUT ){
-        printf("  retrying lookup \n");
+        printf("  retrying lookup number %d\n", n);
+        n++;
 	    goto retry_lookup;
     }
     ClientReadMessage( r, msg_len, data, buffer_read );
@@ -132,7 +147,7 @@ retry_stat:
     m->type = r->type;
     m->size = r->size;
     m->blocks = r->blocks;
-
+*/
     return 0;
 
 }
@@ -144,9 +159,9 @@ retry_stat:
 // invalid block, not a regular file (you can't write to directories).
 int MFS_Write(int inum, char *buffer, int block) {
 
-
     assert( MFS_Init_flag == 1 );
 
+/*
     Params params;
 
     Params *p = &params;
@@ -171,6 +186,8 @@ retry_write:
         return -1;
     }
     return r->status;
+*/
+    return -1;
 
 }
 
@@ -182,6 +199,7 @@ int MFS_Read(int inum, char *buffer, int block) {
 
     assert( MFS_Init_flag == 1 );
 
+/*
     Params params;
 
     Params *p = &params;
@@ -207,6 +225,8 @@ retry_read:
 
     // copy the buffer out
     memcpy( buffer, r->buffer, BUFFER_SIZE);
+*/
+
     return 0;
 
 }
@@ -218,6 +238,8 @@ retry_read:
 int MFS_Creat(int pinum, int type, char *name) {
 
     assert( MFS_Init_flag == 1 );
+
+/*
     Params params;
 
     Params *p = &params;
@@ -241,7 +263,9 @@ retry_create:
         return -1;
     }
 
-    return r->status;
+*/
+    int status = -1;
+    return status;
 
 }
 
@@ -252,6 +276,8 @@ retry_create:
 int MFS_Unlink(int pinum, char *name) {
 
     assert( MFS_Init_flag == 1 );
+
+/*
     Params params;
 
     Params *p = &params;
@@ -282,6 +308,8 @@ retry_unlink:
         }
         return -1;
     }
+
+*/
 
     // copy the buffer out
     return 0;
