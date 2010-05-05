@@ -162,7 +162,7 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
             data[0] = (void *) p;
 
             buff = params->buffer;
-            msg_len[1] = strlen(buff) + 1;
+            msg_len[1] = BUFFER_SIZE;
             data[1]    = (void *) buff;
 
             SetLenZero(2, msg_len);
@@ -176,8 +176,8 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
             data[0] = (void *) p;
 
             buff   = params->buffer;
+            msg_len[1] = BUFFER_SIZE;
             data[1] = (void *) buff;
-            msg_len[1] = strlen(buff) + 1;
 
             SetLenZero(2, msg_len );
             
@@ -260,7 +260,7 @@ int ClientReadMessage(Params *params, int msg_len[], void * data[],
             params->inum = *p;
 
             buf = (char *) data[1];
-            strncpy( params->buffer, buf, BUFFER_SIZE);
+            memcpy( params->buffer, buf, BUFFER_SIZE);
             break;
 
         case 4:
@@ -269,7 +269,7 @@ int ClientReadMessage(Params *params, int msg_len[], void * data[],
             params->status = *p;
 
             buf = (char *) data[1];
-            strncpy( params->buffer, buf, BUFFER_SIZE);
+            memcpy( params->buffer, buf, BUFFER_SIZE);
 
             break;
 
@@ -343,7 +343,7 @@ int ClientCreatMessage(Params *params, int msg_len[], void * data[],
             data[0] = (void *) p;
 
             buff = params->buffer;
-            msg_len[1] = strlen(buff)+1;
+            msg_len[1] = BUFFER_SIZE;
             data[1]    = (void *) buff;
 
             block = params->block;
@@ -446,7 +446,7 @@ int ServerReadMessage(Params *params, int msg_len[], void * data[],
             params->inum = *p;
 
             buff = (char *) data[1];
-            strncpy( params->buffer, buff, BUFFER_SIZE);
+            memcpy( params->buffer, buff, BUFFER_SIZE);
 
             p = (int*) data[2];
             params->block = *p;
@@ -469,7 +469,7 @@ int ServerReadMessage(Params *params, int msg_len[], void * data[],
             params->type = *p;
 
             buff = (char *) data[1];
-            strncpy( params->name, buff, BUFFER_SIZE );
+            memcpy( params->name, buff, BUFFER_SIZE );
             break;
 
         case 6:
@@ -478,7 +478,7 @@ int ServerReadMessage(Params *params, int msg_len[], void * data[],
             params->pinum = *p;
 
             buff = (char *) data[1];
-            strncpy( params->name, buff, BUFFER_SIZE );
+            memcpy( params->name, buff, BUFFER_SIZE );
             break;
     }
 
