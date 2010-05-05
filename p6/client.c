@@ -14,12 +14,16 @@ int port = -1;                  // port number
 int sd   = -1;                    // socket descriptor
 struct sockaddr_in addr, addr2;
 
+int MFS_Init_flag = 0;         // 0 means the function has not been called
+
 int ClientSendBuffer( char * buffer ) { 
+
     int rc = UDP_Write(sd, &addr, buffer, UDP_BUFFER_SIZE);
     return rc;
 }
 
 int ClientReadBuffer( char * buffer ) {
+
     int rc = UDP_Read(sd, &addr2, buffer, UDP_BUFFER_SIZE);
     return rc;
 }
@@ -28,9 +32,11 @@ int ClientReadBuffer( char * buffer ) {
 // exporting the file system.  (Return status?)
 int MFS_Init(char *hostname, int port) {
 
+    assert( MFS_Init_flag == 0 );
+    MFS_Init_flag = 1;
+
     sd = UDP_Open(23107);
     assert( sd >= 0 );
-//  if( sd < 0 ) { return -1; }
 
     int rc = UDP_FillSockAddr(&addr, hostname, port);
     assert(rc == 0);
@@ -65,6 +71,8 @@ printparams(p, 1);
 // Failure modes: invalid pinum, name does not exist in pinum.
 int MFS_Lookup(int pinum, char *name) {
 
+    assert( MFS_Init_flag == 1 );
+
     // save all the necessary parameters
     Params *p = &params;
     ResetParams( p );
@@ -97,6 +105,8 @@ retry_lookup:
 // success, return 0, otherwise -1. The exact info returned is defined by
 // MFS_Stat_t. Failure modes: inum does not exist.
 int MFS_Stat(int inum, MFS_Stat_t *m) {
+
+    assert( MFS_Init_flag == 1 );
 
     Params params;
 
@@ -134,6 +144,9 @@ retry_stat:
 // invalid block, not a regular file (you can't write to directories).
 int MFS_Write(int inum, char *buffer, int block) {
 
+
+    assert( MFS_Init_flag == 1 );
+
     Params params;
 
     Params *p = &params;
@@ -166,6 +179,8 @@ retry_write:
 // directories should return data in the format specified by MFS_DirEnt_t.
 // Success: 0, failure: -1. Failure modes: invalid inum, invalid block.
 int MFS_Read(int inum, char *buffer, int block) {
+
+    assert( MFS_Init_flag == 1 );
 
     Params params;
 
@@ -202,6 +217,7 @@ retry_read:
 // name already exists, return success (think about why).
 int MFS_Creat(int pinum, int type, char *name) {
 
+    assert( MFS_Init_flag == 1 );
     Params params;
 
     Params *p = &params;
@@ -235,6 +251,7 @@ retry_create:
 // our definition (think about why this might be).
 int MFS_Unlink(int pinum, char *name) {
 
+    assert( MFS_Init_flag == 1 );
     Params params;
 
     Params *p = &params;
