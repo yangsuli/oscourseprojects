@@ -13,14 +13,15 @@ TEST_MSSG_OBJS = mssg.o testmssg.o
 ALL_LIB_SOURCES = $(ALL_SERVER_SOURCES) $(ALL_CLIENT_SOURCES)
 
 
-TEST = testcases/test4.c
+TEST = testcases/test6.c
+TEST = testmssg.c
 
 #all: server client
 all: client server
 
-test: $(TEST)
+test: $(TEST) all
 	gcc -Wall -ggdb -c $(TEST) -o testclient.o
-	gcc -o testclient testclient.o udp.o -L. -lmfs
+	gcc -ggdb -o testclient testclient.o udp.o -L. -lmfs
 
 #client: $(ALL_CLIENT_SOURCES)
 #	gcc -c -fPIC $(ALL_CLIENT_SOURCES) ;

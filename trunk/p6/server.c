@@ -101,6 +101,10 @@ int main(int argc, char *argv[])
 		}
 		//printf("  p->func_num = %d\n", p->func_num );
 		// call the appropriate function //
+#ifdef MSSG_DEBUG
+printf("  server read the message: \n");
+printparams( p, 2 );
+#else
 		switch( p->func_num )
 		{   
 			// TODO -- fill this in!
@@ -109,7 +113,6 @@ int main(int argc, char *argv[])
 				break;
 			case 1:
 				p->inum = Server_LookUp(p->pinum, p->name );
-
 				break;
 			case 2:
 				m.type = p -> type;
@@ -140,7 +143,12 @@ int main(int argc, char *argv[])
 			default:
 				fprintf(stderr, "bad function number %d called \n", p->func_num );
 		}
+#endif
 
+#ifdef MSSG_DEBUG
+printf("  server is sending the following message : \n");
+printparams( p, 2 );
+#endif
 		// parse a response //
 		ServerCreatMessage(p, msg_len, data, buffer_reply );
 		//      sprintf(buffer_reply, "reply");
