@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <sys/select.h>
 #include "mfs.h"
 #include "udp.h"
 #include "mssg.h"
@@ -114,12 +115,15 @@ int MFS_Lookup(int pinum, char *name) {
 
     // create and send the message
     ClientCreatMessage( p, msg_len, data, buffer_write );
+retry_lookup:
     ClientSendBuffer( buffer_write );
 
     // read the response
     Params read_params;
     Params * r = &read_params;
-    ClientReadBuffer( buffer_read );
+    if( ClientReadBuffer( buffer_read ) == TIME_OUT ){
+	    goto retry_lookup;
+    }
     ClientReadMessage( r, msg_len, data, buffer_read );
     int inum = r->inum;
     if( inum < 0 ) {
@@ -144,12 +148,15 @@ int MFS_Stat(int inum, MFS_Stat_t *m) {
     p->inum     = inum;
     // create and send the message
     ClientCreatMessage( p, msg_len, data, buffer_write );
+retry_stat:
     ClientSendBuffer( buffer_write );
 
     // read the response
     Params read_params;
     Params * r = &read_params;
-    ClientReadBuffer( buffer_read );
+    if( ClientReadBuffer( buffer_read ) == TIME_OUT ){
+	    goto retry_stat;
+    }
     ClientReadMessage( r, msg_len, data, buffer_read );
     if( r->status != 0 ) {
         return -1;
@@ -181,12 +188,15 @@ int MFS_Write(int inum, char *buffer, int block) {
     memcpy( p->buffer, buffer, BUFFER_SIZE);
     // create and send the message
     ClientCreatMessage( p, msg_len, data, buffer_write );
+retry_write:
     ClientSendBuffer( buffer_write );
 
     // read the response
     Params read_params;
     Params * r = &read_params;
-    ClientReadBuffer( buffer_read );
+    if( ClientReadBuffer( buffer_read ) == TIME_OUT ){
+	    goto retry_write;
+    }
     ClientReadMessage( r, msg_len, data, buffer_read );
     if( r->status != 0 ) {
         return -1;
@@ -212,12 +222,15 @@ int MFS_Read(int inum, char *buffer, int block) {
     p->block    = block;
     // create and send the message
     ClientCreatMessage( p, msg_len, data, buffer_write );
+retry_read:
     ClientSendBuffer( buffer_write );
 
     // read the response
     Params read_params;
     Params * r = &read_params;
-    ClientReadBuffer( buffer_read );
+    if( ClientReadBuffer( buffer_read ) == TIME_OUT ){
+	    goto retry_read;
+    }
     ClientReadMessage( r, msg_len, data, buffer_read );
     if( r->status != 0 ) {
         return -1;
@@ -246,12 +259,15 @@ int MFS_Creat(int pinum, int type, char *name) {
     strncpy( p->name, name, BUFFER_SIZE);
     // create and send the message
     ClientCreatMessage( p, msg_len, data, buffer_write );
+retry_create:
     ClientSendBuffer( buffer_write );
 
     // read the response
     Params read_params;
     Params * r = &read_params;
-    ClientReadBuffer( buffer_read );
+    if( ClientReadBuffer( buffer_read ) == TIME_OUT ){
+	    goto retry_create;
+    }
     ClientReadMessage( r, msg_len, data, buffer_read );
     if( r->status != 0 ) {
         return -1;
@@ -278,12 +294,15 @@ int MFS_Unlink(int pinum, char *name) {
     strncpy( p->name, name, BUFFER_SIZE);
     // create and send the message
     ClientCreatMessage( p, msg_len, data, buffer_write );
+retry_unlink:
     ClientSendBuffer( buffer_write );
 
     // read the response
     Params read_params;
     Params * r = &read_params;
-    ClientReadBuffer( buffer_read );
+    if( ClientReadBuffer( buffer_read ) == TIME_OUT ){
+	    goto retry_unlink;
+    }
     ClientReadMessage( r, msg_len, data, buffer_read );
     if( r->status != 0 ) {
         if( r->status == -1) {

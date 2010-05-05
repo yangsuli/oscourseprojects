@@ -27,6 +27,8 @@
 // prototypes
 // 
 
+#define TIME_OUT -2398
+
 int UDP_Open(int fd);
 int UDP_Close(int fd);
 
