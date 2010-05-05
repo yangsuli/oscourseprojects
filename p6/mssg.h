@@ -13,6 +13,9 @@
 #define NUM_MESSAGES (5)
 #endif
 
+// used for debugging message parameters (comment for tests!)
+#define MSSG_DEBUG 
+
 // singleton struct used for passing parameters around -- Note: the number of
 // these parameters that get used depends of message_type -- see table below
 typedef struct __params {
@@ -27,6 +30,8 @@ typedef struct __params {
     int status;             // return status for server
     int type;               // either MFS_DIRECTORY or MFS_REGULAR_FILE
 } Params;
+
+void printparams( Params * p, int c );
 
 // TODO -- why can't these have const in front of them?
 //void CreateMessage( int type, const int msg_len[], 

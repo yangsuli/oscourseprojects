@@ -11,31 +11,6 @@ int port = -1;                  // port number
 int sd = -1;                    // socket descriptor
 struct sockaddr_in addr, addr2;
 
-/*
-int main(int argc, char *argv[])
-{
-    int sd = UDP_Open(20000);
-    assert(sd > -1);
-
-    struct sockaddr_in addr, addr2;
-    char machine_name[] = "mumble-06.cs.wisc.edu";
-    int rc = UDP_FillSockAddr(&addr, machine_name, 10000);
-    assert(rc == 0);
-    printf("filled sock addr\n");
-
-    char message[BUFFER_SIZE];
-
-    rc = UDP_Write(sd, &addr, message, BUFFER_SIZE);
-    printf("CLIENT:: sent message (%d)\n", rc);
-    if (rc > 0) {
-        int rc = UDP_Read(sd, &addr2, buffer, BUFFER_SIZE);
-        printf("CLIENT:: read %d bytes (message: '%s')\n", rc, buffer);
-    }
-
-    return 0;
-}
-*/
-
 int ClientSendBuffer( char * buffer ) { 
     int rc = UDP_Write(sd, &addr, buffer, UDP_BUFFER_SIZE);
     return rc;
@@ -46,31 +21,14 @@ int ClientReadBuffer( char * buffer ) {
     return rc;
 }
 
-
-/*
-int SendMessage( char * buffer ) { 
-
-    int rc = UDP_Write(sd, &addr, buffer, UDP_BUFFER_SIZE);
-    printf("CLIENT:: sent message (%d)\n", rc);
-    if (rc > 0) {
-        int rc = UDP_Read(sd, &addr2, buffer, BUFFER_SIZE);
-        printf("CLIENT:: read %d bytes (message: '%s')\n", rc, buffer);
-    }
-    return 0;
-
-}
-*/
-
 // Takes a host name and port number and uses those to find the server 
 // exporting the file system.  (Return status?)
 int MFS_Init(char *hostname, int port) {
 
     sd = UDP_Open(22107);
     if( sd < 0 ) { return -1; }
-//  assert(sd > -1);
 
     int rc = UDP_FillSockAddr(&addr, hostname, port);
-//  if( rc != 0 ) { return -1; }
     assert(rc == 0);
 
     InitData( msg_len, data);
@@ -122,6 +80,7 @@ retry_lookup:
     Params read_params;
     Params * r = &read_params;
     if( ClientReadBuffer( buffer_read ) == TIME_OUT ){
+        printf("  retrying lookup \n");
 	    goto retry_lookup;
     }
     ClientReadMessage( r, msg_len, data, buffer_read );

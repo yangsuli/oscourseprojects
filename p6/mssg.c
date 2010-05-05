@@ -107,7 +107,7 @@ int ServerCreatMessage(Params *params, int msg_len[], void * data[],
     int * p = NULL;       // generic data pointer here
     int i, inum, status;
 
-    char * buff;
+    char * buff = NULL;
 
     int func_num = params->func_num;
     switch( func_num ) {
@@ -301,8 +301,8 @@ int ClientCreatMessage(Params *params, int msg_len[], void * data[],
     int * p = NULL;       // generic data pointer here
     int i, pinum, inum, block, type;
 
-    char * buff;
-    char * name;
+    char * buff = NULL;
+    char * name = NULL;
 
     int func_num = params->func_num;
     switch( func_num ) {
@@ -411,7 +411,7 @@ int ServerReadMessage(Params *params, int msg_len[], void * data[],
                             char * buffer ) {
 
     int * p = NULL;       // generic data pointer here
-    char * buff;
+    char * buff = NULL;
 
     /////////// read an entire message /////
     int func_num = -1;
@@ -484,4 +484,30 @@ int ServerReadMessage(Params *params, int msg_len[], void * data[],
 
     return 0;
 
+}
+
+// message for printing parameters
+// c == caller c == 1 is client, c == 2 is server
+void printparams( Params * p, int c ) {
+
+    printf("p->func_num = %d\n", p->func_num );
+    printf("p->name = %s\n", p->name );
+    printf("p->buffer = %s\n", p->buffer );
+//  printf("p->func_num %d\n", p->func_num );
+//  printf("p->func_num %d\n", p->func_num );
+//  printf("p->func_num %d\n", p->func_num );
+//  printf("p->func_num %d\n", p->func_num );
+//  printf("p->func_num %d\n", p->func_num );
+//  printf("p->func_num %d\n", p->func_num );
+//  printf("p->func_num %d\n", p->func_num );
+//  printf("p->func_num %d\n", p->func_num );
+//  strncpy( p->name, "", BUFFER_SIZE);
+//  strncpy( p->buffer, "", BUFFER_SIZE);
+//  p->pinum = -1;
+//  p->inum  = -1;
+//  p->size  = -1;
+//  p->block = -1;
+//  p->blocks = -1;
+//  p->status = -1;
+//  p->type  = -1;
 }
