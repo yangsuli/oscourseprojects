@@ -10,34 +10,12 @@
 
 #define BUFFER_SIZE (4096)
 
-/*
- * demo code to show how to use udp
- *
-int main(int argc, char *argv[])
-{
-    int sd = UDP_Open(10000);
-    assert(sd > -1);
-
-    printf("waiting in loop\n");
-
-    while (1) {
-	struct sockaddr_in s;
-	char buffer[BUFFER_SIZE];
-	int rc = UDP_Read(sd, &s, buffer, BUFFER_SIZE);
-	if (rc > 0) {
-	    printf("SERVER:: read %d bytes (message: '%s')\n", rc, buffer);
-	    sleep(10);
-	    char reply[BUFFER_SIZE];
-	    sprintf(reply, "reply");
-	    rc = UDP_Write(sd, &s, reply, BUFFER_SIZE);
-	}
-    }
-
-    return 0;
-}
-*/
 
 int image_fd;
+Bit_Map_t Inode_BitMap;
+Bit_Map_t Data_BitMap;
+Inode_t *inode_table;
+Block_t *data_region;
 
 // read message (read from udp)
 // parse message
@@ -47,16 +25,16 @@ int image_fd;
 // write to udp
 
 /*
-int ServerSendBuffer( int sd, struct sockaddr_in s, char * buffer ) { 
-	int rc = UDP_Write(sd, &s, buffer, UDP_BUFFER_SIZE);
-    return rc;
-}
+   int ServerSendBuffer( int sd, struct sockaddr_in s, char * buffer ) { 
+   int rc = UDP_Write(sd, &s, buffer, UDP_BUFFER_SIZE);
+   return rc;
+   }
 
-int ServerReadBuffer( int sd, struct sockaddr_in s, char * buffer ) {
-	int rc = UDP_Read(sd, &s, buffer, UDP_BUFFER_SIZE);
-    return rc;
-}
-*/
+   int ServerReadBuffer( int sd, struct sockaddr_in s, char * buffer ) {
+   int rc = UDP_Read(sd, &s, buffer, UDP_BUFFER_SIZE);
+   return rc;
+   }
+ */
 
 /*
  * Main program for running the file server.
@@ -65,109 +43,116 @@ int ServerReadBuffer( int sd, struct sockaddr_in s, char * buffer ) {
 int main(int argc, char *argv[])
 {
 
-    ///////////////////////// parse the arguments //////////////////////////////
-    if(argc != 3){
-        fprintf(stderr,"usage: server [portnum] [file-system-image]\n");
-        fprintf(stderr,"you supplied %d args\n", argc);
-        exit(1);
-    }
-    int portnum = atoi( argv[1] );
-    if( ! (portnum > 0 ) ) {
-        fprintf(stderr, "  portnum = %d;  this should be a pos number",portnum);
-    }
-//  printf("   argv[2] = %s\n", argv[2] );
-    char* filename = (char*) malloc( sizeof(char) * (1 + strlen(argv[2])) );
-    strcpy( filename, argv[2] );
+	///////////////////////// parse the arguments //////////////////////////////
+	if(argc != 3){
+		fprintf(stderr,"usage: server [portnum] [file-system-image]\n");
+		fprintf(stderr,"you supplied %d args\n", argc);
+		exit(1);
+	}
+	int portnum = atoi( argv[1] );
+	if( ! (portnum > 0 ) ) {
+		fprintf(stderr, "  portnum = %d;  this should be a pos number",portnum);
+	}
+	//  printf("   argv[2] = %s\n", argv[2] );
+	char* filename = (char*) malloc( sizeof(char) * (1 + strlen(argv[2])) );
+	strcpy( filename, argv[2] );
 
-    const int sd = UDP_Open(portnum);
-    assert(sd > -1);
+	const int sd = UDP_Open(portnum);
+	assert(sd > -1);
 
-    //open file image
-    if( (image_fd = open(filename,O_RDWR)) == -1){
-    	image_fd = Image_Init(filename);
-    }
+	inode_table = (Inode_t *)malloc(MFS_BLOCK_NUMS * sizeof(Inode_t));
+	data_region = (Block_t *)malloc(MFS_BLOCK_NUMS * sizeof(Block_t));
 
-    ///////////////////////////////////////////////////////////////////////////
+	if(inode_table == NULL || data_region == NULL){
+		fprintf(stderr, "malloc error!\n");
+		exit(-1);
+	}
+	//open file image
+	if( (image_fd = open(filename,O_RDWR)) == -1){
+		image_fd = Image_Init(filename);
+	}
 
-    ///////////////////////// main loop ///////////////////////////////////////
-    char buffer_read [UDP_BUFFER_SIZE];
-    char buffer_reply[UDP_BUFFER_SIZE];
-    int msg_len[NUM_MESSAGES];
-    void * data[NUM_MESSAGES];
-    InitData( msg_len, data );  // create room for each data[i] pointer
-    Params params;
-    Params * p = &params;
-    int rc = -1;
-    struct sockaddr_in s;
-    MFS_Stat_t m;
-    while (1) {
+	///////////////////////////////////////////////////////////////////////////
 
-        ResetParams( p );
+	///////////////////////// main loop ///////////////////////////////////////
+	char buffer_read [UDP_BUFFER_SIZE];
+	char buffer_reply[UDP_BUFFER_SIZE];
+	int msg_len[NUM_MESSAGES];
+	void * data[NUM_MESSAGES];
+	InitData( msg_len, data );  // create room for each data[i] pointer
+	Params params;
+	Params * p = &params;
+	int rc = -1;
+	struct sockaddr_in s;
+	MFS_Stat_t m;
+	while (1) {
 
-        // read a message //
-	    rc = UDP_Read(sd, &s, buffer_read, UDP_BUFFER_SIZE);
-        if (rc > 0) {
-            // parse the message into arguments //
-            ServerReadMessage( p, msg_len, data, buffer_read );
+		ResetParams( p );
 
-        } else {  // bad read -- continue waiting for another message ...
-            rc = -1;
-            continue;
-        }
-//printf("  p->func_num = %d\n", p->func_num );
-        // call the appropriate function //
-        switch( p->func_num )
-        {   
-            // TODO -- fill this in!
-            case 0:
-                Server_Init();
-            break;
-            case 1:
-                p->inum = Server_LookUp(p->pinum, p->name );
+		// read a message //
+		rc = UDP_Read(sd, &s, buffer_read, UDP_BUFFER_SIZE);
+		if (rc > 0) {
+			// parse the message into arguments //
+			ServerReadMessage( p, msg_len, data, buffer_read );
 
-            break;
-            case 2:
-                m.type = p -> type;
-                m.size = p -> size;
-                m.blocks = p -> blocks;
-                p->status = Server_Stat( p->inum,  &m );
-                p -> type = m.type;
-                p -> size = m.size;
-                p -> blocks = m.blocks;
+		} else {  // bad read -- continue waiting for another message ...
+			rc = -1;
+			continue;
+		}
+		//printf("  p->func_num = %d\n", p->func_num );
+		// call the appropriate function //
+		switch( p->func_num )
+		{   
+			// TODO -- fill this in!
+			case 0:
+				Server_Init();
+				break;
+			case 1:
+				p->inum = Server_LookUp(p->pinum, p->name );
 
-            break;
-            case 3:
-            p->status = Server_Write( p->inum, p->buffer, p->block );
+				break;
+			case 2:
+				m.type = p -> type;
+				m.size = p -> size;
+				m.blocks = p -> blocks;
+				p->status = Server_Stat( p->inum,  &m );
+				p -> type = m.type;
+				p -> size = m.size;
+				p -> blocks = m.blocks;
 
-            break;
-            case 4:
-            p->status = Server_Read( p->inum, p->buffer, p->block );
-            break;
+				break;
+			case 3:
+				p->status = Server_Write( p->inum, p->buffer, p->block );
 
-            case 5:
-            p->status = Server_Creat( p->pinum, p->type, p->name );
-            break;
+				break;
+			case 4:
+				p->status = Server_Read( p->inum, p->buffer, p->block );
+				break;
 
-            case 6:
-            p->status = Server_Unlink( p->pinum, p->name );
-            break;
+			case 5:
+				p->status = Server_Creat( p->pinum, p->type, p->name );
+				break;
 
-            default:
-            fprintf(stderr, "bad function number %d called \n", p->func_num );
-        }
+			case 6:
+				p->status = Server_Unlink( p->pinum, p->name );
+				break;
 
-        // parse a response //
-        ServerCreatMessage(p, msg_len, data, buffer_reply );
-//      sprintf(buffer_reply, "reply");
+			default:
+				fprintf(stderr, "bad function number %d called \n", p->func_num );
+		}
 
-        // write the response //
-//      rc = ServerSendBuffer(sd, buffer_reply );
-	    rc = UDP_Write(sd, &s, buffer_reply, UDP_BUFFER_SIZE);
+		// parse a response //
+		ServerCreatMessage(p, msg_len, data, buffer_reply );
+		//      sprintf(buffer_reply, "reply");
 
-    }
-    ///////////////////////////////////////////////////////////////////////////
+		// write the response //
+		//      rc = ServerSendBuffer(sd, buffer_reply );
+		rc = UDP_Write(sd, &s, buffer_reply, UDP_BUFFER_SIZE);
 
-    return 0;
+	}
+	///////////////////////////////////////////////////////////////////////////
+
+	return 0;
 }
 
 void Set_Bit(Bit_Map_t *map, int index){
@@ -229,22 +214,15 @@ int Image_Init(const char * filename){
 		exit(-1);
 	}
 
-	Bit_Map_t Inode_BitMap;
-	Bit_Map_t Data_BitMap;
-
 	BitMap_Init(&Inode_BitMap);
 	BitMap_Init(&Data_BitMap);
-
-	Inode_t inode_table[MFS_BLOCK_NUMS];
 
 	for(i = 0; i < MFS_BLOCK_NUMS; i++){
 		Inode_Init(&inode_table[i]);
 	}
 
-	Block_t data_region[MFS_BLOCK_NUMS];
-
 	//initialize root directory
-        //root dir uses data block 0	
+	//root dir uses data block 0	
 	inode_table[0].type = MFS_DIRECTORY;
 	inode_table[0].size = 2 * sizeof(MFS_DirEnt_t);
 	inode_table[0].blocks = 1;
@@ -297,23 +275,11 @@ int Image_Init(const char * filename){
 
 //empty function for Server_Init
 int Server_Init(){
-//  printf("  server_init called -- this function does nothing!\n");
+	//  printf("  server_init called -- this function does nothing!\n");
 	return 0;
 }
 
-int Server_LookUp(int pinum, char *name){
-
-	int idx;
-
-	if(lseek(image_fd,0,SEEK_SET) != 0){
-		fprintf(stderr,"lseek error\n");
-		exit(-1);
-	}
-
-	Bit_Map_t Inode_BitMap;
-	Bit_Map_t Data_BitMap;
-	Inode_t inode_table[MFS_BLOCK_NUMS];
-	Block_t data_region[MFS_BLOCK_NUMS];
+void Data_Init(){
 
 	if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
 		fprintf(stderr,"read error!\n");
@@ -335,6 +301,21 @@ int Server_LookUp(int pinum, char *name){
 		exit(-1);
 	}
 
+}
+
+
+
+int Server_LookUp(int pinum, char *name){
+
+	int idx;
+
+	if(lseek(image_fd,0,SEEK_SET) != 0){
+		fprintf(stderr,"lseek error\n");
+		exit(-1);
+	}
+
+	Data_Init();
+
 	//return -2 if invalid pinum
 	if(Inode_BitMap.bits[pinum] == false){
 		return -2;
@@ -348,8 +329,8 @@ int Server_LookUp(int pinum, char *name){
 			continue;
 		}
 
-	//	int entries_in_curr_blk = (inode_table[pinum].size / MFS_BLOCK_SIZE > idx) ? MFS_BLOCK_SIZE / sizeof(MFS_DirEnt_t) : (inode_table[pinum].size % MFS_BLOCK_SIZE) / sizeof(MFS_DirEnt_t);
-		
+		//	int entries_in_curr_blk = (inode_table[pinum].size / MFS_BLOCK_SIZE > idx) ? MFS_BLOCK_SIZE / sizeof(MFS_DirEnt_t) : (inode_table[pinum].size % MFS_BLOCK_SIZE) / sizeof(MFS_DirEnt_t);
+
 		int entries_in_curr_blk = MFS_BLOCK_SIZE / sizeof(MFS_DirEnt_t);
 
 		MFS_DirEnt_t *entries = (MFS_DirEnt_t *)data_region[curr_blk_num].data;
@@ -368,7 +349,7 @@ int Server_LookUp(int pinum, char *name){
 	//return -3 if name doesn't exist in pinum
 	return -3;
 }
-	
+
 
 
 
@@ -381,10 +362,6 @@ int Server_Stat(int inum, MFS_Stat_t *m){
 		exit(-1);
 	}
 
-	Bit_Map_t Inode_BitMap;
-	Bit_Map_t Data_BitMap;
-	Inode_t inode_table[MFS_BLOCK_NUMS];
-	Block_t data_region[MFS_BLOCK_NUMS];
 
 	if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
 		fprintf(stderr,"read error!\n");
@@ -426,10 +403,6 @@ int  Server_Write(int inum, char * buffer, int block){
 		exit(-1);
 	}
 
-	Bit_Map_t Inode_BitMap;
-	Bit_Map_t Data_BitMap;
-	Inode_t inode_table[MFS_BLOCK_NUMS];
-	Block_t data_region[MFS_BLOCK_NUMS];
 
 	if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
 		fprintf(stderr,"read error!\n");
@@ -467,7 +440,7 @@ int  Server_Write(int inum, char * buffer, int block){
 		return -3;
 	}
 
-	
+
 	int to_write_block;
 	if(inode_table[inum].ptr[block] == -1){// allocate a new data block
 		to_write_block = First_Empty(&Data_BitMap);
@@ -518,16 +491,12 @@ int  Server_Write(int inum, char * buffer, int block){
 }
 
 int Server_Read(int inum, char *buffer, int block){
-	
+
 	if(lseek(image_fd,0,SEEK_SET) != 0){
 		fprintf(stderr,"lseek error\n");
 		exit(-1);
 	}
 
-	Bit_Map_t Inode_BitMap;
-	Bit_Map_t Data_BitMap;
-	Inode_t inode_table[MFS_BLOCK_NUMS];
-	Block_t data_region[MFS_BLOCK_NUMS];
 
 	if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
 		fprintf(stderr,"read error!\n");
@@ -583,10 +552,6 @@ int Server_Creat(int pinum, int type, char *name){
 		exit(-1);
 	}
 
-	Bit_Map_t Inode_BitMap;
-	Bit_Map_t Data_BitMap;
-	Inode_t inode_table[MFS_BLOCK_NUMS];
-	Block_t data_region[MFS_BLOCK_NUMS];
 
 	if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
 		fprintf(stderr,"read error!\n");
@@ -614,7 +579,7 @@ int Server_Creat(int pinum, int type, char *name){
 	}
 
 	if(Server_LookUp(pinum,name) >= 0){//name already exists
-	//how about name exists but types doesn't agree? yangsuli
+		//how about name exists but types doesn't agree? yangsuli
 		return 0;
 	}
 
@@ -653,7 +618,7 @@ int Server_Creat(int pinum, int type, char *name){
 		strcpy(entries[0].name, ".");
 		entries[1].inum = pinum;
 		strcpy(entries[1].name, "..");
-		
+
 		for(i = 2; i < MFS_BLOCK_SIZE / sizeof(MFS_DirEnt_t); i++){
 			entries[i].inum = -1;
 		}
@@ -726,19 +691,15 @@ int Add_Entry(int pinum, int inum, char *name, Inode_t *inode_table, Block_t *da
 	return 0;
 }
 
-			
+
 
 int Server_Unlink(int pinum, char *name){
-	
+
 	if(lseek(image_fd,0,SEEK_SET) != 0){
 		fprintf(stderr,"lseek error\n");
 		exit(-1);
 	}
 
-	Bit_Map_t Inode_BitMap;
-	Bit_Map_t Data_BitMap;
-	Inode_t inode_table[MFS_BLOCK_NUMS];
-	Block_t data_region[MFS_BLOCK_NUMS];
 
 	if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
 		fprintf(stderr,"read error!\n");
@@ -786,7 +747,7 @@ int Server_Unlink(int pinum, char *name){
 	Unset_Bit(&Inode_BitMap, inum);
 
 	Remove_Entry(pinum, inum, name, inode_table, data_region);
-	
+
 
 	if(lseek(image_fd,0,SEEK_SET) != 0){
 		fprintf(stderr,"lseek error\n");
@@ -818,7 +779,7 @@ int Server_Unlink(int pinum, char *name){
 
 	return 0;
 }
-	
+
 
 
 int Remove_Entry(int pinum, int inum, char *name, Inode_t *inode_table, Block_t *data_region){
