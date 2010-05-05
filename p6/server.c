@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <string.h>
 #include "udp.h"
 #include "mfs.h"
@@ -221,9 +222,9 @@ void Inode_Init(Inode_t *inode){
 
 
 //return the file descriptor of the image file
-int Image_Init(char * filename){
+int Image_Init(const char * filename){
 	int fd, i;
-	if((fd = open(filename,O_RDWR|O_CREAT|O_TRUNC)) == -1){
+	if((fd = open(filename,O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR)) == -1){
 		fprintf(stderr,"open failed!\n");
 		exit(-1);
 	}
