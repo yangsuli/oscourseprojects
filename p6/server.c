@@ -318,9 +318,9 @@ int Server_LookUp(int pinum, char *name){
 
 	//return -2 if invalid pinum
 	if(Inode_BitMap.bits[pinum] == false){
-		return -2;
+		return -1;
 	}else if(inode_table[pinum].type != MFS_DIRECTORY){
-		return -2;
+		return -1;
 	}
 
 	int curr_blk_num;
@@ -347,7 +347,7 @@ int Server_LookUp(int pinum, char *name){
 	}
 
 	//return -3 if name doesn't exist in pinum
-	return -3;
+	return -1;
 }
 
 
@@ -386,7 +386,7 @@ int Server_Stat(int inum, MFS_Stat_t *m){
 
 	//return -2 if inum doesn't exit
 	if(Inode_BitMap.bits[inum] == false){
-		return -2;
+		return -1;
 	}
 
 	m -> type = inode_table[inum].type;
@@ -427,17 +427,17 @@ int  Server_Write(int inum, char * buffer, int block){
 
 	//return -2 if invalid inum
 	if(Inode_BitMap.bits[inum] == false){
-		return -2;
+		return -1;
 	}
 
 	//return -4 if not a regular file
 	if(inode_table[inum].type != MFS_REGULAR_FILE){
-		return -4;
+		return -1;
 	}
 
 	//return -3 if invaid block 
 	if(block < 0 || block > 9){
-		return -3;
+		return -1;
 	}
 
 
@@ -521,15 +521,15 @@ int Server_Read(int inum, char *buffer, int block){
 
 	//return -2 if invalid inum
 	if(Inode_BitMap.bits[inum] == false){
-		return -2;
+		return -1;
 	}
 
 
 	//return -3 if invalid block
 	if(block < 0 || block > 9){
-		return -3;
+		return -1;
 	}else if(inode_table[inum].ptr[block] == -1){
-		return -3;
+		return -1;
 	}
 
 
@@ -575,7 +575,7 @@ int Server_Creat(int pinum, int type, char *name){
 
 	//return -2 if pinum doesn't exit or not a directory
 	if(Inode_BitMap.bits[pinum] == false || inode_table[pinum].type == MFS_DIRECTORY){
-		return -2;
+		return -1;
 	}
 
 	if(Server_LookUp(pinum,name) >= 0){//name already exists
@@ -723,7 +723,7 @@ int Server_Unlink(int pinum, char *name){
 
 	//return -2 if pinum doesn't exist
 	if(Inode_BitMap.bits[pinum] == false){
-		return -2;
+		return -1;
 	}
 
 	int inum = Server_LookUp(pinum, name);
@@ -734,7 +734,7 @@ int Server_Unlink(int pinum, char *name){
 	//return -3 if directory not empty
 	if(inode_table[inum].type == MFS_DIRECTORY){
 		if(inode_table[inum].size > 2 * sizeof(MFS_DirEnt_t)){
-			return -3;
+			return -1;
 		}
 	}
 
