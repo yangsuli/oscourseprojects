@@ -73,8 +73,8 @@ void SetLenZero( int istart, int msg_len[] ) {
 // put garbage values in every entry in Params p
 void ResetParams( Params *p ) {
     p->func_num = -1;
-    strncpy( p->name, "", BUFFER_SIZE);
-    strncpy( p->buffer, "", BUFFER_SIZE);
+    strncpy( p->name, "JUNK", BUFFER_SIZE);
+    strncpy( p->buffer, "JUNK", BUFFER_SIZE);
     p->pinum = -1;
     p->inum  = -1;
     p->size  = -1;
@@ -490,17 +490,24 @@ int ServerReadMessage(Params *params, int msg_len[], void * data[],
 // c == caller c == 1 is client, c == 2 is server
 void printparams( Params * p, int c ) {
 
+    if( c == 1 ) {
+        printf("  client has the parameters:\n");
+    } else if ( c == 2 ) {
+        printf("  server has the parameters:\n");
+    } else {
+        exit(1);
+    }
+
     printf("p->func_num = %d\n", p->func_num );
     printf("p->name = %s\n", p->name );
-    printf("p->buffer = %s\n", p->buffer );
-//  printf("p->func_num %d\n", p->func_num );
-//  printf("p->func_num %d\n", p->func_num );
-//  printf("p->func_num %d\n", p->func_num );
-//  printf("p->func_num %d\n", p->func_num );
-//  printf("p->func_num %d\n", p->func_num );
-//  printf("p->func_num %d\n", p->func_num );
-//  printf("p->func_num %d\n", p->func_num );
-//  printf("p->func_num %d\n", p->func_num );
+//  printf("p->buffer = %s\n", p->buffer );
+    printf("p->pinum %d\n", p->pinum );
+    printf("p->inum %d\n", p->inum );
+    printf("p->size %d\n", p->size );
+    printf("p->block %d\n", p->block );
+    printf("p->blocks %d\n", p->blocks );
+    printf("p->status %d\n", p->status );
+    printf("p->type %d\n", p->type );
 //  strncpy( p->name, "", BUFFER_SIZE);
 //  strncpy( p->buffer, "", BUFFER_SIZE);
 //  p->pinum = -1;

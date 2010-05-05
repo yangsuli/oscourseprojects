@@ -5,9 +5,7 @@
 
 // create a socket and bind it to a port on the current machine
 // used to listen for incoming packets
-int
-UDP_Open(int port)
-{
+int UDP_Open(int port) {
 
     int fd;
     if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
@@ -34,9 +32,7 @@ UDP_Open(int port)
 }
 
 // fill sockaddr_in struct with proper goodies
-int
-UDP_FillSockAddr(struct sockaddr_in *addr, char *hostName, int port)
-{
+int UDP_FillSockAddr(struct sockaddr_in *addr, char *hostName, int port) {
     bzero(addr, sizeof(struct sockaddr_in));
     if (hostName == NULL) {
 	return 0; // it's OK just to clear the address
@@ -58,47 +54,49 @@ UDP_FillSockAddr(struct sockaddr_in *addr, char *hostName, int port)
     return 0;
 }
 
-int
-UDP_Write(int fd, struct sockaddr_in *addr, char *buffer, int n)
-{
-    int addrLen = sizeof(struct sockaddr_in);
-    int rc      = sendto(fd, buffer, n, 0, (struct sockaddr *) addr, addrLen);
-    return rc;
-}
-
-int
-UDP_Read(int fd, struct sockaddr_in *addr, char *buffer, int n)
-{
-	int rv;
-	fd_set rset;
-	FD_ZERO(&rset);
-	FD_SET(fd,&rset);
-
-struct timeval timeout;
-    //initialize timeout
-	timeout.tv_sec = 5;
-	timeout.tv_usec = 0;
-
-
-	rv = select(FD_SETSIZE,&rset,NULL,NULL,&timeout);
-
-	if(rv == -1){//select error
-		fprintf(stderr, "select error!");
-		exit(-1);
-	}else if(rv == 0){//time out
-		return TIME_OUT; // read return failure if time out
-	}
-
+int UDP_Read(int fd, struct sockaddr_in *addr, char *buffer, int n) {
     int len = sizeof(struct sockaddr_in); 
     int rc = recvfrom(fd, buffer, n, 0, (struct sockaddr *) addr, (socklen_t *) &len);
     // assert(len == sizeof(struct sockaddr_in)); 
     return rc;
 }
 
-
-int
-UDP_Close(int fd)
-{
-    return close(fd);
+int UDP_Write(int fd, struct sockaddr_in *addr, char *buffer, int n) {
+    int addrLen = sizeof(struct sockaddr_in);
+    int rc      = sendto(fd, buffer, n, 0, (struct sockaddr *) addr, addrLen);
+    return rc;
 }
 
+// udp_read with extra timeout feature added:
+// returns TIME_OUT if not able to read something within 5 seconds
+int Safe_UDP_Read(int fd, struct sockaddr_in *addr, char *buffer, int n) {
+
+    // parameters needed for select
+	fd_set rset;
+	FD_ZERO(&rset);
+	FD_SET(fd,&rset);
+
+    //initialize timeout
+    struct timeval timeout;
+	timeout.tv_sec = 5;
+	timeout.tv_usec = 0;
+
+	int rv = select(FD_SETSIZE,&rset,NULL,NULL,&timeout);
+
+	if(rv == -1){ //select error
+		fprintf(stderr, "select error!");
+		exit(-1);
+	}else if(rv == 0){//time out
+        printf("  TIME_OUT == %d\n", TIME_OUT );
+		return TIME_OUT; // read return failure if time out
+	}
+
+    int len = sizeof(struct sockaddr_in); 
+    int rc = recvfrom(fd, buffer, n, 0, (struct sockaddr *) addr, 
+                        (socklen_t *) &len);
+    return rc;
+}
+
+int UDP_Close(int fd) {
+    return close(fd);
+}

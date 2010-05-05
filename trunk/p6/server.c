@@ -1,15 +1,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <string.h>
 #include "udp.h"
 #include "mfs.h"
 #include "mssg.h"
-#include <fcntl.h>
 #include "server.h"
-
-#define BUFFER_SIZE (4096)
-
 
 int image_fd;
 Bit_Map_t Inode_BitMap;
@@ -17,28 +14,8 @@ Bit_Map_t Data_BitMap;
 Inode_t *inode_table;
 Block_t *data_region;
 
-// read message (read from udp)
-// parse message
-// choose which function to run
-// run the function
-// create return message (parse response)
-// write to udp
-
-/*
-   int ServerSendBuffer( int sd, struct sockaddr_in s, char * buffer ) { 
-   int rc = UDP_Write(sd, &s, buffer, UDP_BUFFER_SIZE);
-   return rc;
-   }
-
-   int ServerReadBuffer( int sd, struct sockaddr_in s, char * buffer ) {
-   int rc = UDP_Read(sd, &s, buffer, UDP_BUFFER_SIZE);
-   return rc;
-   }
- */
-
 /*
  * Main program for running the file server.
- *
  */
 int main(int argc, char *argv[])
 {
@@ -53,9 +30,6 @@ int main(int argc, char *argv[])
 	if( ! (portnum > 0 ) ) {
 		fprintf(stderr, "  portnum = %d;  this should be a pos number",portnum);
 	}
-	//  printf("   argv[2] = %s\n", argv[2] );
-	char* filename = (char*) malloc( sizeof(char) * (1 + strlen(argv[2])) );
-	strcpy( filename, argv[2] );
 
 	const int sd = UDP_Open(portnum);
 	assert(sd > -1);
@@ -68,52 +42,68 @@ int main(int argc, char *argv[])
 		exit(-1);
 	}
 	//open file image
-	if( (image_fd = open(filename,O_RDWR)) == -1){
-		image_fd = Image_Init(filename);
+	if( (image_fd = open(argv[2],O_RDWR)) == -1){
+		image_fd = Image_Init(argv[2]);
 	}
-
 	///////////////////////////////////////////////////////////////////////////
 
 	///////////////////////// main loop ///////////////////////////////////////
-	char buffer_read [UDP_BUFFER_SIZE];
-	char buffer_reply[UDP_BUFFER_SIZE];
-	int msg_len[NUM_MESSAGES];
-	void * data[NUM_MESSAGES];
-	InitData( msg_len, data );  // create room for each data[i] pointer
-	Params params;
-	Params * p = &params;
 	int rc = -1;
 	struct sockaddr_in s;
-	MFS_Stat_t m;
+    MFS_Stat_t m;
+    char buffer_read[ UDP_BUFFER_SIZE];
+    char buffer_reply[UDP_BUFFER_SIZE];
+    char * ptr = buffer_read;
+
 	while (1) {
 
-		ResetParams( p );
+        // every possible parameter that could be used
+        int block  = -1;       // block number
+        int blocks = -1;       // number of blocks allocated to inum
+        int pinum  = -1;       // parent inode number
+        int inum   = -1;       // inode number
+        int size   = -1;
+        int status = -1;       // return status for server
+        int type   = -1;       // either MFS_DIRECTORY or MFS_REGULAR_FILE
+        char * name   = NULL;  // name of file/directory
+        char * buffer = NULL;  // generic buffer for passing information
 
 		// read a message //
 		rc = UDP_Read(sd, &s, buffer_read, UDP_BUFFER_SIZE);
-		if (rc > 0) {
-			// parse the message into arguments //
-			ServerReadMessage( p, msg_len, data, buffer_read );
-
-		} else {  // bad read -- continue waiting for another message ...
-			rc = -1;
+		if (rc < 1) {
+		    // bad read -- continue waiting for another message ...
+            rc = -1;
 			continue;
 		}
-		//printf("  p->func_num = %d\n", p->func_num );
+
 		// call the appropriate function //
-#ifdef MSSG_DEBUG
-printf("  server read the message: \n");
-printparams( p, 2 );
-#else
-		switch( p->func_num )
+        int * func_num = (int*) ptr;
+        ptr += sizeof(int);
+		switch( *func_num )
 		{   
 			// TODO -- fill this in!
 			case 0:
-				Server_Init();
+// since this is an empty function, why call it?
+//				Server_Init(); 
+printf("  func_num == 0 \n");
 				break;
+
 			case 1:
-				p->inum = Server_LookUp(p->pinum, p->name );
+
+                // parse the args passed in for this function
+				pinum = *((int*) ptr);
+                ptr += sizeof(int);
+                name = ptr;
+
+                // call the function
+                status = Server_LookUp(pinum, name );
+
+                // parse a response
+                ptr = buffer_reply;
+                *( (int*)ptr ) = status;
 				break;
+
+/*
 			case 2:
 				m.type = p -> type;
 				m.size = p -> size;
@@ -139,19 +129,10 @@ printparams( p, 2 );
 			case 6:
 				p->status = Server_Unlink( p->pinum, p->name );
 				break;
-
+*/
 			default:
-				fprintf(stderr, "bad function number %d called \n", p->func_num );
+				fprintf(stderr, "bad function number %d called \n", *func_num );
 		}
-#endif
-
-#ifdef MSSG_DEBUG
-printf("  server is sending the following message : \n");
-printparams( p, 2 );
-#endif
-		// parse a response //
-		ServerCreatMessage(p, msg_len, data, buffer_reply );
-		//      sprintf(buffer_reply, "reply");
 
 		// write the response //
 		//      rc = ServerSendBuffer(sd, buffer_reply );
@@ -282,10 +263,12 @@ int Image_Init(const char * filename){
 }
 
 //empty function for Server_Init
+/*
 int Server_Init(){
-	//  printf("  server_init called -- this function does nothing!\n");
+	printf("  server_init called -- this function does nothing!\n");
 	return 0;
 }
+*/
 
 void Data_Init(){
 

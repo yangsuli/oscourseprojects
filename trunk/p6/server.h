@@ -29,7 +29,7 @@ int Image_Init(const char * filename);
 //Note that this function just corresponds to MFS_Init
 //the initialization of file system image is done in function Image_Init()
 //  (func_num == 0)
-int Server_Init();
+// int Server_Init();
 
 //takes the parent inode number and looks up the entry name in it
 //Return Value: inode number of name on sucess, -2 if invalid pinum, -3 if name doesn't exist in pinum
@@ -46,7 +46,6 @@ int Server_Stat(int inum, MFS_Stat_t *m);
 //  (func_num == 3)
 int Server_Write(int inum, char *buffer, int block);
 
-
 //reads a block specified by block into the buffer from the file specified by inum
 //Return Value: 0 on success, -2 if invalid inum, -3 if invalid block
 //  (func_num == 4)
@@ -58,7 +57,7 @@ int Server_Read(int inum, char *buffer, int block);
 int Server_Creat(int pinum, int type, char *name);
 
 //removes the file or directory 'name' from the directory specified by pinum.
-//Return value: 0 on success, -2 if pinum does not exist, -3 if directoy is not empty
+//Return value: 0 on success, -1 on failure
 //  (func_num == 6)
 int Server_Unlink(int pinum, char *name);
 
@@ -66,6 +65,3 @@ int Add_Entry(int pinum, int inum, char *name, Inode_t *inode_table, Block_t *da
 
 int Remove_Entry(int pinum, int inum, char *name, Inode_t *inode_table, Block_t *data_region);
 #endif 
-
-
-
