@@ -549,7 +549,7 @@ int Server_Stat(int inum, MFS_Stat_t *m){
 // TODO - what does this function return?
 int  Server_Write(int inum, char * buffer, int block){
 
-
+	int i;
 	Data_Init();
 
 	//return -2 if invalid inum
@@ -572,15 +572,18 @@ int  Server_Write(int inum, char * buffer, int block){
 	if(inode_table[inum].ptr[block] == -1){// allocate a new data block
 		to_write_block = First_Empty(&Data_BitMap);
 		Set_Bit(&Data_BitMap,to_write_block);
-		inode_table[inum].blocks ++;
+		for(i = 0; i <= inum; i++){
+			if(inode_table[inum].ptr[i] == -1){
+			inode_table[inum].size += MFS_BLOCK_SIZE; // should I and MFS_BLOCK_SIZE of should I add the actual size in buf? yangsuli 
+			inode_table[inum].blocks ++;
+			}
+		}
 		inode_table[inum].ptr[block] = to_write_block;
-		inode_table[inum].size += MFS_BLOCK_SIZE; // should I and MFS_BLOCK_SIZE of should I add the actual size in buf? yangsuli 
 	}else{//overwrite existing data block
 		to_write_block = inode_table[inum].ptr[block];
 	}
 
 
-	int i;
 	for(i = 0; i < MFS_BLOCK_SIZE; i++){
 		data_region[to_write_block].data[i] = buffer[i];
 	}
