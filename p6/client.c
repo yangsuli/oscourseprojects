@@ -125,8 +125,10 @@ int MFS_Lookup(int pinum, char *name) {
     printf("    inum = %d\n", inum );
 #endif
 
-    if( inum != 0 ) { return -1; }
-    return 0;
+    if( inum < 0 ){
+        return -1;
+    }
+    return inum;
 }
 
 // MFS_Stat() returns some information about the file specified by inum. Upon
@@ -306,6 +308,7 @@ int MFS_Read(int inum, char *buffer, int block) {
 #ifdef MSSG_DEBUG
     printf("Client received func_num %d with parameters:\n", func_num);
     printf("    status = %d\n", status);
+    printf("    buffer = %s\n", buffer);  // NOTE: this may crash if buffer is not type char *
 #endif
 
     if( status != 0 ) { return -1; }
