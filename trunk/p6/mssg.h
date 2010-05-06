@@ -2,7 +2,7 @@
 #define __MSSG_H
 
 #ifndef UDP_BUFFER_SIZE
-#define UDP_BUFFER_SIZE (16384)
+#define UDP_BUFFER_SIZE (6000)
 #endif
 
 #ifndef BUFFER_SIZE
