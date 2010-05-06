@@ -295,6 +295,9 @@ int MFS_Read(int inum, char *buffer, int block) {
 
     i_ptr = (int*) buffer_read;
     int status = *i_ptr;
+    i_ptr++;
+    c_ptr = (char*) i_ptr;
+    memcpy(buffer, c_ptr, BUFFER_SIZE);
 
     // free buffers
     free( buffer_read );

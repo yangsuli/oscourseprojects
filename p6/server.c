@@ -239,6 +239,10 @@ int main(int argc, char *argv[])
 
 				i_ptr = (int *) buffer_reply;
 				*i_ptr = status;
+                i_ptr++;
+                c_ptr = (char*) i_ptr;
+                memcpy(c_ptr, buffer, BUFFER_SIZE);
+
 
 #ifdef MSSG_DEBUG
 				printf(
