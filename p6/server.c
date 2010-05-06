@@ -111,7 +111,9 @@ int main(int argc, char *argv[])
 
             case 1: 
 
+#ifdef MSSG_DEBUG
                 printf("  func_num == 1 \n");
+#endif
 
                 // parse the args passed in for this function
                 pinum = *( i_ptr );
@@ -129,7 +131,10 @@ int main(int argc, char *argv[])
 
 
             case 2:
+
+#ifdef MSSG_DEBUG
                 printf("  func_num == 2 \n");
+#endif
 
                 // parse the args passed in for this function
                 inum = *( i_ptr );
@@ -160,7 +165,9 @@ int main(int argc, char *argv[])
 */
             case 5:
 
+#ifdef MSSG_DEBUG
                 printf("  function number 5 in the server\n");
+#endif
                 // save pinum, type, name
                 pinum = *( i_ptr );
                 i_ptr++;
@@ -168,18 +175,29 @@ int main(int argc, char *argv[])
                 i_ptr++;
                 name = (char*) i_ptr;
 
+#ifdef MSSG_DEBUG
                 printf("  arguments are pinum, type, name = %d, %d, %s\n",pinum, type, name);
-                //p->status = Server_Creat( p->pinum, p->type, p->name );
+#endif
+
                 status = Server_Creat( pinum, type, name );
                 i_ptr = (int *) buffer_reply;
                 *i_ptr = status;
 
                 break;
-/*
-                   case 6:
-                   p->status = Server_Unlink( p->pinum, p->name );
-                   break;
-                 */
+
+            case 6:
+#ifdef MSSG_DEBUG
+                printf("  function number 6 in the server\n");
+#endif
+
+                // save pinum, name
+                pinum  = *(i_ptr++);
+                name   = (char*)(i_ptr);
+                status = Server_Unlink( pinum, name );
+                i_ptr  = (int*) buffer_reply;
+                *i_ptr = status;
+                break;
+
             default:
                 fprintf(stderr, "bad function number %d called.\n", *func_num );
                 fprintf(stderr, "terminating server\n");
