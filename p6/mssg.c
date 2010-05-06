@@ -49,8 +49,10 @@ void ReadMessage( int * fun_number, int msg_len[],
     int i = 0;
     for( i = 0; i < NUM_MESSAGES; i++ ) {
         msg_len[i] = *header;
+	printf("msg [%d] = %d\n", i, msg_len[i]);
         header++;
     }
+
     
     // read all the data -- save into buffers pointed to by (void*) data[]
     void * data_ptr = (void*) header;
