@@ -294,7 +294,7 @@ int MFS_Creat(int pinum, int type, char *name) {
     i_ptr++;
     *i_ptr = type;
     i_ptr++;
-    c_ptr - (char*) i_ptr;
+    c_ptr = (char*) i_ptr;
     strncpy( c_ptr, name, BUFFER_SIZE );
 
     int rc = TIME_OUT;

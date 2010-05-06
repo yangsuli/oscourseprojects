@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 */
             case 5:
 
-
+                printf("  function number 5 in the server\n");
                 // save pinum, type, name
                 pinum = *( i_ptr );
                 i_ptr++;
@@ -168,6 +168,7 @@ int main(int argc, char *argv[])
                 i_ptr++;
                 name = (char*) i_ptr;
 
+                printf("  arguments are pinum, type, name = %d, %d, %s\n",pinum, type, name);
                 //p->status = Server_Creat( p->pinum, p->type, p->name );
                 status = Server_Creat( pinum, type, name );
                 i_ptr = (int *) buffer_reply;
