@@ -237,18 +237,19 @@ int main(int argc, char *argv[])
 
 				status = Server_Read( inum, buffer, block );
 
+                // parse a response
 				i_ptr = (int *) buffer_reply;
 				*i_ptr = status;
                 i_ptr++;
                 c_ptr = (char*) i_ptr;
                 memcpy(c_ptr, buffer, BUFFER_SIZE);
 
-
 #ifdef MSSG_DEBUG
 				printf(
 						"Server is Sending func_num %d response with parameters:\n",
 						*func_num);
 				printf("    status = %d", status);
+                printf("    buffer = %s\n", c_ptr);  // NOTE: this may crash if buffer is not type char *
 				printf("\n");
 #endif
 
