@@ -20,25 +20,33 @@ int main(int argc, char* argv[]) {
     int type = 1;  
     MFS_Stat_t m;
 
-printf("  calling MFS_Init() \n");
+    // this function must always be called exactly once before running the
+    // filesystem
     MFS_Init(hostname, port);
 
     ////////// Test a bunch of calls to MFS_Lookup //////
-    MFS_Lookup(-1, "usr");
+//  MFS_Lookup(-1, "usr");
 //  MFS_Lookup(-2, "usr");
 //  MFS_Lookup(-3, "usr");
 
     //////// Test a bunch of Calls to Creat ///////////
-    MFS_Creat(pinum, type, name);
-    pinum = 20;  type = 2;  
-    MFS_Creat(pinum, type, name);
+//  MFS_Creat(pinum, type, name);
+//  pinum = 20;  type = 2;  
+//  MFS_Creat(pinum, type, name);
 
-//  MFS_Stat(inum, MFS_Stat_t *m);
-    m.type = 1; m.size = 100; m.blocks = 20;
-    MFS_Stat(inum, &m);
+//  m.type = 1; m.size = 100; m.blocks = 20;
+//  MFS_Stat(5, &m);
+
+//  m.type = 2;  m.size = 94; m.blocks = 10;
+//  MFS_Stat(15, &m);
 
 //  MFS_Write(inum, "buffer", block);
-//  MFS_Read(inum, "buffer", block);
+//  MFS_Write(5, buffer, 10);
+//  MFS_Write(50, buffer, 15);
+
+//  MFS_Read(5, buffer, 10);
+//  MFS_Read(50, buffer, 15);
+
     MFS_Unlink(pinum, name);
 
     return 0;

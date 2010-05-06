@@ -29,8 +29,8 @@ test: $(TEST) all
 
 # this section works!
 client: $(ALL_CLIENT_SOURCES)
-	gcc -c -g -fPIC client.c mssg.c udp.c ;
-	gcc -shared -o libmfs.so client.o mssg.o udp.o
+	gcc -c -g -fpic client.c udp.c ;
+	gcc -shared -o libmfs.so client.o udp.o
 
 #client: $(ALL_CLIENT_SOURCES)
 #	$(CC) -c -fPIC $(ALL_CLIENT_SOURCES);
