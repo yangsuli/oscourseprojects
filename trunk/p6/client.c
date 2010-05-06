@@ -318,31 +318,6 @@ int MFS_Creat(int pinum, int type, char *name) {
     return status;
 
 }
-/*
-    Params params;
-
-    Params *p = &params;
-    ResetParams( p );
-    p->func_num = 5;
-    p->type     = type;
-    strncpy( p->name, name, BUFFER_SIZE);
-    // create and send the message
-    ClientCreatMessage( p, msg_len, data, buffer_write );
-retry_create:
-    ClientSendBuffer( buffer_write );
-
-    // read the response
-    Params read_params;
-    Params * r = &read_params;
-    if( ClientReadBuffer( buffer_read ) == TIME_OUT ){
-	    goto retry_create;
-    }
-    ClientReadMessage( r, msg_len, data, buffer_read );
-    if( r->status != 0 ) {
-        return -1;
-    }
-
-*/
 
 // MFS_Unlink() removes the file or directory name from the directory specified
 // by pinum . 0 on success, -1 on failure. Failure modes: pinum does not exist,
@@ -352,6 +327,14 @@ int MFS_Unlink(int pinum, char *name) {
 
     assert( MFS_Init_flag == 1 );
     int func_num = 6;
+
+#ifdef MSSG_DEBUG
+    printf("client is sending parameters:\n");
+    printf("    func_num = %d;", func_num);
+    printf("    pinum = %d;", pinum);
+    printf("    name = %s;", name);
+    printf("\n");
+#endif
 
     // create the message
     char * buffer_write = malloc( UDP_BUFFER_SIZE ); 
@@ -380,6 +363,10 @@ int MFS_Unlink(int pinum, char *name) {
 
     i_ptr = (int*) buffer_read;
     int status = *i_ptr;
+
+#ifdef MSSG_DEBUG
+    printf("   client received status = %d\n", status);
+#endif
 
     // free buffers
     free( buffer_read );
