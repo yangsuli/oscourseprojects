@@ -783,7 +783,10 @@ void add_block(int inum){
 		}
 	}
 
-	inode_table[inum].ptr[i] = First_Empty(&Data_BitMap);
+	int curr_block = First_Empty(&Data_BitMap);
+	inode_table[inum].ptr[i] = curr_block;
+	Set_Bit(&Data_BitMap, curr_block);
+
 	inode_table[inum].blocks++;
 }
 
