@@ -462,7 +462,11 @@ void Data_Init(){
 // TODO -- write what the return value is
 int Server_LookUp(int pinum, char *name){
 
-    int idx;
+	if(pinum < 0){
+		return -1;
+	}
+
+	int idx;
 
     if(lseek(image_fd,0,SEEK_SET) != 0){
         fprintf(stderr,"lseek error\n");
@@ -514,26 +518,7 @@ int Server_Stat(int inum, MFS_Stat_t *m){
     }
 
 
-    if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
-
-    if(read(image_fd, &Data_BitMap,sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
-
-    if(read(image_fd,inode_table, MFS_BLOCK_NUMS*sizeof(Inode_t)) != MFS_BLOCK_NUMS*sizeof(Inode_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
-
-    if(read(image_fd,data_region, MFS_BLOCK_NUMS*sizeof(Block_t)) != MFS_BLOCK_NUMS*sizeof(Block_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
-
+    Data_Init();
 
     //return -2 if inum doesn't exit
     if(Inode_BitMap.bits[inum] == false){
@@ -556,26 +541,7 @@ int  Server_Write(int inum, char * buffer, int block){
     }
 
 
-    if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
-
-    if(read(image_fd, &Data_BitMap,sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
-
-    if(read(image_fd,inode_table, MFS_BLOCK_NUMS*sizeof(Inode_t)) != MFS_BLOCK_NUMS*sizeof(Inode_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
-
-    if(read(image_fd,data_region, MFS_BLOCK_NUMS*sizeof(Block_t)) != MFS_BLOCK_NUMS*sizeof(Block_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
-
+    Data_Init();
 
     //return -2 if invalid inum
     if(Inode_BitMap.bits[inum] == false){
@@ -651,26 +617,8 @@ int Server_Read(int inum, char *buffer, int block){
     }
 
 
-    if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
 
-    if(read(image_fd, &Data_BitMap,sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
-
-    if(read(image_fd,inode_table, MFS_BLOCK_NUMS*sizeof(Inode_t)) != MFS_BLOCK_NUMS*sizeof(Inode_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
-
-    if(read(image_fd,data_region, MFS_BLOCK_NUMS*sizeof(Block_t)) != MFS_BLOCK_NUMS*sizeof(Block_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
-
+	Data_Init();
 
     //return -2 if invalid inum
     if(Inode_BitMap.bits[inum] == false){
@@ -705,25 +653,8 @@ int Server_Creat(int pinum, int type, char *name){
         exit(-1);
     }
 
-    if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
 
-    if(read(image_fd, &Data_BitMap,sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
-
-    if(read(image_fd,inode_table, MFS_BLOCK_NUMS*sizeof(Inode_t)) != MFS_BLOCK_NUMS*sizeof(Inode_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
-
-    if(read(image_fd,data_region, MFS_BLOCK_NUMS*sizeof(Block_t)) != MFS_BLOCK_NUMS*sizeof(Block_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
+	Data_Init();
 
     //return -2 if pinum doesn't exit or not a directory
     if(Inode_BitMap.bits[pinum] == false || inode_table[pinum].type == MFS_DIRECTORY){
@@ -851,25 +782,8 @@ int Server_Unlink(int pinum, char *name){
     }
 
 
-    if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
 
-    if(read(image_fd, &Data_BitMap,sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
-
-    if(read(image_fd,inode_table, MFS_BLOCK_NUMS*sizeof(Inode_t)) != MFS_BLOCK_NUMS*sizeof(Inode_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
-
-    if(read(image_fd,data_region, MFS_BLOCK_NUMS*sizeof(Block_t)) != MFS_BLOCK_NUMS*sizeof(Block_t)){
-        fprintf(stderr,"read error!\n");
-        exit(-1);
-    }
+	Data_Init();
 
     //return -2 if pinum doesn't exist
     if(Inode_BitMap.bits[pinum] == false){
