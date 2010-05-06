@@ -572,7 +572,7 @@ int  Server_Write(int inum, char * buffer, int block){
 	if(inode_table[inum].ptr[block] == -1){// allocate a new data block
 		to_write_block = First_Empty(&Data_BitMap);
 		Set_Bit(&Data_BitMap,to_write_block);
-		for(i = 0; i <= inum; i++){
+		for(i = 0; i <= block; i++){
 			if(inode_table[inum].ptr[i] == -1){
 			inode_table[inum].size += MFS_BLOCK_SIZE; // should I and MFS_BLOCK_SIZE of should I add the actual size in buf? yangsuli 
 			inode_table[inum].blocks ++;
