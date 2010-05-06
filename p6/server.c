@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in s;
     char buffer_read[ UDP_BUFFER_SIZE];
     char buffer_reply[UDP_BUFFER_SIZE];
+    char buffer[BUFFER_SIZE];
     char * ptr = buffer_read;
 
     // every possible parameter that could be used
@@ -63,8 +64,6 @@ int main(int argc, char *argv[])
     int status = -1;       // return status for server
     int type   = -1;       // either MFS_DIRECTORY or MFS_REGULAR_FILE
     char * name   = NULL;  // name of file/directory
-    char * buffer = NULL;  // generic buffer for passing information
-
 
     // these are helper pointers to make code more readable
     int * i_ptr   = NULL;  // helper pointer
@@ -82,7 +81,6 @@ int main(int argc, char *argv[])
         status = -1;    // return status for server
         type   = -1;    // either MFS_DIRECTORY or MFS_REGULAR_FILE
         name   = NULL;  // name of file/directory
-        buffer = NULL;  // generic buffer for passing information
         i_ptr  = NULL;  // helper pointer
         c_ptr  = NULL;  // helper pointer
 
@@ -152,11 +150,11 @@ int main(int argc, char *argv[])
                 // parse a response
                 i_ptr = (int*) buffer_reply;
                 *i_ptr = status;
-                if( status == 0 ) { 
-                    // only need to pass m_ptr info if inum exists
+//              if( status == 0 ) { 
+//                  // only need to pass m_ptr info if inum exists
                     i_ptr++;
-                    memcpy( i_ptr, m_ptr, sizeof( MFS_Stat_t ) );
-                }
+                    memcpy((void*) i_ptr, (void*)m_ptr, sizeof( MFS_Stat_t ) );
+//              }
 
 #ifdef MSSG_DEBUG
                 m = (MFS_Stat_t*) i_ptr;;
@@ -179,6 +177,15 @@ int main(int argc, char *argv[])
                 c_ptr += BUFFER_SIZE;
                 i_ptr = (int*) c_ptr;
                 block = *i_ptr;
+
+#ifdef MSSG_DEBUG
+                printf("Server read arguments in func_num %d:\n", *func_num);
+                printf("    inum = %d;", inum);
+                // WARNING: this might be bad if buffer is not of type char *
+                printf("    buffer = %s;", buffer);
+                printf("    block = %d;", block);
+                printf("\n");
+#endif
 
                 status = Server_Write( inum, buffer, block );
 
@@ -206,6 +213,14 @@ int main(int argc, char *argv[])
                 i_ptr = (int*) c_ptr;
                 block = *i_ptr;
 
+#ifdef MSSG_DEBUG
+                printf("Server read arguments in func_num %d:\n", *func_num);
+                printf("    inum = %d;", inum);
+                // WARNING: this might be bad if buffer is not of type char *
+                printf("    buffer = %s;", buffer);
+                printf("    block = %d;", block);
+                printf("\n");
+#endif
 
                 status = Server_Read( inum, buffer, block );
 
@@ -263,7 +278,7 @@ int main(int argc, char *argv[])
 #ifdef MSSG_DEBUG
                 m = m_ptr;
                 printf("Server read arguments in func_num %d:\n", *func_num);
-                printf("    pinum = %d;", inum);
+                printf("    pinum = %d;", pinum);
                 printf("    name = %s;", name);
                 printf("\n");
 #endif
