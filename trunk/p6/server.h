@@ -26,6 +26,7 @@ typedef struct __Block_t{
 int Image_Init(const char * filename);
 void Data_Init();
 void Data_Write();
+void add_block(int inum);
 
 //initialize, should just be an empty function
 //Note that this function just corresponds to MFS_Init
