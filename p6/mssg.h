@@ -14,7 +14,7 @@
 #endif
 
 // used for debugging message parameters (comment for tests!)
-#define MSSG_DEBUG 
+//#define MSSG_DEBUG 
 
 // singleton struct used for passing parameters around -- Note: the number of
 // these parameters that get used depends of message_type -- see table below
