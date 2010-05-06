@@ -83,12 +83,44 @@ int MFS_Init(char *hostname, int port) {
 // Failure modes: invalid pinum, name does not exist in pinum.
 int MFS_Lookup(int pinum, char *name) {
 
-/*
     assert( MFS_Init_flag == 1 );
 
+    int func_num = 1;
+
+    // create the message
+    char * buffer_write = malloc( UDP_BUFFER_SIZE ); 
+    assert( buffer_write != NULL );
+    char * c_ptr = buffer_write;
+    int  * i_ptr  = (int*) buffer_write;
+    *(i_ptr) = func_num;
+    i_ptr++;
+
+    // save other parameters here
+    *( i_ptr ) = pinum;
+    i_ptr++;
+    c_ptr = (char*)i_ptr;
+    strncpy( c_ptr, name, BUFFER_SIZE );
+
+    int rc = TIME_OUT;
+    char * buffer_read = malloc( UDP_BUFFER_SIZE );
+    assert( buffer_read != NULL );
+    while( rc == TIME_OUT ) {
+        // write the message
+        rc = UDP_Write(sd, &addr, buffer_write, UDP_BUFFER_SIZE);
+
+        // read the response
+        rc = Safe_UDP_Read(sd, &addr2, buffer_read, UDP_BUFFER_SIZE);
+    }
+    int inum = *((int*)buffer_read);
+
+    // free buffers
+    free( buffer_read );
+    free( buffer_write );
+
+    return inum;
+
+/*
     // save all the necessary parameters
-    Params *p = &params;
-    ResetParams( p );
     p->func_num = 1;
     p->pinum    = pinum;
     strncpy( p->name, name, BUFFER_SIZE );
@@ -112,8 +144,7 @@ retry_lookup:
     if( inum < 0 ) {
         return -1;
     }
-
-    return inum;
+*/
 }
 
 // MFS_Stat() returns some information about the file specified by inum. Upon
@@ -122,34 +153,44 @@ retry_lookup:
 int MFS_Stat(int inum, MFS_Stat_t *m) {
 
     assert( MFS_Init_flag == 1 );
+    int func_num = 2;
 
-    Params params;
+    // create the message
+    char * buffer_write = malloc( UDP_BUFFER_SIZE ); 
+    assert( buffer_write != NULL );
+    char * c_ptr = buffer_write;
+    int  * i_ptr  = (int*) buffer_write;
+    *(i_ptr) = func_num;
+    i_ptr++;
 
-    Params *p = &params;
-    ResetParams( p );
-    p->func_num = 2;
-    p->inum     = inum;
-    // create and send the message
-    ClientCreatMessage( p, msg_len, data, buffer_write );
-retry_stat:
-    ClientSendBuffer( buffer_write );
+    // save other parameters here
+    *( i_ptr ) = inum;
+    i_ptr++;
+    MFS_Stat_t * m_ptr = (MFS_Stat_t *) i_ptr;
+    memcpy( m_ptr, m, sizeof(MFS_Stat_t) );
 
-    // read the response
-    Params read_params;
-    Params * r = &read_params;
-    if( ClientReadBuffer( buffer_read ) == TIME_OUT ){
-	    goto retry_stat;
+    int rc = TIME_OUT;
+    char * buffer_read = malloc( UDP_BUFFER_SIZE );
+    assert( buffer_read != NULL );
+    while( rc == TIME_OUT ) {
+        // write the message
+        rc = UDP_Write(sd, &addr, buffer_write, UDP_BUFFER_SIZE);
+
+        // read the response
+        rc = Safe_UDP_Read(sd, &addr2, buffer_read, UDP_BUFFER_SIZE);
     }
-    ClientReadMessage( r, msg_len, data, buffer_read );
-    if( r->status != 0 ) {
-        return -1;
-    }
-    m->type = r->type;
-    m->size = r->size;
-    m->blocks = r->blocks;
-*/
-    return 0;
 
+    i_ptr = (int*) buffer_read;
+    int status = *i_ptr;
+    i_ptr++;
+    m_ptr = (MFS_Stat_t*) i_ptr;
+    memcpy( m, m_ptr, sizeof(MFS_Stat_t) );
+
+    // free buffers
+    free( buffer_read );
+    free( buffer_write );
+
+    return status;
 }
 
 
@@ -238,7 +279,45 @@ retry_read:
 int MFS_Creat(int pinum, int type, char *name) {
 
     assert( MFS_Init_flag == 1 );
+    int func_num = 5;
 
+    // create the message
+    char * buffer_write = malloc( UDP_BUFFER_SIZE ); 
+    assert( buffer_write != NULL );
+    int  * i_ptr = (int*) buffer_write;
+    char * c_ptr = buffer_write;
+    *i_ptr = func_num;
+    i_ptr++;
+
+    // save other parameters here
+    *i_ptr = pinum;
+    i_ptr++;
+    *i_ptr = type;
+    i_ptr++;
+    c_ptr - (char*) i_ptr;
+    strncpy( c_ptr, name, BUFFER_SIZE );
+
+    int rc = TIME_OUT;
+    char * buffer_read = malloc( UDP_BUFFER_SIZE );
+    assert( buffer_read != NULL );
+    while( rc == TIME_OUT ) {
+        // write the message
+        rc = UDP_Write(sd, &addr, buffer_write, UDP_BUFFER_SIZE);
+
+        // read the response
+        rc = Safe_UDP_Read(sd, &addr2, buffer_read, UDP_BUFFER_SIZE);
+    }
+
+    i_ptr = (int*) buffer_read;
+    int status = *i_ptr;
+
+    // free buffers
+    free( buffer_read );
+    free( buffer_write );
+
+    return status;
+
+}
 /*
     Params params;
 
@@ -264,10 +343,6 @@ retry_create:
     }
 
 */
-    int status = -1;
-    return status;
-
-}
 
 // MFS_Unlink() removes the file or directory name from the directory specified
 // by pinum . 0 on success, -1 on failure. Failure modes: pinum does not exist,

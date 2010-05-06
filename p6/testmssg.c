@@ -19,7 +19,15 @@ int main(int argc, char* argv[]) {
 
 printf("  calling MFS_Init() \n");
     MFS_Init(hostname, port);
-//  MFS_Lookup(-1, "usr");
+printf("  calling MFS_Lookup with -1\n");
+    MFS_Lookup(-1, "usr");
+    sleep(5);
+printf("  calling MFS_Lookup with -2\n");
+    MFS_Lookup(-2, "usr");
+    sleep(5);
+printf("  calling MFS_Lookup with -3\n");
+    MFS_Lookup(-3, "usr");
+
 //  MFS_Stat(inum, MFS_Stat_t *m);
 //  int block = 4;
 //  MFS_Write(inum, "buffer", block);
