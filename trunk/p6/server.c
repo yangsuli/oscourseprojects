@@ -437,6 +437,11 @@ int Image_Init(const char * filename){
 
 void Data_Init(){
 
+    if(lseek(image_fd,0,SEEK_SET) != 0){
+        fprintf(stderr,"lseek error\n");
+        exit(-1);
+    }
+
     if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
         fprintf(stderr,"read error!\n");
         exit(-1);
@@ -468,10 +473,6 @@ int Server_LookUp(int pinum, char *name){
 
 	int idx;
 
-    if(lseek(image_fd,0,SEEK_SET) != 0){
-        fprintf(stderr,"lseek error\n");
-        exit(-1);
-    }
 
     Data_Init();
 
@@ -512,11 +513,6 @@ int Server_LookUp(int pinum, char *name){
 // TODO -- what does this function return?
 int Server_Stat(int inum, MFS_Stat_t *m){
 
-    if(lseek(image_fd,0,SEEK_SET) != 0){
-        fprintf(stderr,"lseek error\n");
-        exit(-1);
-    }
-
 
     Data_Init();
 
@@ -534,11 +530,6 @@ int Server_Stat(int inum, MFS_Stat_t *m){
 
 // TODO - what does this function return?
 int  Server_Write(int inum, char * buffer, int block){
-
-    if(lseek(image_fd,0,SEEK_SET) != 0){
-        fprintf(stderr,"lseek error\n");
-        exit(-1);
-    }
 
 
     Data_Init();
@@ -576,10 +567,21 @@ int  Server_Write(int inum, char * buffer, int block){
         data_region[to_write_block].data[i] = buffer[i];
     }
 
+    Data_Write();
+
+    return 0;
+}
+
+void Data_Write(){
 
     if(lseek(image_fd,0,SEEK_SET) != 0){
         fprintf(stderr,"lseek error\n");
         exit(-1);
+    }
+
+    if(ftruncate(image_fd,0) != 0){
+	    fprintf(stderr,"truncate error\n");
+	    exit(-1);
     }
 
     if(write(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
@@ -605,18 +607,13 @@ int  Server_Write(int inum, char * buffer, int block){
 
     fsync(image_fd);
 
-    return 0;
 }
+
+
+
 
 // TODO - what does this function return?
 int Server_Read(int inum, char *buffer, int block){
-
-    if(lseek(image_fd,0,SEEK_SET) != 0){
-        fprintf(stderr,"lseek error\n");
-        exit(-1);
-    }
-
-
 
 	Data_Init();
 
@@ -648,10 +645,6 @@ int Server_Read(int inum, char *buffer, int block){
 // TODO -- what is the return type of this function call?
 int Server_Creat(int pinum, int type, char *name){
 
-    if(lseek(image_fd,0,SEEK_SET) != 0){
-        fprintf(stderr,"lseek error\n");
-        exit(-1);
-    }
 
 
 	Data_Init();
@@ -707,32 +700,7 @@ int Server_Creat(int pinum, int type, char *name){
         }
     }
 
-    if(lseek(image_fd,0,SEEK_SET) != 0){
-        fprintf(stderr,"lseek error\n");
-        exit(-1);
-    }
-
-    if(write(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
-        fprintf(stderr, "write error!\n");
-        exit(-1);
-    }
-
-    if(write(image_fd,&Data_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
-        fprintf(stderr,"write error!\n");
-        exit(-1);
-    }
-
-    if(write(image_fd,inode_table, MFS_BLOCK_NUMS*sizeof(Inode_t)) != MFS_BLOCK_NUMS*sizeof(Inode_t)){
-        fprintf(stderr,"write error!\n");
-        exit(-1);
-    }
-
-    if(write(image_fd,data_region, MFS_BLOCK_NUMS*sizeof(Block_t)) != MFS_BLOCK_NUMS*sizeof(Block_t)){
-        fprintf(stderr,"write error\n");
-        exit(-1);
-    }
-
-    fsync(image_fd);
+    Data_Write();
 
     return 0;
 }
@@ -776,12 +744,6 @@ int Add_Entry(int pinum, int inum, char *name, Inode_t *inode_table, Block_t *da
 
 int Server_Unlink(int pinum, char *name){
 
-    if(lseek(image_fd,0,SEEK_SET) != 0){
-        fprintf(stderr,"lseek error\n");
-        exit(-1);
-    }
-
-
 
 	Data_Init();
 
@@ -812,34 +774,7 @@ int Server_Unlink(int pinum, char *name){
 
     Remove_Entry(pinum, inum, name, inode_table, data_region);
 
-
-    if(lseek(image_fd,0,SEEK_SET) != 0){
-        fprintf(stderr,"lseek error\n");
-        exit(-1);
-    }
-
-    if(write(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
-        fprintf(stderr, "write error!\n");
-        exit(-1);
-    }
-
-    if(write(image_fd,&Data_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
-        fprintf(stderr,"write error!\n");
-        exit(-1);
-    }
-
-    if(write(image_fd,inode_table, MFS_BLOCK_NUMS*sizeof(Inode_t)) != MFS_BLOCK_NUMS*sizeof(Inode_t)){
-        fprintf(stderr,"write error!\n");
-        exit(-1);
-    }
-
-
-    if(write(image_fd,data_region, MFS_BLOCK_NUMS*sizeof(Block_t)) != MFS_BLOCK_NUMS*sizeof(Block_t)){
-        fprintf(stderr,"write error\n");
-        exit(-1);
-    }
-
-    fsync(image_fd);
+Data_Write();
 
     return 0;
 }
