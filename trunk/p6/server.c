@@ -773,6 +773,11 @@ int Server_Unlink(int pinum, char *name){
 		return -1;
 	}
 
+
+	if(inode_table[pinum].type != MFS_DIRECTORY){
+		return -1;
+	}
+
 	int inum = Server_LookUp(pinum, name);
 	if(inum < 0){//name does not exist
 		return 0;
