@@ -256,6 +256,7 @@ int main(int argc, char *argv[])
 #endif
 
                 status = Server_Creat( pinum, type, name );
+
                 i_ptr = (int *) buffer_reply;
                 *i_ptr = status;
 
@@ -266,8 +267,6 @@ int main(int argc, char *argv[])
                 printf("    status = %d", status);
                 printf("\n");
 #endif
-
-
                 break;
 
             case 6:
@@ -706,7 +705,6 @@ int Server_Creat(int pinum, int type, char *name){
         exit(-1);
     }
 
-
     if(read(image_fd, &Inode_BitMap, sizeof(Bit_Map_t)) != sizeof(Bit_Map_t)){
         fprintf(stderr,"read error!\n");
         exit(-1);
@@ -778,7 +776,6 @@ int Server_Creat(int pinum, int type, char *name){
         }
     }
 
-
     if(lseek(image_fd,0,SEEK_SET) != 0){
         fprintf(stderr,"lseek error\n");
         exit(-1);
@@ -798,7 +795,6 @@ int Server_Creat(int pinum, int type, char *name){
         fprintf(stderr,"write error!\n");
         exit(-1);
     }
-
 
     if(write(image_fd,data_region, MFS_BLOCK_NUMS*sizeof(Block_t)) != MFS_BLOCK_NUMS*sizeof(Block_t)){
         fprintf(stderr,"write error\n");

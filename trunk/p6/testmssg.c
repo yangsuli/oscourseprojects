@@ -30,9 +30,9 @@ int main(int argc, char* argv[]) {
 //  MFS_Lookup(-3, "usr");
 
     //////// Test a bunch of Calls to Creat ///////////
-//  MFS_Creat(pinum, type, name);
-//  pinum = 20;  type = 2;  
-//  MFS_Creat(pinum, type, name);
+    MFS_Creat(pinum, type, name);
+    pinum = 20;  type = 2;  
+    MFS_Creat(pinum, type, name);
 
 //  m.type = 1; m.size = 100; m.blocks = 20;
 //  MFS_Stat(5, &m);
@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 //  MFS_Read(5, buffer, 10);
 //  MFS_Read(50, buffer, 15);
 
-    MFS_Unlink(pinum, name);
+//  MFS_Unlink(pinum, name);
 
     return 0;
 
