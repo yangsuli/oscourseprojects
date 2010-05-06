@@ -36,11 +36,11 @@ int main(int argc, char *argv[])
 
     inode_table = (Inode_t *)malloc(MFS_BLOCK_NUMS * sizeof(Inode_t));
     data_region = (Block_t *)malloc(MFS_BLOCK_NUMS * sizeof(Block_t));
-
     if(inode_table == NULL || data_region == NULL){
         fprintf(stderr, "malloc error!\n");
         exit(-1);
     }
+
     //open file image
     if( (image_fd = open(argv[2],O_RDWR)) == -1){
         image_fd = Image_Init(argv[2]);
@@ -361,8 +361,6 @@ void Inode_Init(Inode_t *inode){
     }
 }
 
-
-
 //return the file descriptor of the image file
 int Image_Init(const char * filename){
     int fd, i;
@@ -550,6 +548,7 @@ int Server_Stat(int inum, MFS_Stat_t *m){
     return 0;
 }
 
+// TODO - what does this function return?
 int  Server_Write(int inum, char * buffer, int block){
 
     if(lseek(image_fd,0,SEEK_SET) != 0){
@@ -644,6 +643,7 @@ int  Server_Write(int inum, char * buffer, int block){
     return 0;
 }
 
+// TODO - what does this function return?
 int Server_Read(int inum, char *buffer, int block){
 
     if(lseek(image_fd,0,SEEK_SET) != 0){
@@ -969,5 +969,3 @@ int Remove_Entry(int pinum, int inum, char *name, Inode_t *inode_table, Block_t 
 
     return 0;
 }
-
-

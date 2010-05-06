@@ -203,8 +203,6 @@ int MFS_Stat(int inum, MFS_Stat_t *m) {
     printf("    status = %d; m->type = %d, m->size = %d, m->blocks = %d\n", 
         status, m->type, m->size, m->blocks);
 #endif
-
-
     return status;
 }
 
@@ -382,6 +380,7 @@ int MFS_Creat(int pinum, int type, char *name) {
     printf("    status = %d\n", status);
 #endif
 
+    if( status != 0 ) { return -1; }
     return status;
 
 }

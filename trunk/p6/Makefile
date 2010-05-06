@@ -13,8 +13,8 @@ TEST_MSSG_OBJS = mssg.o testmssg.o
 ALL_LIB_SOURCES = $(ALL_SERVER_SOURCES) $(ALL_CLIENT_SOURCES)
 
 
-TEST = testcases/test5.c
 TEST = testmssg.c
+TEST = testcases/test5.c
 
 #all: server client
 all: client server
