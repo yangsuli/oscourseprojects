@@ -351,6 +351,43 @@ retry_create:
 int MFS_Unlink(int pinum, char *name) {
 
     assert( MFS_Init_flag == 1 );
+    int func_num = 6;
+
+    // create the message
+    char * buffer_write = malloc( UDP_BUFFER_SIZE ); 
+    assert( buffer_write != NULL );
+    int  * i_ptr = (int*) buffer_write;
+    char * c_ptr = buffer_write;
+    *i_ptr = func_num;
+    i_ptr++;
+
+    // save other parameters here
+    *i_ptr = pinum;
+    i_ptr++;
+    c_ptr = (char*) i_ptr;
+    strncpy( c_ptr, name, BUFFER_SIZE );
+
+    int rc = TIME_OUT;
+    char * buffer_read = malloc( UDP_BUFFER_SIZE );
+    assert( buffer_read != NULL );
+    while( rc == TIME_OUT ) {
+        // write the message
+        rc = UDP_Write(sd, &addr, buffer_write, UDP_BUFFER_SIZE);
+
+        // read the response
+        rc = Safe_UDP_Read(sd, &addr2, buffer_read, UDP_BUFFER_SIZE);
+    }
+
+    i_ptr = (int*) buffer_read;
+    int status = *i_ptr;
+
+    // free buffers
+    free( buffer_read );
+    free( buffer_write );
+
+    return status;
+
+}
 
 /*
     Params params;
@@ -385,8 +422,3 @@ retry_unlink:
     }
 
 */
-
-    // copy the buffer out
-    return 0;
-
-}

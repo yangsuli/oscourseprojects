@@ -31,27 +31,6 @@ typedef struct __params {
     int type;               // either MFS_DIRECTORY or MFS_REGULAR_FILE
 } Params;
 
-void printparams( Params * p, int c );
-
-// TODO -- why can't these have const in front of them?
-//void CreateMessage( int type, const int msg_len[], 
-//    const void * data[], char * buffer);
-int CreateMessage( int fun_number, int msg_len[], 
-    void * data[], char * buffer);
-
-void ReadMessage( int * fun_number, int msg_len[], 
-    void * data[], const char * buffer); 
-
-// initializes each entry in msg_len to zero and allocates memory for each
-// entry in data[]
-int InitData( int msg_len[], void * data[] );
-void ResetParams( Params *p );
-
-int ServerCreatMessage(Params *p,int msg_len[],void * data[],char * buffer);
-int ClientCreatMessage(Params *p,int msg_len[],void * data[],char * buffer);
-int ServerReadMessage( Params *p,int msg_len[],void * data[],char * buffer);
-int ClientReadMessage( Params *p,int msg_len[],void * data[],char * buffer);
-
 // the format of these routines follows (int func_num, Params ) where Params
 // can be anything of any length
 
@@ -91,10 +70,6 @@ MFS_Creat (func_num == 5):
     client send (int type, char *name)
     server send (int status)
            status == 0 on success, otherwise == -2 if ss, '-2' pinum doesn't
-
-////// "old version"
-////// MFS_Creat: client send '5' 'type' name (3 strings in total)
-//////           server send '0' on success, '-2' pinum doesn't
 
 MFS_Unlink (func_num == 6): 
     client send (int pinum, char *name)
