@@ -111,40 +111,22 @@ int MFS_Lookup(int pinum, char *name) {
         // read the response
         rc = Safe_UDP_Read(sd, &addr2, buffer_read, UDP_BUFFER_SIZE);
     }
-    int inum = *((int*)buffer_read);
 
     // free buffers
     free( buffer_read );
     free( buffer_write );
 
-    return inum;
+    // parse the response
+    i_ptr = (int*) buffer_read;
+    int inum = *i_ptr;
 
-/*
-    // save all the necessary parameters
-    p->func_num = 1;
-    p->pinum    = pinum;
-    strncpy( p->name, name, BUFFER_SIZE );
+#ifdef MSSG_DEBUG
+    printf("Client received func_num %d with parameters:\n", func_num);
+    printf("    inum = %d\n", inum );
+#endif
 
-    // create and send the message
-    ClientCreatMessage( p, msg_len, data, buffer_write );
-int n = 0;
-retry_lookup:
-    ClientSendBuffer( buffer_write );
-
-    // read the response
-    Params read_params;
-    Params * r = &read_params;
-    if( ClientReadBuffer( buffer_read ) == TIME_OUT ){
-        printf("  retrying lookup number %d\n", n);
-        n++;
-	    goto retry_lookup;
-    }
-    ClientReadMessage( r, msg_len, data, buffer_read );
-    int inum = r->inum;
-    if( inum < 0 ) {
-        return -1;
-    }
-*/
+    if( inum != 0 ) { return -1; }
+    return 0;
 }
 
 // MFS_Stat() returns some information about the file specified by inum. Upon

@@ -108,23 +108,35 @@ int main(int argc, char *argv[])
 
 			case 1: 
 
-#ifdef MSSG_DEBUG
-				printf("  func_num == 1 \n");
-#endif
-
 				// parse the args passed in for this function
 				pinum = *( i_ptr );
 				i_ptr++;
 				c_ptr = (char*)i_ptr;
 				name = c_ptr;
 
+#ifdef MSSG_DEBUG
+				printf("Server read arguments in func_num %d:\n", *func_num);
+				printf("    pinum = %d;", pinum);
+				printf("    name = %s;", name);
+				printf("\n");
+#endif
+
 				// call the function
 				inum = Server_LookUp(pinum, name );
 
 				// parse a response
-				ptr = buffer_reply;
-	//			*( (int*)ptr ) = status;
-				*( (int*)ptr ) = inum;
+				i_ptr = (int*) buffer_reply;
+				*i_ptr = inum;
+
+#ifdef MSSG_DEBUG
+				printf(
+						"Server is Sending func_num %d response with parameters:\n",
+						*func_num);
+				printf("    inum = %d", inum);
+				printf("\n");
+#endif
+
+
 				break;
 
 
