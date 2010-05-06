@@ -1,6 +1,7 @@
-#include "mfs.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
+#include "mfs.h"
 
 int main(int argc, char* argv[]) {
 
@@ -14,39 +15,31 @@ int main(int argc, char* argv[]) {
 
     int pinum = 2;
     char name[] = "SOME_NAME";
+    char buffer[] = "SOME_BUFFER";
     int inum  = 3;
+    int type = 1;  
     MFS_Stat_t m;
 
 printf("  calling MFS_Init() \n");
     MFS_Init(hostname, port);
-/*
-printf("  calling MFS_Lookup with -1\n");
-    MFS_Lookup(-1, "usr");
-    sleep(5);
-printf("  calling MFS_Lookup with -2\n");
-    MFS_Lookup(-2, "usr");
-    sleep(5);
-printf("  calling MFS_Lookup with -3\n");
-    MFS_Lookup(-3, "usr");
-*/
 
-    printf("  calling MFS_Creat with arguments \n");
-    pinum = 2;  
-    int type = 1;  
-    printf("  pinum, type, name = %d, %d, %s\n",pinum, type, name);
+    ////////// Test a bunch of calls to MFS_Lookup //////
+    MFS_Lookup(-1, "usr");
+//  MFS_Lookup(-2, "usr");
+//  MFS_Lookup(-3, "usr");
+
+    //////// Test a bunch of Calls to Creat ///////////
     MFS_Creat(pinum, type, name);
-    sleep(5);
-    printf("  calling MFS_Creat with arguments \n");
-    pinum = 20;  
-    type = 2;  
-    printf("  pinum, type, name = %d, %d, %s\n",pinum, type, name);
+    pinum = 20;  type = 2;  
     MFS_Creat(pinum, type, name);
 
 //  MFS_Stat(inum, MFS_Stat_t *m);
-//  int block = 4;
+    m.type = 1; m.size = 100; m.blocks = 20;
+    MFS_Stat(inum, &m);
+
 //  MFS_Write(inum, "buffer", block);
 //  MFS_Read(inum, "buffer", block);
-//  MFS_Unlink(int pinum, char *name);
+    MFS_Unlink(pinum, name);
 
     return 0;
 

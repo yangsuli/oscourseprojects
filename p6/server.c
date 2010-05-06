@@ -50,7 +50,6 @@ int main(int argc, char *argv[])
     ///////////////////////// main loop ///////////////////////////////////////
     int rc = -1;
     struct sockaddr_in s;
-    MFS_Stat_t m;
     char buffer_read[ UDP_BUFFER_SIZE];
     char buffer_reply[UDP_BUFFER_SIZE];
     char * ptr = buffer_read;
@@ -132,14 +131,20 @@ int main(int argc, char *argv[])
 
             case 2:
 
-#ifdef MSSG_DEBUG
-                printf("  func_num == 2 \n");
-#endif
-
                 // parse the args passed in for this function
                 inum = *( i_ptr );
                 i_ptr++;
                 m_ptr = (MFS_Stat_t*)i_ptr;
+
+#ifdef MSSG_DEBUG
+                MFS_Stat_t * m = m_ptr;
+                printf("Server read arguments in func_num %d:\n", *func_num);
+                printf("    inum = %d;", inum);
+                printf("    m->type = %d;", m->type);
+                printf("    m->size = %d;", m->size);
+                printf("    m->blocks = %d;", m->blocks);
+                printf("\n");
+#endif
 
                 // call the function
                 status = Server_Stat(inum, m_ptr );
@@ -153,21 +158,73 @@ int main(int argc, char *argv[])
                     memcpy( i_ptr, m_ptr, sizeof( MFS_Stat_t ) );
                 }
 
-                break;
-/*
-                   case 3:
-                   p->status = Server_Write( p->inum, p->buffer, p->block );
+#ifdef MSSG_DEBUG
+                m = (MFS_Stat_t*) i_ptr;;
+                printf(
+                  "Server is Sending func_num %d response with parameters:\n", *func_num);
+                printf("    status = %d; m->type = %d, m->size = %d, m->blocks = %d\n", 
+                        status, m->type, m->size, m->blocks);
+#endif
 
-                   break;
-                   case 4:
-                   p->status = Server_Read( p->inum, p->buffer, p->block );
-                   break;
-*/
-            case 5:
+
+                break;
+
+            case 3:
+
+                // save inum, buffer, block 
+                inum = *( i_ptr );
+                i_ptr++;
+                c_ptr = (char*)i_ptr;
+                memcpy( buffer, c_ptr, BUFFER_SIZE );
+                c_ptr += BUFFER_SIZE;
+                i_ptr = (int*) c_ptr;
+                block = *i_ptr;
+
+                status = Server_Write( inum, buffer, block );
+
+                i_ptr = (int *) buffer_reply;
+                *i_ptr = status;
 
 #ifdef MSSG_DEBUG
-                printf("  function number 5 in the server\n");
+                printf(
+                    "Server is Sending func_num %d response with parameters:\n",
+                        *func_num);
+                printf("    status = %d", status);
+                printf("\n");
 #endif
+
+                break;
+
+            case 4:
+
+                // save inum, buffer, block 
+                inum = *( i_ptr );
+                i_ptr++;
+                c_ptr = (char*)i_ptr;
+                memcpy( buffer, c_ptr, BUFFER_SIZE );
+                c_ptr += BUFFER_SIZE;
+                i_ptr = (int*) c_ptr;
+                block = *i_ptr;
+
+
+                status = Server_Read( inum, buffer, block );
+
+                i_ptr = (int *) buffer_reply;
+                *i_ptr = status;
+
+#ifdef MSSG_DEBUG
+                printf(
+                    "Server is Sending func_num %d response with parameters:\n",
+                        *func_num);
+                printf("    status = %d", status);
+                printf("\n");
+#endif
+
+
+                break;
+
+            case 5:
+
                 // save pinum, type, name
                 pinum = *( i_ptr );
                 i_ptr++;
@@ -176,26 +233,53 @@ int main(int argc, char *argv[])
                 name = (char*) i_ptr;
 
 #ifdef MSSG_DEBUG
-                printf("  arguments are pinum, type, name = %d, %d, %s\n",pinum, type, name);
+                printf("Server read arguments in func_num %d:\n", *func_num);
+                printf("    pinum = %d;", pinum);
+                printf("    type  = %d;", type);
+                printf("    name  = %s;", name);
+                printf("\n");
 #endif
 
                 status = Server_Creat( pinum, type, name );
                 i_ptr = (int *) buffer_reply;
                 *i_ptr = status;
 
+#ifdef MSSG_DEBUG
+                printf(
+                    "Server is Sending func_num %d response with parameters:\n",
+                        *func_num);
+                printf("    status = %d", status);
+                printf("\n");
+#endif
+
+
                 break;
 
             case 6:
-#ifdef MSSG_DEBUG
-                printf("  function number 6 in the server\n");
-#endif
 
                 // save pinum, name
                 pinum  = *(i_ptr++);
                 name   = (char*)(i_ptr);
+#ifdef MSSG_DEBUG
+                m = m_ptr;
+                printf("Server read arguments in func_num %d:\n", *func_num);
+                printf("    pinum = %d;", inum);
+                printf("    name = %s;", name);
+                printf("\n");
+#endif
+
                 status = Server_Unlink( pinum, name );
                 i_ptr  = (int*) buffer_reply;
                 *i_ptr = status;
+
+#ifdef MSSG_DEBUG
+                printf(
+                    "Server is Sending func_num %d response with parameters:\n",
+                        *func_num);
+                printf("    status = %d", status);
+                printf("\n");
+#endif
+
                 break;
 
             default:
