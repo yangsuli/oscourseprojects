@@ -154,6 +154,14 @@ int MFS_Stat(int inum, MFS_Stat_t *m) {
 
     assert( MFS_Init_flag == 1 );
     int func_num = 2;
+#ifdef MSSG_DEBUG
+    printf("Client is sending func_num %d with parameters:\n", func_num);
+    printf("    inum = %d;", inum);
+    printf("    m->type = %d;", m->type);
+    printf("    m->size = %d;", m->size);
+    printf("    m->blocks = %d;", m->blocks);
+    printf("\n");
+#endif
 
     // create the message
     char * buffer_write = malloc( UDP_BUFFER_SIZE ); 
@@ -190,10 +198,15 @@ int MFS_Stat(int inum, MFS_Stat_t *m) {
     free( buffer_read );
     free( buffer_write );
 
+#ifdef MSSG_DEBUG
+    printf("Client received func_num %d with parameters:\n", func_num);
+    printf("    status = %d; m->type = %d, m->size = %d, m->blocks = %d\n", 
+        status, m->type, m->size, m->blocks);
+#endif
+
+
     return status;
 }
-
-
 
 // MFS_Write() writes a block of size 4096 bytes at the block offset specified
 // by block . Returns 0 on success, -1 on failure. Failure modes: invalid inum,
@@ -201,34 +214,55 @@ int MFS_Stat(int inum, MFS_Stat_t *m) {
 int MFS_Write(int inum, char *buffer, int block) {
 
     assert( MFS_Init_flag == 1 );
+    int func_num = 3;
+#ifdef MSSG_DEBUG
+    printf("Client is sending func_num %d with parameters:\n", func_num);
+    printf("    inum = %d;", inum);
+    printf("    block = %d;", block);
+    printf("\n");
+#endif
 
-/*
-    Params params;
+    // create the message
+    char * buffer_write = malloc( UDP_BUFFER_SIZE ); 
+    assert( buffer_write != NULL );
+    int  * i_ptr = (int*) buffer_write;
+    char * c_ptr = buffer_write;
+    *i_ptr = func_num;
+    i_ptr++;
 
-    Params *p = &params;
-    ResetParams( p );
-    p->func_num = 3;
-    p->inum     = inum;
-    p->block    = block;
-    memcpy( p->buffer, buffer, BUFFER_SIZE);
-    // create and send the message
-    ClientCreatMessage( p, msg_len, data, buffer_write );
-retry_write:
-    ClientSendBuffer( buffer_write );
+    // save other parameters here
+    *i_ptr = inum;
+    i_ptr++;
+    c_ptr = (char*)i_ptr;
+    memcpy( c_ptr, buffer, BUFFER_SIZE );
+    c_ptr += BUFFER_SIZE;
+    i_ptr = (int*)c_ptr; 
+    *i_ptr = block;
 
-    // read the response
-    Params read_params;
-    Params * r = &read_params;
-    if( ClientReadBuffer( buffer_read ) == TIME_OUT ){
-	    goto retry_write;
+    int rc = TIME_OUT;
+    char * buffer_read = malloc( UDP_BUFFER_SIZE );
+    assert( buffer_read != NULL );
+    while( rc == TIME_OUT ) {
+        // write the message
+        rc = UDP_Write(sd, &addr, buffer_write, UDP_BUFFER_SIZE);
+
+        // read the response
+        rc = Safe_UDP_Read(sd, &addr2, buffer_read, UDP_BUFFER_SIZE);
     }
-    ClientReadMessage( r, msg_len, data, buffer_read );
-    if( r->status != 0 ) {
-        return -1;
-    }
-    return r->status;
-*/
-    return -1;
+
+    i_ptr = (int*) buffer_read;
+    int status = *i_ptr;
+
+    // free buffers
+    free( buffer_read );
+    free( buffer_write );
+
+#ifdef MSSG_DEBUG
+    printf("Client received func_num %d with parameters:\n", func_num);
+    printf("    status = %d\n", status);
+#endif
+
+    return status;
 
 }
 
@@ -239,36 +273,57 @@ retry_write:
 int MFS_Read(int inum, char *buffer, int block) {
 
     assert( MFS_Init_flag == 1 );
+    int func_num = 4;
 
-/*
-    Params params;
+#ifdef MSSG_DEBUG
+    printf("Client is sending func_num %d with parameters:\n", func_num);
+    printf("    inum = %d;", inum);
+    printf("    buffer = %s;", buffer);  // NOTE: this may crash if buffer is not type char *
+    printf("    block = %d;", block);
+    printf("\n");
+#endif
 
-    Params *p = &params;
-    ResetParams( p );
-    p->func_num = 4;
-    p->inum     = inum;
-    p->block    = block;
-    // create and send the message
-    ClientCreatMessage( p, msg_len, data, buffer_write );
-retry_read:
-    ClientSendBuffer( buffer_write );
+    // create the message
+    char * buffer_write = malloc( UDP_BUFFER_SIZE ); 
+    assert( buffer_write != NULL );
+    int  * i_ptr = (int*) buffer_write;
+    char * c_ptr = buffer_write;
+    *i_ptr = func_num;
+    i_ptr++;
 
-    // read the response
-    Params read_params;
-    Params * r = &read_params;
-    if( ClientReadBuffer( buffer_read ) == TIME_OUT ){
-	    goto retry_read;
+    // save other parameters here
+    *i_ptr = inum;
+    i_ptr++;
+    c_ptr = (char*) i_ptr;
+    memcpy(c_ptr, buffer, BUFFER_SIZE);
+    c_ptr += BUFFER_SIZE;
+    i_ptr = (int *) c_ptr;
+    *i_ptr = block;
+
+    int rc = TIME_OUT;
+    char * buffer_read = malloc( UDP_BUFFER_SIZE );
+    assert( buffer_read != NULL );
+    while( rc == TIME_OUT ) {
+        // write the message
+        rc = UDP_Write(sd, &addr, buffer_write, UDP_BUFFER_SIZE);
+
+        // read the response
+        rc = Safe_UDP_Read(sd, &addr2, buffer_read, UDP_BUFFER_SIZE);
     }
-    ClientReadMessage( r, msg_len, data, buffer_read );
-    if( r->status != 0 ) {
-        return -1;
-    }
 
-    // copy the buffer out
-    memcpy( buffer, r->buffer, BUFFER_SIZE);
-*/
+    i_ptr = (int*) buffer_read;
+    int status = *i_ptr;
 
-    return 0;
+    // free buffers
+    free( buffer_read );
+    free( buffer_write );
+
+#ifdef MSSG_DEBUG
+    printf("Client received func_num %d with parameters:\n", func_num);
+    printf("    status = %d\n", status);
+#endif
+
+    return status;
 
 }
 
@@ -280,6 +335,13 @@ int MFS_Creat(int pinum, int type, char *name) {
 
     assert( MFS_Init_flag == 1 );
     int func_num = 5;
+#ifdef MSSG_DEBUG
+    printf("Client is sending func_num %d with parameters:\n", func_num);
+    printf("    pinum = %d;", pinum);
+    printf("    type = %d;", type);
+    printf("    name = %s;", name);
+    printf("\n");
+#endif
 
     // create the message
     char * buffer_write = malloc( UDP_BUFFER_SIZE ); 
@@ -315,6 +377,11 @@ int MFS_Creat(int pinum, int type, char *name) {
     free( buffer_read );
     free( buffer_write );
 
+#ifdef MSSG_DEBUG
+    printf("Client received func_num %d with parameters:\n", func_num);
+    printf("    status = %d\n", status);
+#endif
+
     return status;
 
 }
@@ -329,8 +396,7 @@ int MFS_Unlink(int pinum, char *name) {
     int func_num = 6;
 
 #ifdef MSSG_DEBUG
-    printf("client is sending parameters:\n");
-    printf("    func_num = %d;", func_num);
+    printf("Client is sending func_num %d with parameters:\n", func_num);
     printf("    pinum = %d;", pinum);
     printf("    name = %s;", name);
     printf("\n");
@@ -365,7 +431,8 @@ int MFS_Unlink(int pinum, char *name) {
     int status = *i_ptr;
 
 #ifdef MSSG_DEBUG
-    printf("   client received status = %d\n", status);
+    printf("Client received func_num %d with parameters:\n", func_num);
+    printf("    status = %d\n", status);
 #endif
 
     // free buffers
