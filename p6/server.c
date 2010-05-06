@@ -731,6 +731,7 @@ int Add_Entry(int pinum, int inum, char *name, Inode_t *inode_table, Block_t *da
 	int idx1, idx2;
 	int curr_blk_num;
 	bool insert = false;
+retry_add_entry:
 	for(idx1 = 0; idx1 < MFS_PTR_NUMS; idx1 ++){
 		if(inode_table[pinum].ptr[idx1] == -1){
 			continue;
@@ -753,12 +754,37 @@ int Add_Entry(int pinum, int inum, char *name, Inode_t *inode_table, Block_t *da
 	}
 
 	if(insert == false){//one has to allocate a new block and such things
-		//TODO
+		add_block(pinum);
+		goto retry_add_entry;
 	}
 
 	inode_table[pinum].size += sizeof(MFS_DirEnt_t);
 
 	return 0;
+}
+
+//only for dir
+void add_block(int inum){
+	if(Inode_BitMap.bits[inum] == false){
+		fprintf(stderr,"error!\n");
+		exit(-1);
+	}
+
+
+	if(inode_table[inum].type != MFS_DIRECTORY ){
+		fprintf(stderr, "error!\n");
+		exit(-1);
+	}
+
+	int i;
+	for(i = 0; i < MFS_PTR_NUMS; i ++){
+		if(inode_table[inum].ptr[i] == -1){
+			break;
+		}
+	}
+
+	inode_table[inum].ptr[i] = First_Empty(&Data_BitMap);
+	inode_table[inum].blocks++;
 }
 
 
