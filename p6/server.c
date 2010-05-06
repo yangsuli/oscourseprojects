@@ -123,7 +123,8 @@ int main(int argc, char *argv[])
 
 				// parse a response
 				ptr = buffer_reply;
-				*( (int*)ptr ) = status;
+	//			*( (int*)ptr ) = status;
+				*( (int*)ptr ) = inum;
 				break;
 
 
