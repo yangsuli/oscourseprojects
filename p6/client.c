@@ -203,7 +203,8 @@ int MFS_Stat(int inum, MFS_Stat_t *m) {
     printf("    status = %d; m->type = %d, m->size = %d, m->blocks = %d\n", 
         status, m->type, m->size, m->blocks);
 #endif
-    return status;
+    if( status != 0 ) { return -1; }
+    return 0;
 }
 
 // MFS_Write() writes a block of size 4096 bytes at the block offset specified
@@ -260,7 +261,8 @@ int MFS_Write(int inum, char *buffer, int block) {
     printf("    status = %d\n", status);
 #endif
 
-    return status;
+    if( status != 0 ) { return -1; }
+    return 0;
 
 }
 
@@ -321,7 +323,8 @@ int MFS_Read(int inum, char *buffer, int block) {
     printf("    status = %d\n", status);
 #endif
 
-    return status;
+    if( status != 0 ) { return -1; }
+    return 0;
 
 }
 
@@ -381,7 +384,7 @@ int MFS_Creat(int pinum, int type, char *name) {
 #endif
 
     if( status != 0 ) { return -1; }
-    return status;
+    return 0;
 
 }
 
@@ -438,7 +441,8 @@ int MFS_Unlink(int pinum, char *name) {
     free( buffer_read );
     free( buffer_write );
 
-    return status;
+    if( status != 0 ) { return -1; }
+    return 0;
 
 }
 
