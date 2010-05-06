@@ -788,6 +788,12 @@ void add_block(int inum){
 	Set_Bit(&Data_BitMap, curr_block);
 
 	inode_table[inum].blocks++;
+
+		MFS_DirEnt_t *entries = (MFS_DirEnt_t *)data_region[curr_block].data;
+		for(i = 0; i < MFS_BLOCK_SIZE / sizeof(MFS_DirEnt_t); i++){
+			entries[i].inum = -1;
+		}
+
 }
 
 
