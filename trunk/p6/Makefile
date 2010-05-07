@@ -1,20 +1,21 @@
 CC   = gcc
 # Useful opts are -Wall, -ggdb, ...
 OPTS = -Wall -ggdb
+OPTS =
 
-ALL_SERVER_SOURCES = server.c udp.c mssg.c
-ALL_CLIENT_SOURCES = client.c udp.c mssg.c
-ALL_TEST_MSSG_SOURCES = testmssg.c mssg.c
+ALL_SERVER_SOURCES = server.c udp.c
+ALL_CLIENT_SOURCES = client.c udp.c
+ALL_TEST_MSSG_SOURCES = testmssg.c
 
-SERVER_OBJS = server.o udp.o mssg.o
-CLIENT_OBJS = client.o udp.o mssg.o
+SERVER_OBJS = server.o udp.o
+CLIENT_OBJS = client.o udp.o
 TEST_MSSG_OBJS = mssg.o testmssg.o
 
 ALL_LIB_SOURCES = $(ALL_SERVER_SOURCES) $(ALL_CLIENT_SOURCES)
 
 
-TEST = testcases/test5.c
 TEST = testmssg.c
+TEST = testcases/test39.c
 
 #all: server client
 all: client server
@@ -29,7 +30,7 @@ test: $(TEST) all
 
 # this section works!
 client: $(ALL_CLIENT_SOURCES)
-	gcc -c -g -fpic client.c udp.c ;
+	gcc -c -fpic client.c udp.c ;
 	gcc -shared -o libmfs.so client.o udp.o
 
 #client: $(ALL_CLIENT_SOURCES)
