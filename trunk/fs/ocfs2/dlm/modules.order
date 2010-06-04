@@ -1,0 +1,2 @@
+kernel/fs/ocfs2/dlm/ocfs2_dlm.ko
+kernel/fs/ocfs2/dlm/ocfs2_dlmfs.ko
