@@ -1,0 +1,1 @@
+cmd_fs/fscache/fscache.ko := ld -r -m elf_i386 -T /home/yangsuli/rpmbuild/BUILD/kernel-2.6.33/linux-2.6.33.i686/scripts/module-common.lds --build-id -o fs/fscache/fscache.ko fs/fscache/fscache.o fs/fscache/fscache.mod.o
