@@ -29,8 +29,13 @@ int main(){
 	double time1_end[REPEAT_SIZE], time2_end[REPEAT_SIZE];
 	double *time_start, *time_end;
 	char *prefix;
+	cpu_set_t run_set;
 	
 	get_time_offset();
+	CPU_ZERO(&run_set);
+	CPU_SET(0,&run_set);
+
+	assert(sched_setaffinity(0,sizeof(cpu_set_t),&run_set) == 0);
 
 	assert(sched_getparam(0,&param) == 0);
 	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
@@ -52,7 +57,7 @@ int main(){
 
 	for(i = 0; i < REPEAT_SIZE; i++){
 		time_start[i] = get_time();
-		for(j = 0; j < 100000; j++){
+		for(j = 0; j < 1000000; j++){
 			k++;
 		}
 		time_end[i] = get_time();
