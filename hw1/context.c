@@ -1,9 +1,80 @@
 #include <sched.h>
 #include <sys/time.h>
 #include <assert.h>
+#include <stdio.h>
 
+#define REPEAT_SIZE 500
+
+double time_offset; //in seconds
+
+double get_time_offset(){
+	struct timeval t;
+	int rc = gettimeofday(&t,NULL);
+	assert(rc==0);
+	time_offset = t.tv_sec;
+}
+
+double get_time(){
+	struct timeval t;
+	int rc = gettimeofday(&t,NULL);
+	assert(rc == 0);
+	return 1e3*(t.tv_sec - time_offset) + t.tv_usec/1e3;
+}
 
 int main(){
 	struct sched_param param;
-	asse
-	if(sched_setscheduler(0, SCHED_FIFO,
+	int i = 0, j = 0, k = 0;
+	int pid;
+	double time1_start[REPEAT_SIZE], time2_start[REPEAT_SIZE];
+	double time1_end[REPEAT_SIZE], time2_end[REPEAT_SIZE];
+	double *time_start, *time_end;
+	char *prefix;
+	
+	get_time_offset();
+
+	assert(sched_getparam(0,&param) == 0);
+	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+	//fprintf(stderr,"%d\n",param.sched_priority);
+	assert(sched_setscheduler(0, SCHED_FIFO,&param) == 0);
+
+	if((pid = fork()) < 0){
+		fprintf(stderr,"fork error!");
+		return -1;
+	}
+
+	if(pid ==0 ){//childe;
+		time_start = time2_start;
+		time_end = time2_end;
+	}else{//parent
+		time_start = time1_start;
+		time_end = time1_end;
+	}
+
+	for(i = 0; i < REPEAT_SIZE; i++){
+		time_start[i] = get_time();
+		for(j = 0; j < 100000; j++){
+			k++;
+		}
+		time_end[i] = get_time();
+		assert(sched_yield() == 0);
+	}
+
+	if(pid == 0){
+ 		prefix = "child";
+	}else{
+		prefix = "parent";
+	}
+	
+	for(i = 0; i < REPEAT_SIZE; i++){
+		fprintf(stdout,"%s start %f\n", prefix, time_start[i]);
+	}
+
+	for(i = 0; i < REPEAT_SIZE; i++){
+		fprintf(stdout, "%s, end %f\n", prefix, time_end[i]);
+	}
+
+
+	return 0;
+}
+
+	
