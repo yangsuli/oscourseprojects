@@ -2,6 +2,8 @@
 #include <sched.h>
 #include <stdio.h>
 #include <time.h>
+#include <assert.h>
+#include <unistd.h>
 
 
 #define PAGE_SIZE 4096
@@ -21,6 +23,11 @@ int main(){
 	int i, trial_size;
 	double time[TRIAL_PAGES];
 	double start, end;
+	cpu_set_t run_set;
+
+	CPU_ZERO(&run_set);
+	CPU_SET(0,&run_set);
+	assert(sched_setaffinity(0,sizeof(cpu_set_t),&run_set) == 0);
 
 	assert(sched_getparam(0,&param) == 0);
 	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
