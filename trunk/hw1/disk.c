@@ -8,16 +8,18 @@
 #define SECTOR_SIZE 512
 #define SECTORS_PER_TRACK 63
 #define TRACK_SIZE SECTORS_PER_TRACK*SECTOR_SIZE
-#define HEADS 255
+#define HEADS 16 //TODO: ?
 #define CYLINDER_SIZE TRACK_SIZE*HEADS
 #define CYLINDERS 60801
-//TODO UNITS??
 
+//Disk Info:
+//Nominal Media Rotation Rate: 5400
+//cache/buffer size = 8192 KBytes
 
 #define BUFSIZE SECTOR_SIZE 
 #define SEEK_TIME 100
-#define SEEK_SIZE CYLINDER_SIZE*CYLINDERS/(SEEK_TIME + 10)
-
+//#define SEEK_SIZE CYLINDER_SIZE*CYLINDERS/(SEEK_TIME + 10)
+#define SEEK_SIZE CYLINDER_SIZE*100
 
 /*
    potential problems:
@@ -25,6 +27,7 @@
    2. other overhead (sys call etc.)
    3. bus contention/ other transmission time
    4. acceleartion, costing, settling simplified
+   5. skew parameters (rotational delay)
  */
 
 
@@ -38,6 +41,9 @@ int main(){
 	void *buf_ptr = valloc(SECTOR_SIZE);
 	assert(buf_ptr != NULL);
 	int i;
+
+	//disable look-ahead cache
+	assert(system("hdparm -A0 /dev/sda") == 0);
 
 	CPU_ZERO(&run_set);
 	CPU_SET(0,&run_set);
@@ -80,6 +86,8 @@ int main(){
 
 	close(fd);
 	free(buf_ptr);
+	//enable look-ahead cache
+	system("hdparm -A1 /dev/sda");
 	return 0;
 }
 
