@@ -16,15 +16,16 @@
 //Nominal Media Rotation Rate: 5400
 //cache/buffer size = 8192 KBytes
 
-#define BUFSIZE SECTOR_SIZE 
+#define BUFSIZE SECTOR_SIZE * 2
 #define SEEK_TIME 100
+#define ROTATION_TIME 100
 //#define SEEK_SIZE CYLINDER_SIZE*CYLINDERS/(SEEK_TIME + 10)
-#define SEEK_SIZE CYLINDER_SIZE*100
+#define SEEK_SIZE CYLINDER_SIZE*1000
 
 /*
    potential problems:
    1. hard disk drive cache
-   2. other overhead (sys call etc.)
+   2. other overhead (sys call, trans rate etc.)
    3. bus contention/ other transmission time
    4. acceleartion, costing, settling simplified
    5. skew parameters (rotational delay)
@@ -35,7 +36,7 @@ int main(){
 	struct sched_param param;
 	int fd;
 	double time1, time2, time3, time4;
-	double seek_time, total_time;
+	double seek_time, total_time, rotation_time, rotation_time2;
 	double time[SEEK_TIME];
 	cpu_set_t run_set;
 	void *buf_ptr = valloc(SECTOR_SIZE);
@@ -54,16 +55,25 @@ int main(){
 	
 	get_time_offset();
 	assert((fd = open("/dev/sda", O_RDONLY|O_DIRECT)) >= 0);
-	assert(lseek64(fd, 0, SEEK_SET) == 0);
+	assert(lseek64(fd, CYLINDER_SIZE*100, SEEK_SET) > 0);
 	assert(read(fd,buf_ptr,SECTOR_SIZE) == SECTOR_SIZE);
 
+	//measure rotation time
+	time3 = get_time();
+	for(i = 0; i < ROTATION_TIME; i++){
+		time1 = get_time();
+		assert(lseek64(fd,-SECTOR_SIZE,SEEK_CUR) > 0);
+		assert(read(fd,buf_ptr,SECTOR_SIZE) == SECTOR_SIZE);
+		time2 = get_time();
+		time[i] = time2 - time1;
+	}
+	time4 = get_time();
 
-	/*fprintf(stderr,"%d\n",lseek(fd, 0, SEEK_SET));
-	time1 = get_time();
-	fprintf(stderr,"%d\n",lseek(fd, 4096*1000, SEEK_CUR));
-	time2 = get_time();
-	fprintf(stderr,"%d %d %d\n", read(fd,buf_ptr,CYLINDER_SIZE), errno, EINVAL);
-	*/
+	total_time = time4 - time3;
+	rotation_time = total_time/ROTATION_TIME; 
+
+
+	fprintf(stdout,"rotation average: %f\n", rotation_time);
 	
 	time3 = get_time();
 	for(i = 0; i < SEEK_TIME; i++){
