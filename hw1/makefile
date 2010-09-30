@@ -6,6 +6,9 @@ context:context.c hw1.h
 tlb:tlb.c hw1.h
 	gcc -O0 -lrt -D_GNU_SOURCE -o tlb tlb.c
 
+tlb2:tlb2.c hw1.h
+	gcc -O0 -lrt -D_GNU_SOURCE -o tlb2 tlb2.c
+
 disk:disk.c hw1.h
 	gcc -O0 -lrt -D_GNU_SOURCE -o disk disk.c
 
