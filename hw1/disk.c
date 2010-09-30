@@ -17,7 +17,7 @@
 //cache/buffer size = 8192 KBytes
 
 #define BUFSIZE SECTOR_SIZE * 2
-#define SEEK_TIME 100
+#define SEEK_TIME 500
 #define ROTATION_TIME 100
 //#define SEEK_SIZE CYLINDER_SIZE*CYLINDERS/(SEEK_TIME + 10)
 #define SEEK_SIZE CYLINDER_SIZE*1000
@@ -29,6 +29,7 @@
    3. bus contention/ other transmission time
    4. acceleartion, costing, settling simplified
    5. skew parameters (rotational delay)
+   6. I/O of other process (page cache suppressed? bi:33 bo 7)....
  */
 
 
@@ -69,11 +70,16 @@ int main(){
 	}
 	time4 = get_time();
 
+	for(i = 0; i < ROTATION_TIME; i++){
+		fprintf(stdout,"%f\n", time[i]);
+	}
 	total_time = time4 - time3;
 	rotation_time = total_time/ROTATION_TIME; 
 
-
 	fprintf(stdout,"rotation average: %f\n", rotation_time);
+
+
+	//measure seek time
 	
 	time3 = get_time();
 	for(i = 0; i < SEEK_TIME; i++){
