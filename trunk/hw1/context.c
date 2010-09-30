@@ -56,14 +56,17 @@ int main(){
 	}
 	
 	for(i = 0; i < REPEAT_SIZE; i++){
-		fprintf(stdout,"%s start %f\n", prefix, time_start[i]);
+		fprintf(stdout,"%s start%d %f\n", prefix, i, time_start[i]);
 	}
 
 	for(i = 0; i < REPEAT_SIZE; i++){
-		fprintf(stdout, "%s, end %f\n", prefix, time_end[i]);
+		fprintf(stdout, "%s, end%d %f\n", prefix, i, time_end[i]);
 	}
 
 
+	fflush(stdout);
+	fprintf(stderr, "test\n");
+	_exit(0);
 	return 0;
 }
 
