@@ -18,11 +18,19 @@ struct full_page page_array[TRIAL_PAGES];
 
 int main(){
 	struct sched_param param;
-	int i, trial_size;
+	int i,j, trial_size;
 	double time[TRIAL_PAGES];
 	double start, end;
+	int add_result = 0;
 	cpu_set_t run_set;
 
+	//inialize page_array
+	for(i = 0; i < TRIAL_PAGES; i++){
+		for(j = 0; j < PAGE_SIZE; j++){
+			page_array[i].whatever[j] = 0;
+		}
+	}
+	
 	CPU_ZERO(&run_set);
 	CPU_SET(0,&run_set);
 	assert(sched_setaffinity(0,sizeof(cpu_set_t),&run_set) == 0);
@@ -42,13 +50,16 @@ int main(){
 		time[trial_size-1] = end - start;
 	}
 
+	//look at the value, just to make sure memory access is not optimized off
+	for(i = 0; i < TRIAL_PAGES; i++){
+		add_result+=page_array[i].whatever[0];
+	}
+
 	for(i = 0; i < TRIAL_PAGES; i++){
 		fprintf(stdout,"%d: %f\n",i+1, time[i]);
 	}
 
-	fprintf(stdout,"%Ld\n",get_ticks());
-	clock_getres(CLOCK_PROCESS_CPUTIME_ID, &ts);
-	fprintf(stdout,"%d, %d\n", ts.tv_sec, ts.tv_nsec);
+	fprintf(stdout, "add_result: %d\n", add_result);
 	return 0;
 }
 
