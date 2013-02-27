@@ -8,14 +8,14 @@
 #include <sys/types.h>
 
 //Let's read in 512K
-//#define BUF_SIZE (512*1024)
+//#define BUF_SIZE (128*1024)
 #define BUF_SIZE 4096
 #define SEQ_READ_SIZE (200*1024*1024) //200M
-#define NUM_TRY 10 //I think 500*512K = 256M might be big enough for prefetch cache?
+#define NUM_TRY 100 //I think 500*512K = 256M might be big enough for prefetch cache?
 #define START 0
-#define STEP 10
+#define STEP (512*1024)
 
-int main(){
+int main(int argc, char** argv){
 	int fd;
 	int i, j;
 	double time1, time2;
@@ -25,8 +25,16 @@ int main(){
 	void *buf_ptr = malloc(BUF_SIZE);
 	assert(buf_ptr != NULL);
 
+	if(argc != 2){
+		printf("Usage prefetch4 file_to_read\n");
+		exit(-1);
+	}
+
+	char* file = argv[1]; 
+
 	//disable look-ahead cache of disk, because that could affect our measurements
-	assert(system("hdparm -A0 /dev/sda") == 0);
+	//assert(system("hdparm -A0 /dev/sda") == 0);
+	//assert(system("hdparm -W0 /dev/sda") == 0);
 
 	//attach to one cpu and have the highest priority so that it doesn't get scheduled out
 	CPU_ZERO(&run_set);
@@ -37,22 +45,23 @@ int main(){
 
 
 	for(i = 0; i < NUM_TRY; i++){
-		printf("start %d iteration\n", i);
 
-		assert(system("sync;echo 3 > /proc/sys/vm/drop_caches") == 0);
 
 		//get_time_offset();
 		get_realtime_offset();
-		assert((fd = open("file_1G", O_RDONLY)) >= 0);
-
+		assert((fd = open(file, O_RDONLY)) >= 0);
+/*
 		//Let's read sequentially for some time
 		for(j = 0; j < SEQ_READ_SIZE/BUF_SIZE; j++){
 			assert(read(fd,buf_ptr, BUF_SIZE) == BUF_SIZE);
 		}
-
+*/
 		//Let's measure time now
 		//time1 = get_time();
-		assert(lseek(fd, (i + START)*STEP*BUF_SIZE, SEEK_CUR) != -1);
+		assert(read(fd,buf_ptr, BUF_SIZE) == BUF_SIZE);
+		//wait for prefetching
+		usleep(40000);
+		assert(lseek(fd, (i + START)*STEP, SEEK_SET) == (i + START)*STEP);
 		time1 = get_realtime();
 		assert(read(fd,buf_ptr,BUF_SIZE) == BUF_SIZE);
 		time2 = get_realtime();
