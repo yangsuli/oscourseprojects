@@ -8,10 +8,9 @@
 #include <sys/types.h>
 
 //Let's read in 512K
-//#define BUF_SIZE (512*1024)
-#define BUF_SIZE 4096
+#define BUF_SIZE (128*1024)
 #define SEQ_READ_SIZE (200*1024*1024) //200M
-#define NUM_TRY 10 //I think 500*512K = 256M might be big enough for prefetch cache?
+#define NUM_TRY 100 //I think 500*512K = 256M might be big enough for prefetch cache?
 #define START 0
 #define STEP 10
 
@@ -36,30 +35,33 @@ int main(){
 	assert(sched_setscheduler(0,SCHED_FIFO,&param) == 0);
 
 
+	assert((fd = open("file_1G", O_RDONLY)) >= 0);
 	for(i = 0; i < NUM_TRY; i++){
-		printf("start %d iteration\n", i);
+	//	printf("start %d iteration\n", i);
 
-		assert(system("sync;echo 3 > /proc/sys/vm/drop_caches") == 0);
+	//	assert(system("sync;echo 3 > /proc/sys/vm/drop_caches") == 0);
 
-		//get_time_offset();
+		get_time_offset();
 		get_realtime_offset();
-		assert((fd = open("file_1G", O_RDONLY)) >= 0);
-
+/*
 		//Let's read sequentially for some time
 		for(j = 0; j < SEQ_READ_SIZE/BUF_SIZE; j++){
 			assert(read(fd,buf_ptr, BUF_SIZE) == BUF_SIZE);
 		}
-
+*/
 		//Let's measure time now
 		//time1 = get_time();
-		assert(lseek(fd, (i + START)*STEP*BUF_SIZE, SEEK_CUR) != -1);
+	//	assert(lseek(fd, (i + START)*STEP*BUF_SIZE, SEEK_CUR) != -1);
+		usleep(10000);
 		time1 = get_realtime();
+		time1 = get_time();
 		assert(read(fd,buf_ptr,BUF_SIZE) == BUF_SIZE);
 		time2 = get_realtime();
+		time2 = get_time();
 		time[i] = time2 - time1;
 
-		close(fd);
 	}
+	close(fd);
 
 
 	for(i = 0; i < NUM_TRY; i++){
