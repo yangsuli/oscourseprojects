@@ -11,9 +11,9 @@
 //#define BUF_SIZE (128*1024)
 #define BUF_SIZE 4096
 #define SEQ_READ_SIZE (200*1024*1024) //200M
-#define NUM_TRY 100 //I think 500*512K = 256M might be big enough for prefetch cache?
-#define START 0
-#define STEP (512*1024)
+#define NUM_TRY 500 //I think 500*1M = 500M might be big enough for prefetch cache?
+#define START 1
+#define STEP (1024*1024)
 
 int main(int argc, char** argv){
 	int fd;

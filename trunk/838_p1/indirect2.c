@@ -10,7 +10,7 @@
 #define BUF_SIZE 4096
 #define MAX_TRY 64
 
-int main(){
+int main(int argc, char** argv){
 	int fd;
 	int num_block;
 	double time1, time2;
@@ -18,6 +18,11 @@ int main(){
 	struct sched_param param;
 	void *buf_ptr = valloc(BUF_SIZE);
 
+
+	if(argc != 2){
+		printf("usage indirect2 file");
+		exit(-1);
+	}
 
 	//attach to one cpu and have the highest priority so that it doesn't get scheduled out
 	CPU_ZERO(&run_set);
@@ -31,7 +36,7 @@ int main(){
 	for(num_block = 0; num_block < MAX_TRY; num_block++){
 		assert(system("sync;echo 3 > /proc/sys/vm/drop_caches") == 0);
 
-		fd = open("file_1G", O_RDONLY|O_SYNC|O_DIRECT);
+		fd = open(argv[1], O_RDONLY|O_SYNC|O_DIRECT);
 		assert(lseek(fd, num_block*BUF_SIZE, SEEK_SET) == num_block*BUF_SIZE);
 
 		time1 = get_realtime();
