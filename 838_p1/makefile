@@ -16,7 +16,7 @@ indirect2:indirect2.c mytime.h
 	gcc -O2 -lrt -D_GNU_SOURCE -o indirect2 indirect2.c
 
 indirect:indirect.c mytime.h
-	gcc -O2 -lrt -D_GNU_SOURCE -o indirect2 indirect.c
+	gcc -O2 -lrt -D_GNU_SOURCE -o indirect indirect.c
 
 clean:
 	rm -rf prefetch prefetch4 buffer_size file_cache indirect2
