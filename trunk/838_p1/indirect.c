@@ -21,6 +21,7 @@ int main(){
 
 	system("rm -f indirec_file");
 	system("hdparm -W0 /dev/sda");
+	assert(system("sync;echo 3 > /proc/sys/vm/drop_caches") == 0);
 
 	//attach to one cpu and have the highest priority so that it doesn't get scheduled out
 	CPU_ZERO(&run_set);
