@@ -19,7 +19,7 @@ int main(){
 	void *buf_ptr = valloc(BUF_SIZE);
 	assert(buf_ptr != NULL);
 
-	system("rm -f indirec_file");
+	system("rm -f indirect_file");
 	system("hdparm -W0 /dev/sda");
 	assert(system("sync;echo 3 > /proc/sys/vm/drop_caches") == 0);
 
@@ -32,7 +32,7 @@ int main(){
 
 	get_realtime_offset();
 
-	fd = open("indirec_file", O_RDWR|O_CREAT|O_SYNC);
+	fd = open("indirect_file", O_RDWR|O_CREAT|O_SYNC);
 	assert(fd >= 0);
 
 
