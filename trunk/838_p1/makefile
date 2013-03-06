@@ -1,4 +1,4 @@
-all: prefetch prefetch4 buffer_size file_cache direct_access
+all: prefetch prefetch4 buffer_size file_cache indirect2 indirect
 
 prefetch:prefetch.c mytime.h
 	gcc -O2 -lrt -D_GNU_SOURCE -o prefetch prefetch.c
@@ -12,10 +12,13 @@ buffer_size:buffer_size.c mytime.h
 file_cache:file_cache.c mytime.h
 	gcc -O2 -lrt -D_GNU_SOURCE -o file_cache file_cache.c
 
-direct_access:direct_access.c mytime.h
-	gcc -O2 -lrt -D_GNU_SOURCE -o direct_access direct_access.c
+indirect2:indirect2.c mytime.h
+	gcc -O2 -lrt -D_GNU_SOURCE -o indirect2 indirect2.c
+
+indirect:indirect.c mytime.h
+	gcc -O2 -lrt -D_GNU_SOURCE -o indirect2 indirect.c
 
 clean:
-	rm -rf prefetch prefetch4 buffer_size file_cache direct_access
+	rm -rf prefetch prefetch4 buffer_size file_cache indirect2
 
 
