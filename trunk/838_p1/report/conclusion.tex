@@ -1,6 +1,4 @@
 \section{Conclusion}
 \label{section:conclusion}
 
-In this paper, we have developed a new packet tracing technique, the application aware packet tracing; and used it to understand HDFS's network behavior. 
-
-We have shown the traffic type, flow size and flow duration, and also different type of traffic exhibits different characteristics, and how they relate to the internal operation of HDFS. 
+In this report, we measured four key aspects of how a file system works internally, namely the ideal buffer size for random access, the file system prefetch size for sequential access, the file cache size, and at which point does file system add additional layers of indirection. Our measurements on the non-virtualized system confirmed our hypothesis, and give us some accurate estimations of these file system internals. However, the same experiments conducted in a veritualized system is complicated by the virtualization techniques and the guest/host interaction. Thus the behavior of a virtualized system is much less preditable than a non-virtualized system, and we need new techiques to measure and understand how a virtualized system works.
