@@ -48,6 +48,13 @@ not formatting correctly.
 \subsection{Ideal Buffer Size}
 To find the ideal buffer size for random file access, we randomly access a large file with different buffer size, and measure how long it takes to read given size of data. Here we set the size of data to read is 32MB; and we vary buffer size from 512 bytes to 51200 bytes (0.5 KB - 50 KB). 
 
+\begin{figure*}
+\centering
+\includegraphics[width=.65\textwidth]{figures/buffer_size.eps}
+\caption{Ideal Buffer Size Measurement}
+\label{fig:buffer_size}
+\end{figure*}
+
 The measurement result is shown if figure \ref{fig:buffer_size}. In the non-virtulized setting, we could see that the time took to randomly read 32MB data decrease rapidly as the buffer size increase, until the buffer size is larger than 12KB, at which point the esplsed time start to stablize. Onewould expect that any buffer size < 4KB would be suboptimal, since essentially a whole 4K block has to be read into memory even if you are filling a buffer which is much smaller than 4K. However, we do observe some additional performance gain further increasing the buffer size up to 12KB. This might be attributed to the fact that larger buffer size amortized the cost of initiating an I/O transfer from disk. But further experiments needs to be condoucted to verify this hypothesis. 
 
 Measurement results in the virtualized enviorment exhibted similar trends, where the reading time start to stablize when the buffer size is larger than 20KB. However, there are two noticible difference. First, with small buffer size, the random read performance is siginficantly worse than in a non-veritualized setting. This is expected because there is more overhead associated with each I/O in a virtual machine. Second, with larger buffer size, virtual machine actually outperformace a native operating system. This effect might be attributed to the fact that the host operating system memory served as a secondary level cach. However, more measurements are needed to confirm this guess. 
