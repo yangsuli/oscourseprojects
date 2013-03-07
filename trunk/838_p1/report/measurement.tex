@@ -5,29 +5,43 @@ In this section we present the result of experiments, and discuss what we could 
 
 \subsection{Timer Calibration}
 It is necessary to discuss how we measure times, since the accuracy of the timer we use is the basis of our measurment. We use the time stamp counter (tsc) and the rdtsc instruction on the x86 platform as our timer to guarantee the accuracy of our measurement. Since rdtsc returns clock counts instead of time, we write our own function to convert its result to second based on the CPU speed. This gives us upto nanosecond precision. However, since rdtsc is not synchronized across cpu, we may have problems using it in a multi-core machine. We cope with this by forcing our program to bind to one particular core and give it the highest priority to run until completion without context switch. To confirm the accuracy of our conversion, we in turn use our rdtsc function and gettimeofday() to measure the system call sleep(1) in 9 iterations in the non-virtualized/virtualized environment. 
-Iteration	rdtsc	gettimeofday
-1	1.000126	1.000115
-2	1.000099	1.000088
-3	1.000099	1.000088
-4	1.000102	1.000091
-5	1.000098	1.000088
-6	1.000098	1.000087
-7	1.000100	1.000089
-8	1.000102	1.000093
-9	1.000109	1.000097
-Table 1. Measuring sleep(1) in the non-virtualized environment.
-Iteration	rdtsc	gettimeofday
-1	1.001859	1.002069
-2	1.000830	1.001039
-3	0.999983	1.000189
-4	1.000760	1.000967
-5	0.999982	1.000189
-6	1.001173	1.001388
-7	1.000029	1.000233
-8	1.000896	1.001109
-9	0.999955	1.000160
-Table 2. Measuring sleep(1) in the virtualized en-vironment.
-The data in table 1 and 2 show that the results of rdtsc function and gettimeofday() are the same up to 3 significant decimals. It confirms that our rdtsc function has accuracy in 0.001 seconds or 1 microsecond.
+
+\begin{table}[!thb]
+\centering
+\begin{tabular}{|c|c|c|} \hline
+Iteration & rdtsc & gettimeofday \\ \hline
+1 & 1.000126 & 1.000115 \\ \hline
+2 & 1.000099 & 1.000088 \\ \hline
+3 & 1.000099 & 1.000088 \\ \hline
+4 & 1.000102 & 1.000091 \\ \hline
+5 & 1.000098 & 1.000088 \\ \hline
+6 & 1.000098 & 1.000087 \\ \hline
+7 & 1.000100 & 1.000089 \\ \hline
+8 & 1.000102 & 1.000093 \\ \hline
+9 & 1.000109 & 1.000097 \\ \hline
+\end{tabular}\label{tab:cali_non_virtual}
+\caption{Measuring sleep(1) in the non-virtualized environment}
+\end{table}
+
+
+\begin{table}[!thb]
+\centering
+\begin{tabular}{|c|c|c|} \hline
+Iteration & rdtsc & gettimeofday \\ \hline
+1 & 1.001859 & 1.002069 \\ \hline
+2 & 1.000830 & 1.001039 \\ \hline
+3 & 0.999983 & 1.000189 \\ \hline
+4 & 1.000760 & 1.000967 \\ \hline
+5 & 0.999982 & 1.000189 \\ \hline
+6 & 1.001173 & 1.001388 \\ \hline
+7 & 1.000029 & 1.000233 \\ \hline
+8 & 1.000896 & 1.001109 \\ \hline
+9 & 0.999955 & 1.000160 \\ \hline
+\end{tabular}\label{tab:cali_virtual}
+\caption{Measuring sleep(1) in the virtualized environment}
+\end{table}
+
+The data in table \ref{tab:cali_non_virtual} and \ref{tab:cali_virtual} show that the results of rdtsc function and gettimeofday() are the same up to 3 significant decimals. It confirms that our rdtsc function has accuracy in 0.001 seconds or 1 microsecond.
   
 not formatting correctly.
 
