@@ -44,8 +44,6 @@ Iteration & rdtsc & gettimeofday \\ \hline
 \end{table}
 
 The data in table 1 and 2 show that the results of rdtsc function and gettimeofday() are the same up to 3 significant decimals. It confirms that our rdtsc function has accuracy in 0.001 seconds or 1 microsecond.
-  
-not formatting correctly.
 
 \subsection{Ideal Buffer Size}
 To find the ideal buffer size for random file access, we randomly access a large file with different buffer size, and measure how long it takes to read given size of data. Here we set the size of data to read is 32MB; and we vary buffer size from 512 bytes to 51200 bytes (0.5 KB - 50 KB). 
