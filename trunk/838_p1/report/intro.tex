@@ -1,9 +1,9 @@
 \section{Introduction}
 \label{section:intro}
 
-A file system is essential to a operating system, as it organizes data for programs and provides procedures to store, retrieve, and update data as well as manage the spaces. However, traditional file systems are designed under the assumption that it is operating on some physcial devices, and this assumption may not hold in a virtualized setting. Thus it would be interesting to understand how file system will work in a virtualized system.
+A file system is essential to a operating system, as it organizes data for programs and provides procedures to store, retrieve, and update data as well as manage the spaces. However, traditional file systems are designed under the assumption that it is operating on some physical devices, and this assumption may not hold in a virtualized setting. Thus it would be interesting to understand how file system will work in a virtualized system.
 
-In this report, we investigate the inner-workings of the file systems by estimating the idea buffer size for random file access, pre-fetech datasize for sequential reading, file caches, and at which point the file system starts to add indrection in file structures. Our main approach is to write little code snippets that exercise the file system in different ways; measure how long various operation take, and make some deductions about the file system's inner-working. We compaire our results obtained under both a normal operating system, and under a virtual machine, to gain some insights as to how virtualization works.  
+In this report, we investigate the inner-workings of the file systems by estimating the idea buffer size for random file access, pre-fetch data size for sequential reading, file caches, and at which point the file system starts to add indirection in file structures. Our main approach is to write little code snippets that exercise the file system in different ways; measure how long various operation take, and make some deductions about the file system's inner-working. We compare our results obtained under both a normal operating system, and under a virtual machine, to gain some insights as to how virtualization works.  
 
 \subsection{Platform}
 \label{subsection:platform}
@@ -38,5 +38,5 @@ Guest machine processor: Intel(R) Core(TM) i3-2100 CPU @ 3.10GHz x 4
 Guest machine memory: 512MB
 \end{itemize}
 
-We would aslo like to point out that the virtualization of guest file system is done on top of the host file system, by using files as virtual disks, diving the disk file into blocks, and building a file system on it. Ext3 and ext4 file system are very similar and have the same on-disk layout.  The only noticable difference is that ext4 supports extent based addressing.
+We would also like to point out that the virtualization of guest file system is done on top of the host file system, by using files as virtual disks, diving the disk file into blocks, and building a file system on it. Ext3 and ext4 file system are very similar and have the same on-disk layout.  The only noticeable difference is that ext4 supports extent based addressing.
 
