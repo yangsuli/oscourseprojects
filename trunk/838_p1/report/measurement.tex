@@ -64,13 +64,34 @@ In summary, the idea buffer size is 12KB in non-virtualized seeting, and 20KB in
 \subsection{Prefectch Size}
 In this experiment we are concerned about how muchdata is prefetched by the file system during a sequential read. In order to estimate this, we first open a file and read its first block; we then sleep for some time (40ms in our experiment) to allow the file system prefetching, finally we seek for a certain distance and read another block of this file. If this block is previousely prefetched by the file system, then this read would be very fast; otherwise this read would be significantly slower. Thus by varying the distance of seeking, we would observe a jump of read latency at certain distance, and that would be the file system prefetch size. 
 
+\begin{figure*}
+\centering
+\includegraphics[width=.65\textwidth]{figures/prefetch_1.eps}
+\caption{Prefetch Size Measurement in Non-virtualized Environment}
+\label{fig:prefetch_1}
+\end{figure*}
+
 The measurement results in the non-virtualized setting are shown in figure \ref{fig:prefetch_1}. From the result we could see a clear jump at 50KB. Thus the prefetch size window of ext3 file system is most likely to be around 50KB.
+
+\begin{figure*}
+\centering
+\includegraphics[width=.65\textwidth]{figures/prefetch_2.eps}
+\caption{Prefetch Size Measurement in Virtualized Environment}
+\label{fig:prefetch_2}
+\end{figure*}
 
 The measurement results in the virtualized setting, shown in figure \ref{fig:prefetch_2}, however, is more complicated. Instead of a simple staircase behavior, we observe occosically spike in latency time. This is due to the fact that under VMware workstation 9.0, the virtual disk is realized using files on the host file system. Thus when we access the virtual disk, the host file system will perform its own prefetching, in addition to the prefetching going on in the guest file system. This double prefetching causes most file block access being served from memory cache of either the guest or the host file system. However, occosically the block we want to access is in neither system's cache, and the overhead of accessing such a block is siginificantly higher, causing the spikes in latency time. Due to this double prefetching effect, it is hard to draw any firm conclusion on the prefetch size. But we could be confident that it would be smaller than 437K, where we observe the spike. 
 
 
 \subsection{File Cache Size}
 In order to measure how big the file cache is, we repeatedly read a group of blocks. The rational behind this is repeated reads of a group of blocks will be very fast; but if the read size exceeds the cache size, performance will start to degrate due to paging effect.
+
+\begin{figure*}
+\centering
+\includegraphics[width=.65\textwidth]{figures/cache_size.eps}
+\caption{File Cache Size Measurement}
+\label{fig:cache_size}
+\end{figure*}
 
 The memory size of the system we are measuring is 512MB, and the unified cache machinism makes the most of this memory available for file cache under low memory pressure. Thus we vary the block group size we read from 324MB to 512MB, and the measurement results are shown in figure \ref{fig:cache_size}. In the non-virtualized setting, we could see a cldear performance degration starting from read size of 392MB. Thus the file cache is most likely to be around 392MB. In a virtualized setting, however, we don't see any performance degration upto 512MB,which is the memory size of the guest operating system. This is because the host of the virtual machine we test has a large amount of memory (32GB), and any paging which might happen in the guest operating system is served from the host memory, which is fast enough and doesn't cause noticible performance degration. So from this experiment we cannot draw any conclusion on the file cache size of the guest operating system.
 
@@ -81,5 +102,12 @@ Usually a file system inode can only hold pointers to a few blocks, and after th
 Our first attempt is to extend an empty file by one block repeatedly, and the force the change to the disk using fsync(). The idea is that is a block's pointer is holded in the inode, adding this block only occurs two writes: one to the inode block, the other one to the newly added data block. However, if a block's pointer has to be accessed through some kind of indirection, one would have to update or allocate the indirection block(s) too. So exending a file to the point where an indirection layer is needed would be siginificantly slower than the situation where indirection is not necessarily. However, the time of extending a file stays constant, regardless of whether indirection is involved. This is because ext3/4 is a journaling file system, and by calling fsync() we only cause the journal to be committed to disk instead of actually writing the blocks to the in-place location. Since journal commiting is a sequential write, writing one more block doesn't cause significnt performance difference.
 
 We instead try to read a block of a file at different offset: if we are accesing a block which is directly pointed from the inode, only one block access is needed; however, if we are accessing a block which requires indirection, one has to follow the indirection chain to find the location of the block before accesing it, resulting in two or more block accesses. If we disable file cache and force all the access to go to disk, siginficant performance difference might be observed. 
+
+\begin{figure*}
+\centering
+\includegraphics[width=.65\textwidth]{figures/indirect.eps}
+\caption{Inode Holding Size Measurement}
+\label{fig:indirect}
+\end{figure*}
 
 The measurement results are shown in figure \ref{fig:indirect}. For the non-virtualized setting results, we could easily see a spike at block offset 13, which is twice as much latency as accessing other blocks. This is due to the need to access one more indirect block. So we could conclude that in ext3, file system starts to add a layer of indirection when holding more than 12 blocks. The subsequent access to blocks after block 13 doesn't incur additional overhead because now the indirect information is cached in memory. The virtualized results are more difficult to understand though. Noticibally there is a spike at block offset 62, however it is hard to say whether this is due to indirection, or some kind of paging happening in the host file system in order to access the virtual disk. We also see more flucation in the read latency, which is likely to be introduced by the complex guest/host interaction. However, it is hard to draw any conclusion on the inode holding size using this methodology in our virtualized setting. 
