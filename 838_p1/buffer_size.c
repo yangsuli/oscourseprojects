@@ -51,6 +51,7 @@ int main(int argc, char** argv){
 		buf_size = i * 	MIN_SIZE;
 		void *buf_ptr = malloc(buf_size);
 		assert(buf_ptr != NULL);
+		assert(system("sync;echo 3 > /proc/sys/vm/drop_caches") == 0);
 
 		fd = open(file, O_RDONLY|O_LARGEFILE);
 		assert(fd > 0);
