@@ -1,0 +1,40 @@
+\section{Introduction}
+\label{section:intro}
+
+A file system is essential to a operating system, as it organizes data for programs and provides procedures to store, retrieve, and update data as well as manage the spaces. However, traditional file systems are designed under the assumption that it is operating on some physcial devices, and this assumption may not hold in a virtualized setting. Thus it would be interesting to understand how file system will work in a virtualized system.
+
+In this report, we investigate the inner-workings of the file systems by estimating the idea buffer size for random file access, pre-fetech datasize for sequential reading, file caches, and at which point the file system starts to add indrection in file structures. Our main approach is to write little code snippets that exercise the file system in different ways; measure how long various operation take, and make some deductions about the file system's inner-working. We compaire our results obtained under both a normal operating system, and under a virtual machine, to gain some insights as to how virtualization works.  
+
+\subsection{Platform}
+\label{subsection:platform}
+
+We conduct our experiments both in a non-virtualized setting, and in an virtual machine. The details of the platform are listed below.
+
+\subsubsection{Non-virtualized Environment}
+\begin{itemize}
+\item{}
+Operation system: CentOS 5.0 with kernel version 3.0.1 and ext3 file system. 
+\item{}
+Processor:AMD Opteron(tm) Processor 148 @ 2.2 GHz
+\item{}
+Memory: 512MB
+\end{itemize}
+
+\subsubsection{Virtualized Environment}
+\begin{itemize}
+\item{}
+Host operation system: RedHat Enterprise 6.0 with kernel version 2.6.32 and ext4 file system. 
+\item{}
+Host machine processor:Intel(R) Core(TM) i3-2100 CPU @ 3.10GHz x 4
+\item{}
+Host machine memory: 32GB
+\item{}
+Virtual machine monitor: VMWare Workstation 9.0
+\item{}
+Guest operating system: Ubuntu 12.04 with kernel version 3.5.0 and ext4 file system
+\item{}
+Guest machine processor: Intel(R) Core(TM) i3-2100 CPU @ 3.10GHz x 4
+\item{}
+Guest machine memory: 512MB
+\end{itemize}
+

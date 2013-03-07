@@ -1,0 +1,26 @@
+\section{Measurement}
+\label{section:measurement}
+
+In this section we present the result of experiments, and discuss what we could deduct from these measurements.
+
+\subsection{Timer Calibration}
+It is necessary to discuss how we measure times.....blahblahblah
+
+\subsection{Ideal Buffer Size}
+To find the ideal buffer size for random file access, we randomly access a large file with different buffer size, and measure how long it takes to read given size of data. Here we set the size of data to read is 32MB; and we vary buffer size from 512 bytes to 51200 bytes (0.5 KB - 50 KB). 
+
+The measurement result is shown if figure \ref{fig:buffer_size}. In the non-virtulized setting, we could see that the time took to randomly read 32MB data decrease rapidly as the buffer size increase, until the buffer size is larger than 12KB, at which point the esplsed time start to stablize. Onewould expect that any buffer size < 4KB would be suboptimal, since essentially a whole 4K block has to be read into memory even if you are filling a buffer which is much smaller than 4K. However, we do observe some additional performance gain further increasing the buffer size up to 12KB. This might be attributed to the fact that larger buffer size amortized the cost of initiating an I/O transfer from disk. But further experiments needs to be condoucted to verify this hypothesis. 
+
+Measurement results in the virtualized enviorment exhibted similar trends, where the reading time start to stablize when the buffer size is larger than 20KB. However, there are two noticible difference. First, with small buffer size, the random read performance is siginficantly worse than in a non-veritualized setting. This is expected because there is more overhead associated with each I/O in a virtual machine. Second, with larger buffer size, virtual machine actually outperformace a native operating system. This effect might be attributed to the fact that the host operating system memory served as a secondary level cach. However, more measurements are needed to confirm this guess. 
+
+In summary, the idea buffer size is 12KB in non-virtualized seeting, and 20KB in a virtualized setting.
+
+\subsection{Prefectch Size}
+In this experiment we are concerned about how muchdata is prefetched by the file system during a sequential read. In order to estimate this, we first open a file and read its first block; we then sleep for some time (40ms in our experiment) to allow the file system prefetching, finally we seek for a certain distance and read another block of this file. If this block is previousely prefetched by the file system, then this read would be very fast; otherwise this read would be significantly slower. Thus by varying the distance of seeking, we would observe a jump of read latency at certain distance, and that would be the file system prefetch size. 
+
+The measurement results in the non-virtualized setting are shown in figure \ref{fig:prefetch_1}. From the result we could see a clear jump at 50KB. Thus the prefetch size window of ext3 file system is most likely to be around 50KB.
+
+The measurement results in the virtualized setting, shown in figure \ref{fig:prefetch_2}, however, is more complicated. Instead of a simple staircase behavior, we observe occosically spike in latency time. This is due to the fact that under VMware workstation 9.0, the virtual disk is realized using files on the host file system. Thus when we access the virtual disk, the host file system will perform its own prefetching, in addition to the prefetching going on in the guest file system. This double prefetching causes most file block access being served from memory cache of either the guest or the host file system. However, occosically the block we want to access is in neither system's cache, and the overhead of accessing such a block is siginificantly higher, causing the spikes in latency time. Due to this double prefetching effect, it is hard to draw any firm conclusion on the prefetch size. But we could be confident that it would be smaller than 437K, where we observe the spike. 
+
+
+\subsection{File Cache Size}
