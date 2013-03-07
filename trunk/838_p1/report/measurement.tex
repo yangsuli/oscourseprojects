@@ -63,7 +63,7 @@ Measurement results in the virtualized environment exhibited similar trends, whe
 
 In summary, the idea buffer size is 12KB in non-virtualized setting, and 20KB in a virtualized setting.
 
-\subsection{Prefects Size}
+\subsection{Prefetch Size}
 In this experiment we are concerned about how much data is prefetched by the file system during a sequential read. In order to estimate this, we first open a file and read its first block; we then sleep for some time (40ms in our experiment) to allow the file system prefetching, finally we seek for a certain distance and read another block of this file. If this block is previously prefetched by the file system, then this read would be very fast; otherwise this read would be significantly slower. Thus by varying the distance of seeking, we would observe a jump of read latency at certain distance, and that would be the file system prefetch size. 
 
 \begin{figure*}
