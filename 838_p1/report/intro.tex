@@ -38,3 +38,5 @@ Guest machine processor: Intel(R) Core(TM) i3-2100 CPU @ 3.10GHz x 4
 Guest machine memory: 512MB
 \end{itemize}
 
+We would aslo like to point out that the virtualization of guest file system is done on top of the host file system, by using files as virtual disks, diving the disk file into blocks, and building a file system on it. Ext3 and ext4 file system are very similar and have the same on-disk layout.  The only noticable difference is that ext4 supports extent based addressing.
+
